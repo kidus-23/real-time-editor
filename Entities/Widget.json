@@ -1,0 +1,52 @@
+{
+  "name": "Widget",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Widget title"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "tasks",
+        "calendar",
+        "notes",
+        "weather",
+        "stats",
+        "recent"
+      ],
+      "description": "Widget type"
+    },
+    "config": {
+      "type": "object",
+      "description": "Widget configuration"
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "description": "Widget position and size"
+    },
+    "dashboard_id": {
+      "type": "string",
+      "description": "Dashboard ID where widget is placed"
+    }
+  },
+  "required": [
+    "title",
+    "type"
+  ]
+}

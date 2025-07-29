@@ -1,0 +1,42 @@
+{
+  "name": "Reminder",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Reminder title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Reminder description"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "datetime-local",
+      "description": "When the reminder is due"
+    },
+    "document_id": {
+      "type": "string",
+      "description": "Associated document ID"
+    },
+    "is_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether reminder is completed"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "Reminder priority"
+    }
+  },
+  "required": [
+    "title",
+    "due_date"
+  ]
+}

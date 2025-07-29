@@ -1,0 +1,41 @@
+{
+  "name": "Block",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "heading",
+        "list",
+        "code",
+        "image",
+        "table",
+        "embed",
+        "database",
+        "whiteboard"
+      ],
+      "description": "Type of block"
+    },
+    "content": {
+      "type": "object",
+      "description": "Block content data"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "Parent block or page ID"
+    },
+    "position": {
+      "type": "number",
+      "description": "Position within parent"
+    },
+    "properties": {
+      "type": "object",
+      "description": "Block-specific properties"
+    }
+  },
+  "required": [
+    "type",
+    "content"
+  ]
+}

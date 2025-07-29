@@ -1,0 +1,42 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Project name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Project description"
+    },
+    "color": {
+      "type": "string",
+      "enum": [
+        "lavender",
+        "mint",
+        "blue",
+        "peach",
+        "pink",
+        "yellow"
+      ],
+      "default": "lavender",
+      "description": "Project color theme"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Email addresses of project members"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether project is archived"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

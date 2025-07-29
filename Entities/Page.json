@@ -1,0 +1,49 @@
+{
+  "name": "Page",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Page title"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Page icon emoji"
+    },
+    "cover": {
+      "type": "string",
+      "description": "Cover image URL"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "Parent page ID for hierarchy"
+    },
+    "template": {
+      "type": "string",
+      "enum": [
+        "blank",
+        "note",
+        "project",
+        "database",
+        "whiteboard"
+      ],
+      "default": "blank",
+      "description": "Page template type"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether page is publicly accessible"
+    },
+    "collaborators": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Collaborator email addresses"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
