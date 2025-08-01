@@ -1,0 +1,169 @@
+@import "@blocknote/core/fonts/inter.css";
+@import "@blocknote/mantine/style.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 222.2 84% 4.9%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 210 40% 95%;
+    --sidebar-accent-foreground: 222.2 84% 4.9%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 249 12% 12%;
+    --foreground: 210 14% 83%;
+
+    --card: 249 12% 12%;
+    --card-foreground: 210 14% 83%;
+
+    --popover: 249 12% 12%;
+    --popover-foreground: 210 14% 83%;
+
+    --primary: 210 14% 83%;
+    --primary-foreground: 249 12% 12%;
+
+    --secondary: 249 12% 17%;
+    --secondary-foreground: 210 14% 83%;
+
+    --muted: 249 12% 17%;
+    --muted-foreground: 210 11% 71%;
+
+    --accent: 249 12% 17%;
+    --accent-foreground: 210 14% 83%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 249 12% 17%;
+    --input: 249 12% 17%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --sidebar-background: 249 12% 12%;
+    --sidebar-foreground: 210 14% 83%;
+    --sidebar-primary: 210 14% 83%;
+    --sidebar-primary-foreground: 249 12% 12%;
+    --sidebar-accent: 249 12% 17%;
+    --sidebar-accent-foreground: 210 14% 83%;
+    --sidebar-border: 249 12% 17%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Compact mode styles */
+.compact {
+  /* Reduce sidebar width and spacing */
+  --sidebar-width: 200px;
+
+  /* Reduce general spacing */
+  --spacing-sm: 0.25rem;
+  --spacing-md: 0.5rem;
+  --spacing-lg: 0.75rem;
+  --spacing-xl: 1rem;
+}
+
+.compact .sidebar {
+  width: var(--sidebar-width);
+}
+
+.compact .sidebar-item {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.compact .header {
+  padding: 0.5rem 1rem;
+  border-bottom-width: 1px;
+}
+
+.compact .header h1 {
+  font-size: 1rem;
+}
+
+.compact .editor-container {
+  padding: 0.75rem 1rem;
+}
+
+.compact .modal-header {
+  padding: 0.75rem 1rem;
+}
+
+.compact .modal-content {
+  padding: 0.75rem 1rem;
+}
+
+.compact .modal-footer {
+  padding: 0.75rem 1rem;
+}
+
+.compact .button {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.compact .input {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.compact .nav-item {
+  padding: 0.375rem 0.5rem;
+  margin-bottom: 0.125rem;
+}
+
+.compact .workspace-item {
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.125rem;
+}
