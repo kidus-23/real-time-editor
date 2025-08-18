@@ -18,4 +18,3 @@ const adminDB = getFirestore(app);
 
 export { app as adminApp, adminDB };
 
-1:07
