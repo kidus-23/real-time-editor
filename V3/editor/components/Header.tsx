@@ -1,7 +1,7 @@
 'use client'
 
 import { SignedIn, SignInButton, SignedOut,UserButton, useUser } from "@clerk/nextjs";
-import Breadcrumbs from "./ui/Breadcrumbs";
+import Breadcrumbs from "./Breadcrumbs";
 
 function Header(){
     const {user} = useUser();
