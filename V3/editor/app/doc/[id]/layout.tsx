@@ -1,7 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import RoomProvider from "@/components/RoomProvider";
 
-async function DocLayout({ children, params: {id} }: {children: React.ReactNode; params: {id: string};}) {
+async function DocLayout({ children, params }: {children: React.ReactNode; params: {id: string}}) {
+    const { id } = await params;
 
     const { userId } = await auth();
     if (!userId) {

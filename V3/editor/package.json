@@ -12,6 +12,7 @@
     "@blocknote/core": "^0.37.0",
     "@blocknote/mantine": "^0.37.0",
     "@blocknote/react": "^0.37.0",
+    "@blocknote/shadcn": "^0.37.0",
     "@clerk/nextjs": "^6.31.1",
     "@liveblocks/client": "^3.5.2",
     "@liveblocks/node": "^3.5.2",
