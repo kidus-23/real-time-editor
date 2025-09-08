@@ -1,7 +1,7 @@
 'use client'
 
 import { useRoom, useSelf } from "@liveblocks/react/suspense";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { MoonIcon, SunIcon } from "lucide-react";
@@ -21,18 +21,55 @@ type EditorProps = {
 function BlockNote({ doc, provider, darkMode }: EditorProps) {
     const userInfo = useSelf((me) => me.info);
 
-    const editor: BlockNoteEditor = useCreateBlockNote({
-        collaboration: {
-            fragment: doc.getXmlFragment("root"),
-            user: {
-                name: userInfo?.name,
-                color: stringToColor(userInfo?.email || "1"),
-            },
-            provider,
+    // Memoize the collaboration config to prevent unnecessary re-creations
+    const collaborationConfig = useMemo(() => ({
+        fragment: doc.getXmlFragment("root"),
+        user: {
+            name: userInfo?.name || "Anonymous",
+            color: userInfo?.color || stringToColor(userInfo?.email || "1"),
         },
-    })
+        provider,
+    }), [doc, provider, userInfo?.name, userInfo?.email, userInfo?.color]);
+
+    const editor: BlockNoteEditor = useCreateBlockNote({
+        collaboration: collaborationConfig,
+    });
+
+    // Prevent page scrolling when slash command menu is open
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check if slash command menu is open and visible
+            const menuOpen = document.querySelector('.bn-suggestion-menu, [data-suggestion-menu], .bn-menu');
+
+            if (menuOpen && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                // Only intercept if the event target is within the menu or if menu has focus
+                const targetInMenu = menuOpen.contains(e.target as Node);
+                const menuHasFocus = menuOpen.querySelector('[data-selected="true"], [aria-selected="true"], .selected');
+
+                // Check if the menu is actually being navigated (has a selected item)
+                if (targetInMenu || menuHasFocus) {
+                    // Only prevent page scrolling, not the arrow key functionality
+                    const handleScroll = (scrollEvent: Event) => {
+                        scrollEvent.preventDefault();
+                    };
+
+                    // Temporarily prevent page scroll
+                    document.addEventListener('scroll', handleScroll, { passive: false, once: true });
+
+                    // Clean up after a short delay
+                    setTimeout(() => {
+                        document.removeEventListener('scroll', handleScroll);
+                    }, 100);
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     return (
-        <div className="relative max-w-6xl mx-auto">
+        <div className={`relative max-w-7xl mx-auto ${darkMode ? 'dark' : ''}`}>
             <BlockNoteView
                 className="min-h-screen"
                 editor={editor}
@@ -48,62 +85,74 @@ function Editor() {
     const [provider, setProvider] = useState<LiveblocksYjsProvider>()
     const [darkMode, setDarkMode] = useState(false);
 
-    // Debug logging
-    console.log("Editor component - Room:", room);
-    console.log("Editor component - Room ID:", room?.id);
-    console.log("Editor component - Doc:", doc);
-    console.log("Editor component - Provider:", provider);
-
     useEffect(() => {
         if (!room) {
-            console.log("Editor - No room available, skipping setup");
             return;
         }
 
-        console.log("Editor - Setting up YDoc and provider for room:", room.id);
         const yDoc = new Y.Doc();
         const yProvider = new LiveblocksYjsProvider(room, yDoc);
         setdoc(yDoc);
         setProvider(yProvider);
 
         return () => {
-            console.log("Editor - Cleaning up YDoc and provider");
             yProvider?.destroy();
             yDoc?.destroy();
         }
     }, [room]);
 
+    // Apply dark mode to body
+    useEffect(() => {
+        if (darkMode) {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+
+        return () => {
+            document.body.classList.remove('dark');
+        };
+    }, [darkMode]);
+
     if (!room) {
-        console.log("Editor - Rendering: No room");
         return <div>No room available</div>;
     }
 
     if (!doc || !provider) {
-        console.log("Editor - Rendering: Loading...");
         return <div>Loading editor...</div>;
     }
 
-    console.log("Editor - Rendering: Full editor");
-    const style = `hover:text-white ${darkMode ?
-        "text-gray-300 bg-gray-700 hover:text-gray-700 hover:bg-gray-100" :
-        "text-gray-700 bg-gray-300 hover:text-gray-300 hover:bg-gray-700"}`;
+    const style = `${darkMode ?
+        "text-gray-100 bg-gray-800 hover:bg-gray-700 border-gray-600 shadow-lg" :
+        "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-md"}`;
+
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className={`max-w-7xl mx-auto ${darkMode ? 'dark' : ''}`}>
             <div className="flex items-center gap-2 justify-end mb-10">
                 {/*Summerization/Translation AI*/}
                 {/*Chat to doc AI*/}
 
                 {/*Dark Mode*/}
-                <Button className={style} onClick={() => setDarkMode(!darkMode)}>
-                    {darkMode ? <SunIcon /> : <MoonIcon />}
+                <Button
+                    className={`${style} border px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-300`}
+                    onClick={() => setDarkMode(!darkMode)}
+                >
+                    {darkMode ? (
+                        <>
+                            <SunIcon size={18} />
+                            <span className="hidden sm:inline">Light</span>
+                        </>
+                    ) : (
+                        <>
+                            <MoonIcon size={18} />
+                            <span className="hidden sm:inline">Dark</span>
+                        </>
+                    )}
                 </Button>
-
-
             </div>
 
             {/*Block Notes*/}
             <BlockNote doc={doc} provider={provider} darkMode={darkMode} />
-
         </div>
     )
 } export default Editor;

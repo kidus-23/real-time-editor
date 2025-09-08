@@ -17,7 +17,7 @@ export async function createNewDocument() {
     const docRef = await docCollectionRef.add({
         title: "New Doc"
     })
-  
+
     await adminDB
         .collection('users')
         .doc(sessionClaims?.email!)
@@ -28,53 +28,64 @@ export async function createNewDocument() {
             role: "owner",
             createAt: new Date(),
             roomId: docRef.id,
-    });
+        });
 
     return { docId: docRef.id };
 }
 
 export async function deleteDocument(roomId: string) {
-    auth().protect();
+    const { userId } = await auth();
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
     try {
+        // Delete the main document
         await adminDB.collection("documents").doc(roomId).delete();
 
-        const query = await adminDB
-            .collection('rooms')
+        // Delete all user-room relationships
+        const usersQuery = await adminDB.collectionGroup('rooms')
             .where('roomId', '==', roomId)
             .get();
 
-        const batch = adminDB.batch();  
-
-        query.forEach((doc) => {
+        const batch = adminDB.batch();
+        usersQuery.forEach((doc) => {
             batch.delete(doc.ref);
         });
-        
+
         await batch.commit();
 
+        // Delete the Liveblocks room
         await liveblocks.deleteRoom(roomId);
+
         return { success: true };
     } catch (error) {
+        console.error("Error deleting document:", error);
         return { success: false };
-    }        
+    }
 }
 
 export async function inviteUserToDocument(roomId: string, email: string) {
-    auth().protect();
-    try{
+    const { userId } = await auth();
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
         await adminDB
-        .collection('users')
-        .doc(email)
-        .collection('rooms')
-        .doc(roomId)
-        .set({
-            userId: email,
-            role: "editor", 
-            createAt: new Date(),
-            roomId,
-        });
+            .collection('users')
+            .doc(email)
+            .collection('rooms')
+            .doc(roomId)
+            .set({
+                userId: email,
+                role: "editor",
+                createAt: new Date(),
+                roomId,
+            });
         return { success: true };
-    }catch(error){
+    } catch (error) {
         console.log("Error inviting user to document:", error);
         return { success: false };
-    }  
+    }
 }

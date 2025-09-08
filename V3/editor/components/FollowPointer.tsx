@@ -1,5 +1,5 @@
 import stringToColor from "@/lib/stringToColor";
-import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { motion } from "framer-motion";
 
 function FollowPointer({
     x, y, info,
@@ -10,17 +10,18 @@ function FollowPointer({
         name: string;
         email: string;
         avatar: string;
+        color?: string; // Optional color from user profile
     };
 }) {
-    const color = stringToColor(info.email || '1')
+    // Use profile color if available, fallback to generated color
+    const color = info.color || stringToColor(info.email || '1');
 
     return (
         <motion.div
-            className="h-4 w-4 rounded-full absolute z-50"
+            className="absolute z-50 pointer-events-none"
             style={{
                 top: y,
                 left: x,
-                pointerEvents: "none",
             }}
             initial={{
                 scale: 1,
@@ -35,41 +36,47 @@ function FollowPointer({
                 opacity: 0,
             }}
         >
+            {/* Cursor pointer */}
             <svg
-                stroke={color}
-                fill={color}
-                strokeWidth="1"
-                viewBox="0 0 16 16"
-                className={`h-6 w-6 text-[${color}] transform -rotate-[70deg] -translate-x-[12px] -translate-y-[10px] stroke-[${color}]`}
-                height="1em"
-                width="1em"
-                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{
+                    transform: "translate(-2px, -2px)",
+                }}
             >
-                <path d="M14.082 2.182a.5.5 0 0 1 .103.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103z" />
-
-                <motion.div
-                    style={{
-                        backgroundColor: color,
-                    }}
-
-                    initial={{
-                        scale: 0.5,
-                        opacity: 0,
-                    }}
-
-                    animate={{
-                        scale: 1,
-                        opacity: 0,
-                    }}
-
-                    exit={{
-                        scale: 0.5,
-                        opacity: 0,
-                    }}
-                >
-                    {info?.name || info.email}
-                </motion.div>
+                <path
+                    d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
+                    fill={color}
+                    stroke="white"
+                    strokeWidth="2"
+                />
             </svg>
+
+            {/* User name label */}
+            <motion.div
+                className="px-2 py-1 text-white text-sm rounded-md"
+                style={{
+                    backgroundColor: color,
+                    marginLeft: "10px",
+                    marginTop: "-8px",
+                }}
+                initial={{
+                    scale: 0.5,
+                    opacity: 0,
+                }}
+                animate={{
+                    scale: 1,
+                    opacity: 1,
+                }}
+                exit={{
+                    scale: 0.5,
+                    opacity: 0,
+                }}
+            >
+                {info?.name || info.email}
+            </motion.div>
         </motion.div>
     )
 }
