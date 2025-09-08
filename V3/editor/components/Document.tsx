@@ -1,14 +1,13 @@
 'use client';
 
 import { FormEvent, useEffect, useState, useTransition } from "react";
-import { Input } from "@/components/ui/Input"
+import { Input } from "@/components/ui/input"
 import { Button } from "./ui/button";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import useOwner from "@/lib/useOwner";
 import Editor from "./Editor";
-import { Delete } from "lucide-react";
 import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 
@@ -24,6 +23,30 @@ function Document({ id }: { id: string }) {
             setInput(data.title);
         }
     }, [data]);
+
+    // Debug logging
+    console.log("=== Document Component START ===");
+    console.log("Document component - ID:", id);
+    console.log("Document component - Data:", data);
+    console.log("Document component - Loading:", loading);
+    console.log("Document component - Error:", error);
+
+    if (loading) {
+        console.log("Document component - Rendering: Loading...");
+        return <div>Loading document...</div>;
+    }
+
+    if (error) {
+        console.log("Document component - Rendering: Error");
+        return <div>Error loading document: {error.message}</div>;
+    }
+
+    if (!data) {
+        console.log("Document component - Rendering: Not found");
+        return <div>Document not found</div>;
+    }
+
+    console.log("Document component - Rendering: Full document with editor");
 
     const updateTitle = (e: FormEvent) => {
         e.preventDefault();

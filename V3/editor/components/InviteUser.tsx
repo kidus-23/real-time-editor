@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { deleteDocument, inviteUserToDocument } from "@/actions/actions";
 import { toast } from "sonner";
-import { Input } from "./ui/Input";
+import { Input } from "./ui/input";
 
 function InviteUser() {
     const [isOpen, setIsOpen] = useState(false)

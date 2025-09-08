@@ -48,21 +48,42 @@ function Editor() {
     const [provider, setProvider] = useState<LiveblocksYjsProvider>()
     const [darkMode, setDarkMode] = useState(false);
 
+    // Debug logging
+    console.log("Editor component - Room:", room);
+    console.log("Editor component - Room ID:", room?.id);
+    console.log("Editor component - Doc:", doc);
+    console.log("Editor component - Provider:", provider);
+
     useEffect(() => {
+        if (!room) {
+            console.log("Editor - No room available, skipping setup");
+            return;
+        }
+
+        console.log("Editor - Setting up YDoc and provider for room:", room.id);
         const yDoc = new Y.Doc();
         const yProvider = new LiveblocksYjsProvider(room, yDoc);
         setdoc(yDoc);
         setProvider(yProvider);
 
         return () => {
+            console.log("Editor - Cleaning up YDoc and provider");
             yProvider?.destroy();
             yDoc?.destroy();
         }
     }, [room]);
-    if (!doc || !provider) {
-        return null;
+
+    if (!room) {
+        console.log("Editor - Rendering: No room");
+        return <div>No room available</div>;
     }
 
+    if (!doc || !provider) {
+        console.log("Editor - Rendering: Loading...");
+        return <div>Loading editor...</div>;
+    }
+
+    console.log("Editor - Rendering: Full editor");
     const style = `hover:text-white ${darkMode ?
         "text-gray-300 bg-gray-700 hover:text-gray-700 hover:bg-gray-100" :
         "text-gray-700 bg-gray-300 hover:text-gray-300 hover:bg-gray-700"}`;
@@ -81,10 +102,8 @@ function Editor() {
             </div>
 
             {/*Block Notes*/}
-               <BlockNote doc={doc} provider={provider} darkMode={darkMode} />
+            <BlockNote doc={doc} provider={provider} darkMode={darkMode} />
 
         </div>
     )
-}
-
-export default Editor;
+} export default Editor;
