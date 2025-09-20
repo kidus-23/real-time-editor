@@ -37,9 +37,24 @@ function Sidebar() {
         user &&
         query(
             collectionGroup(db, 'rooms'),
-            where('userId', '==', user.emailAddresses[0].toString())
+            where('userId', '==', user.emailAddresses[0].emailAddress)
         )
     );
+
+    // Debug logging
+    useEffect(() => {
+        if (user) {
+            console.log('User email:', user.emailAddresses[0].emailAddress);
+            console.log('Data:', data?.docs?.length, 'documents');
+            console.log('Loading:', loading);
+            console.log('Error:', error);
+            if (data?.docs) {
+                data.docs.forEach(doc => {
+                    console.log('Document data:', doc.data());
+                });
+            }
+        }
+    }, [user, data, loading, error]);
 
     useEffect(() => {
         if (!data) return;
@@ -77,34 +92,46 @@ function Sidebar() {
             <NewDocumentButton />
             <div className="flex py-4 flex-col space-y-4 md:max-w-36">
                 {/*My Document List...*/}
-                {groupedData.owner.length === 0 ? (
+                {loading && (
+                    <h2 className="text-gray-500 font-semibold text-sm">
+                        Loading documents...
+                    </h2>
+                )}
+                {error && (
+                    <h2 className="text-red-500 font-semibold text-sm">
+                        Error: {error.message}
+                    </h2>
+                )}
+                {!loading && !error && groupedData.owner.length === 0 ? (
                     <h2 className="text-gray-500 font-semibold text-sm">
                         No Documents found
                     </h2>
                 ) : (
+                    !loading && !error && (
+                        <>
+                            <h2 className="text-gray-500 font-semibold text-sm">
+                                My Documents ({groupedData.owner.length})
+                            </h2>
+                            {groupedData.owner.map((doc) => (
+                                <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
+                            ))}
+                        </>
+                    )
+                )}
+
+                {/*Shared with Me*/}
+                {!loading && !error && groupedData.editor.length > 0 && (
                     <>
-                        <h2 className="text-gray-500 font-semibold text-sm">
-                            My Documents
+                        <h2 className="text-gray-500 font semibold text-sm">
+                            Shared with Me ({groupedData.editor.length})
                         </h2>
-                        {groupedData.owner.map((doc) => (
+                        {groupedData.editor.map((doc) => (
                             <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
                         ))}
                     </>
-                )}
-           
-            {/*Shared with Me*/}
-            {groupedData.editor.length > 0 && (
-                <>
-                    <h2 className="text-gray-500 font semibold text-sm">
-                        Shared with Me
-                    </h2>
-                    {groupedData.editor.map((doc) => (
-                        <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
-                    ))}
-                </>
 
-            )}
-             </div>
+                )}
+            </div>
         </>
     );
 

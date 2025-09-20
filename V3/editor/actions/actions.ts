@@ -26,9 +26,11 @@ export async function createNewDocument() {
         .set({
             userId: sessionClaims?.email,
             role: "owner",
-            createAt: new Date(),
+            createdAt: new Date(),
             roomId: docRef.id,
         });
+
+    console.log('Created document with ID:', docRef.id, 'for user:', sessionClaims?.email);
 
     return { docId: docRef.id };
 }
@@ -80,7 +82,7 @@ export async function inviteUserToDocument(roomId: string, email: string) {
             .set({
                 userId: email,
                 role: "editor",
-                createAt: new Date(),
+                createdAt: new Date(),
                 roomId,
             });
         return { success: true };
