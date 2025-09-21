@@ -12,7 +12,6 @@ async function DocumentPage({
             className="flex flex-col flex-1 min-h-screen"
             style={{
                 margin: "0 auto",
-                maxWidth: "900px",
                 width: "100%",
             }}
         >

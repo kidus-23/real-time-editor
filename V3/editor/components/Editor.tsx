@@ -69,7 +69,7 @@ function BlockNote({ doc, provider, darkMode }: EditorProps) {
     }, []);
 
     return (
-        <div className={`relative max-w-7xl mx-auto ${darkMode ? 'dark' : ''}`}>
+        <div className={`relative mx-auto ${darkMode ? 'dark' : ''}`}>
             <BlockNoteView
                 className="min-h-screen"
                 editor={editor}
@@ -79,11 +79,10 @@ function BlockNote({ doc, provider, darkMode }: EditorProps) {
     )
 }
 
-function Editor() {
+function Editor({ darkMode = false }: { darkMode?: boolean }) {
     const room = useRoom();
     const [doc, setdoc] = useState<Y.Doc>()
     const [provider, setProvider] = useState<LiveblocksYjsProvider>()
-    const [darkMode, setDarkMode] = useState(false);
 
     useEffect(() => {
         if (!room) {
@@ -101,58 +100,22 @@ function Editor() {
         }
     }, [room]);
 
-    // Apply dark mode to body
-    useEffect(() => {
-        if (darkMode) {
-            document.body.classList.add('dark');
-        } else {
-            document.body.classList.remove('dark');
-        }
-
-        return () => {
-            document.body.classList.remove('dark');
-        };
-    }, [darkMode]);
+    // Dark mode is now managed by the parent Document component
 
     if (!room) {
-        return <div>No room available</div>;
+        return <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">No room available</div>;
     }
 
     if (!doc || !provider) {
-        return <div>Loading editor...</div>;
+        return <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">Loading editor...</div>;
     }
 
-    const style = `${darkMode ?
-        "text-gray-100 bg-gray-800 hover:bg-gray-700 border-gray-600 shadow-lg" :
-        "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-md"}`;
-
     return (
-        <div className={`max-w-7xl mx-auto ${darkMode ? 'dark' : ''}`}>
-            <div className="flex items-center gap-2 justify-end mb-10">
-                {/*Summerization/Translation AI*/}
-                {/*Chat to doc AI*/}
-
-                {/*Dark Mode*/}
-                <Button
-                    className={`${style} border px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-300`}
-                    onClick={() => setDarkMode(!darkMode)}
-                >
-                    {darkMode ? (
-                        <>
-                            <SunIcon size={18} />
-                            <span className="hidden sm:inline">Light</span>
-                        </>
-                    ) : (
-                        <>
-                            <MoonIcon size={18} />
-                            <span className="hidden sm:inline">Dark</span>
-                        </>
-                    )}
-                </Button>
+        <div className="relative">
+            {/* Editor content */}
+            <div className="pt-2">
+                <BlockNote doc={doc} provider={provider} darkMode={darkMode} />
             </div>
-
-            {/*Block Notes*/}
-            <BlockNote doc={doc} provider={provider} darkMode={darkMode} />
         </div>
     )
 } export default Editor;

@@ -1,5 +1,5 @@
 "use client"
-import { MenuIcon } from "lucide-react";
+import { HomeIcon, MenuIcon } from "lucide-react";
 import NewDocumentButton from "./NewDocumentButton"
 import { useCollection } from "react-firebase-hooks/firestore";
 
@@ -16,6 +16,8 @@ import { collectionGroup, DocumentData, query, where } from "firebase/firestore"
 import { db } from "@/firebase";
 import { useEffect, useState } from "react";
 import SidebarOption from "./SidebarOption";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface RoomDocument extends DocumentData {
     createdAt: string;
@@ -26,6 +28,9 @@ interface RoomDocument extends DocumentData {
 
 function Sidebar() {
     const { user } = useUser();
+    const pathname = usePathname();
+    const isHomeActive = pathname === "/";
+    
     const [groupedData, setGroupedData] = useState<{
         owner: RoomDocument[];
         editor: RoomDocument[];
@@ -74,33 +79,55 @@ function Sidebar() {
 
     const menuOptions = (
         <>
-            <NewDocumentButton />
-            <div className="flex py-4 flex-col space-y-4 md:max-w-36">
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+                {/* Home Button */}
+                <Link
+                    href="/"
+                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        ${isHomeActive
+                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                    `}
+                >
+                    <HomeIcon className="w-4 h-4" />
+                    <p className="text-sm leading-tight font-medium">Home</p>
+                </Link>
+                
+                <div className="mt-2 mb-1">
+                    <NewDocumentButton />
+                </div>
+            </div>
+            
+            <div className="flex flex-col gap-3 py-4 w-full max-w-xs divide-y divide-gray-100 dark:divide-neutral-800">
                 {/*My Document List...*/}
                 {groupedData.owner.length === 0 ? (
-                    <h2 className="text-gray-500 font-semibold text-sm">
-                        No Documents found
+                    <h2 className="text-sm text-gray-400 dark:text-neutral-500 font-medium italic px-1">
+                        No documents yet
                     </h2>
                 ) : (
                     <>
-                        <h2 className="text-gray-500 font-semibold text-sm">
+                        <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold px-1">
                             My Documents
                         </h2>
-                        {groupedData.owner.map((doc) => (
-                            <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
-                        ))}
+                        <div className="flex flex-col gap-1 pt-2">
+                            {groupedData.owner.map((doc) => (
+                                <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
+                            ))}
+                        </div>
                     </>
                 )}
            
             {/*Shared with Me*/}
             {groupedData.editor.length > 0 && (
                 <>
-                    <h2 className="text-gray-500 font semibold text-sm">
-                        Shared with Me
+                    <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold pt-3 px-1">
+                        Shared with me
                     </h2>
-                    {groupedData.editor.map((doc) => (
-                        <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
-                    ))}
+                    <div className="flex flex-col gap-1 pt-2">
+                        {groupedData.editor.map((doc) => (
+                            <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
+                        ))}
+                    </div>
                 </>
 
             )}
@@ -109,15 +136,17 @@ function Sidebar() {
     );
 
     return (
-        <div className="p-2 md:p-5 bg-gray-200 relative">
+        <div className="p-3 md:p-5 bg-white min-h-screen dark:bg-[#090e19] border-r border-gray-100 dark:border-neutral-800 h-full">
             <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger>
-                        <MenuIcon className="p-2 hover:opacity-30 rounded-lg" size={40} />
+                        <div className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                            <MenuIcon className="text-gray-700 dark:text-gray-200" size={24} />
+                        </div>
                     </SheetTrigger>
                     <SheetContent side='left'>
                         <SheetHeader>
-                            <SheetTitle>Menu</SheetTitle>
+                            <SheetTitle className="text-lg font-semibold">Menu</SheetTitle>
                             <div>
                                 {menuOptions}
                             </div>
@@ -127,7 +156,7 @@ function Sidebar() {
                 </Sheet>
             </div>
 
-            <div className="hidden md:inline">
+            <div className="hidden md:block">
                 {menuOptions}
             </div>
         </div>
