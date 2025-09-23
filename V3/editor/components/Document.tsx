@@ -13,6 +13,7 @@ import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
 import { Crown, User, MoonIcon, SunIcon } from "lucide-react";
+import { updateLastOpened } from "@/actions/actions";
 
 function Document({ id }: { id: string }) {
     const [data, loading, error] = useDocumentData(doc(db, "documents", id));
@@ -26,6 +27,15 @@ function Document({ id }: { id: string }) {
             setInput(data.title);
         }
     }, [data]);
+    
+    // Update last opened timestamp when document is loaded
+    useEffect(() => {
+        if (id) {
+            startTransition(async () => {
+                await updateLastOpened(id);
+            });
+        }
+    }, [id]);
     
     // Apply dark mode to body
     useEffect(() => {

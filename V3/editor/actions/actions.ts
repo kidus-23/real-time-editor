@@ -28,6 +28,7 @@ export async function createNewDocument() {
             role: "owner",
             createAt: new Date(),
             roomId: docRef.id,
+            lastOpened: new Date(),
         });
 
     return { docId: docRef.id };
@@ -82,6 +83,7 @@ export async function inviteUserToDocument(roomId: string, email: string) {
                 role: "editor",
                 createAt: new Date(),
                 roomId,
+                lastOpened: new Date(),
             });
         return { success: true };
     } catch (error) {
@@ -106,6 +108,30 @@ export async function removeUserFromDocument(roomId: string, email: string) {
         return { success: true };
     } catch (error) {
         console.log("Error removing user from document:", error);
+        return { success: false };
+    }
+}
+
+export async function updateLastOpened(roomId: string) {
+    const session = await auth();
+    if (!session || !session.sessionClaims?.email) {
+        throw new Error("Unauthorized");
+    }
+
+    const email = session.sessionClaims.email as string;
+
+    try {
+        await adminDB
+            .collection('users')
+            .doc(email)
+            .collection('rooms')
+            .doc(roomId)
+            .update({
+                lastOpened: new Date()
+            });
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating last opened timestamp:", error);
         return { success: false };
     }
 }
