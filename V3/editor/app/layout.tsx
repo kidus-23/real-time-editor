@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "sonner";
 import LiveBlocksProvider from "@/components/LiveBlocksProvider";
+import Chatbar from "@/components/Chatbar"
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,6 +29,7 @@ export default function RootLayout({
                 {children}
               </div>
             </div>
+            <Chatbar />
             <Toaster position="top-center" />
           </body>
         </html>
