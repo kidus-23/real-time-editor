@@ -2,18 +2,16 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
-import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Zap, Settings } from "lucide-react"
+import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
   SheetClose,
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
@@ -62,7 +60,7 @@ function Chatbar() {
   const [input, setInput] = useState('')
   const [composerInput, setComposerInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [activeModel, setActiveModel] = useState('openai/gpt-3.5-turbo') // Set default model
+  const [activeModel, setActiveModel] = useState('openai/gpt-3.5-turbo') // Default model
   const [showSettings, setShowSettings] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -139,7 +137,7 @@ function Chatbar() {
       if (!response.ok) throw new Error('Failed to apply changes')
 
       setComposerInput('')
-      // Here you would typically update the editor content directly
+      // Update editor content here if needed
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -171,7 +169,8 @@ function Chatbar() {
           className="w-[400px] sm:w-[540px] p-0 flex flex-col h-screen"
         >
           <Tabs defaultValue="chat" className="flex flex-col h-full">
-            <div className="shrink-0 border-b">
+            {/* Fixed Header */}
+            <div className="shrink-0 border-b sticky top-0 z-10 bg-background">
               <div className="px-4 py-2 flex items-center justify-between">
                 <SheetTitle className="flex items-center gap-2 text-sm">
                   <Bot className="h-4 w-4" />
@@ -211,11 +210,13 @@ function Chatbar() {
               </TabsList>
             </div>
 
+            {/* Chat Tab */}
             <TabsContent 
               value="chat" 
-              className="flex-1 flex flex-col mt-0 data-[state=active]:flex"
+              className="flex-1 flex flex-col overflow-y-auto mt-0 data-[state=active]:flex relative"
             >
-              <ScrollArea className="flex-1 px-4">
+              {/* Scrollable chat area */}
+              <ScrollArea className="flex-1 overflow-y-auto  px-4">
                 <div className="space-y-4 py-4">
                   {messages.map((message, i) => (
                     <div
@@ -252,7 +253,8 @@ function Chatbar() {
                 </div>
               </ScrollArea>
 
-              <div className="shrink-0 border-t p-4 space-y-4">
+              {/* Fixed Footer */}
+              <div className="shrink-0 border-t p-4 space-y-4 bg-background z-10">
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
