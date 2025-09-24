@@ -1,5 +1,5 @@
 "use client"
-import { HomeIcon, MenuIcon, SearchIcon } from "lucide-react";
+import { HomeIcon, MenuIcon, SearchIcon, GitGraphIcon, Settings, SettingsIcon } from "lucide-react";
 import NewDocumentButton from "./NewDocumentButton"
 import { useCollection } from "react-firebase-hooks/firestore";
 
@@ -105,6 +105,24 @@ function Sidebar() {
                     <p className="text-sm leading-tight font-medium">Search</p>
                 </button>
                 
+                {/* Graph Button */}
+                <button
+                    className="flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                >
+                    <GitGraphIcon className="w-4 h-4" />
+                    <p className="text-sm leading-tight font-medium">Graph</p>
+                </button>
+
+                {/* settings */}
+                <button
+                    className="flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                >
+                    <SettingsIcon className="w-4 h-4" />
+                    <p className="text-sm leading-tight font-medium">Settings</p>
+                </button>
+                
                 <div className="mt-2 mb-1">
                     <NewDocumentButton />
                 </div>
@@ -147,6 +165,8 @@ function Sidebar() {
              
              {/* Search Dialog */}
              <SearchDialog isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+             
+             {/* Graph Dialog */}
         </>
     );
 
@@ -177,4 +197,5 @@ function Sidebar() {
         </div>
     );
 }
+
 export default Sidebar
