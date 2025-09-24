@@ -1,5 +1,5 @@
 "use client"
-import { HomeIcon, MenuIcon } from "lucide-react";
+import { HomeIcon, MenuIcon, SearchIcon } from "lucide-react";
 import NewDocumentButton from "./NewDocumentButton"
 import { useCollection } from "react-firebase-hooks/firestore";
 
@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import SidebarOption from "./SidebarOption";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SearchDialog from "./SearchDialog";
 
 interface RoomDocument extends DocumentData {
     createdAt: string;
@@ -30,6 +31,7 @@ function Sidebar() {
     const { user } = useUser();
     const pathname = usePathname();
     const isHomeActive = pathname === "/";
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     
     const [groupedData, setGroupedData] = useState<{
         owner: RoomDocument[];
@@ -93,6 +95,16 @@ function Sidebar() {
                     <p className="text-sm leading-tight font-medium">Home</p>
                 </Link>
                 
+                {/* Search Button */}
+                <button
+                    onClick={() => setIsSearchOpen(true)}
+                    className="flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                >
+                    <SearchIcon className="w-4 h-4" />
+                    <p className="text-sm leading-tight font-medium">Search</p>
+                </button>
+                
                 <div className="mt-2 mb-1">
                     <NewDocumentButton />
                 </div>
@@ -132,6 +144,9 @@ function Sidebar() {
 
             )}
              </div>
+             
+             {/* Search Dialog */}
+             <SearchDialog isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         </>
     );
 
