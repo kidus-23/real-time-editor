@@ -4,10 +4,14 @@ import { ClientSideSuspense, RoomProvider as RoomProviderWrapper } from "@livebl
 import LoadingSpinner from "./LoadingSpinner";
 import LiveCursorProvider from "./LiveCursorProvider";
 
-function RoomProvider({roomId, children}: {
+function RoomProvider({ roomId, children }: {
     roomId: string;
     children: React.ReactNode;
 }) {
+    if (!roomId) {
+        throw new Error("RoomProvider requires a valid roomId");
+    }
+
     return (
         <RoomProviderWrapper
             id={roomId}

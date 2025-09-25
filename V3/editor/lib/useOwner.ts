@@ -16,13 +16,17 @@ function useOwner() {
     );
 
     useEffect(() => {
-        if (userInRoom?.docs && userInRoom.docs.length > 0) {
-            const owners = userInRoom.docs.filter((doc) => doc.data().role === "Owner");
-            if (
-                owners.some((owner) => owner.data().userId === user?.emailAddresses[0].toString())
-            ) {
+        if (userInRoom?.docs && userInRoom.docs.length > 0 && user) {
+            const userEmail = user.emailAddresses[0].emailAddress;
+            const userDoc = userInRoom.docs.find((doc) => doc.data().userId === userEmail);
+
+            if (userDoc && userDoc.data().role === "owner") {
                 setIsOwner(true);
+            } else {
+                setIsOwner(false);
             }
+        } else {
+            setIsOwner(false);
         }
     }, [userInRoom, user]);
 

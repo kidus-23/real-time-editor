@@ -17,9 +17,15 @@ function SidebarOption({ href, id }: {
     if (!data) return null;
 
     return (
-        <Link href={href} className={`border p-2 rounded-md 
-            ${isActive ? "bg-gray-300 font-bold border-black" : "border-gray-400"}`}>
-            <p className="truncate">{data.data()?.title}</p>
+        <Link
+            href={href}
+            className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out truncate
+                ${isActive
+                    ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+            `}
+        >
+            <p className="truncate text-sm leading-tight">{data.data()?.title}</p>
         </Link>
     )
 }

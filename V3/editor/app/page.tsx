@@ -1,12 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { ArrowLeftCircle } from "lucide-react";
+'use client'; // optional: page can be server but rendering a client component is fine; keep this only if you need client behavior on the page
+
+import HomePage from "@/components/HomePage";
 
 export default function Home() {
-  return (
-    <main className="flex space-x-2 item-center animate-pulse">
-      <ArrowLeftCircle className="w-12 h-12" />
-      <h1 className="font-bold">Get started with creating a New Document</h1>
-    </main>
-    
-  );
+  return <HomePage />;
 }
