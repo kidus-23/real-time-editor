@@ -4,14 +4,13 @@ import { useRoom, useSelf } from "@liveblocks/react/suspense";
 import { useState, useEffect, useMemo } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
-import { MoonIcon, SunIcon } from "lucide-react";
-import { Button } from "./ui/button";
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css"
 import "@blocknote/core/fonts/inter.css"
 import { useCreateBlockNote } from "@blocknote/react";
 import stringToColor from "@/lib/stringToColor";
 import { BlockNoteEditor } from "@blocknote/core";
+import TranslateDocument from "./TranslateDocument";
 
 type EditorProps = {
     doc: Y.Doc;
@@ -112,6 +111,7 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
 
     return (
         <div className="relative">
+            <TranslateDocument doc={doc} />
             {/* Editor content */}
             <div className="pt-2">
                 <BlockNote doc={doc} provider={provider} darkMode={darkMode} />

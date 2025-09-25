@@ -14,6 +14,7 @@ import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
 import { Crown, User, MoonIcon, SunIcon } from "lucide-react";
 import { updateLastOpened } from "@/actions/actions";
+import TranslateDocument from "./TranslateDocument";
 
 function Document({ id }: { id: string }) {
     const [data, loading, error] = useDocumentData(doc(db, "documents", id));
