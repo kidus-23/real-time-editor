@@ -145,7 +145,7 @@ function Document({ id }: { id: string }) {
             </header>
 
             {/* Main editor area with proper padding */}
-            <main className="w-full px-50 py-6">
+            <main className="w-full px-5 py-6">
                 <Editor darkMode={darkMode} />
             </main>
         </div>
