@@ -77,7 +77,7 @@ function Chatbar() {
   const [input, setInput] = useState('')
   const [teamChatInput, setTeamChatInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [activeModel, setActiveModel] = useState('openai/gpt-3.5-turbo') // Default model
+  const [activeModel, setActiveModel] = useState('x-ai/grok-4-fast:free') // Default model
   const [showSettings, setShowSettings] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const teamChatEndRef = useRef<HTMLDivElement>(null)
