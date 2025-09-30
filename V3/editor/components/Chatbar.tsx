@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
-import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings } from "lucide-react"
+import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -16,6 +16,13 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { AI_MODELS, ModelId } from "@/lib/constants"
+import { usePathname } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore"
+import { db } from "@/firebase"
+
+// Import useRoom but don't use it directly
+import { useRoom } from "@liveblocks/react"
 
 // Define model categories and their models
 const MODEL_CATEGORIES = {
@@ -54,23 +61,79 @@ interface Message {
   }
 }
 
+interface TeamChatMessage {
+  id?: string
+  content: string
+  userId: string
+  userName: string
+  userAvatar?: string
+  timestamp: any
+}
+
 function Chatbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
+  const [teamMessages, setTeamMessages] = useState<TeamChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [composerInput, setComposerInput] = useState('')
+  const [teamChatInput, setTeamChatInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [activeModel, setActiveModel] = useState('openai/gpt-3.5-turbo') // Default model
   const [showSettings, setShowSettings] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const teamChatEndRef = useRef<HTMLDivElement>(null)
+  
+  const pathname = usePathname()
+  const { user } = useUser()
+  
+  // Check if we're in a document page
+  const isDocumentPage = pathname?.startsWith('/doc/')
+  const roomId = isDocumentPage ? pathname.split('/').pop() : null
+  
+  // Only try to use room context if we're in a document page
+  let room: { id: string } | null = null
+  try {
+    // This will throw an error if not in a RoomProvider context
+    if (isDocumentPage) {
+      // @ts-ignore - We're handling the error if this fails
+      room = useRoom()
+    }
+  } catch (error) {
+    console.log('Not in a room context')
+    room = null
+  }
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   useEffect(() => {
-    scrollToBottom()
+    scrollToBottom(messagesEndRef)
   }, [messages])
+
+  useEffect(() => {
+    scrollToBottom(teamChatEndRef)
+  }, [teamMessages])
+
+  // Subscribe to team chat messages for the current document
+  useEffect(() => {
+    if (!roomId) return
+
+    const teamChatRef = collection(db, "teamChats", roomId, "messages")
+    const q = query(teamChatRef, orderBy("timestamp", "asc"))
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messages: TeamChatMessage[] = []
+      snapshot.forEach((doc) => {
+        messages.push({
+          id: doc.id,
+          ...doc.data() as Omit<TeamChatMessage, 'id'>
+        })
+      })
+      setTeamMessages(messages)
+    })
+
+    return () => unsubscribe()
+  }, [roomId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -119,29 +182,23 @@ function Chatbar() {
     }
   }
 
-  const handleComposerSubmit = async (e: React.FormEvent) => {
+  const handleTeamChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!composerInput.trim()) return
+    if (!teamChatInput.trim() || !user || !roomId) return
 
-    setIsLoading(true)
     try {
-      const response = await fetch('/api/compose', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt: composerInput,
-          model: activeModel
-        }),
+      // Add message to Firebase
+      await addDoc(collection(db, "teamChats", roomId, "messages"), {
+        content: teamChatInput,
+        userId: user.emailAddresses[0].emailAddress,
+        userName: user.fullName || user.username || user.emailAddresses[0].emailAddress,
+        userAvatar: user.imageUrl,
+        timestamp: serverTimestamp()
       })
 
-      if (!response.ok) throw new Error('Failed to apply changes')
-
-      setComposerInput('')
-      // Update editor content here if needed
+      setTeamChatInput('')
     } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setIsLoading(false)
+      console.error('Error sending team chat message:', error)
     }
   }
 
@@ -153,6 +210,9 @@ function Chatbar() {
     }
     return modelId;
   };
+
+  // Determine if Team Chat tab should be shown
+  const showTeamChat = isDocumentPage && roomId
 
   return (
     <>
@@ -200,13 +260,15 @@ function Chatbar() {
                   <MessagesSquare className="h-4 w-4 mr-2" />
                   Chat
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="composer" 
-                  className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Composer
-                </TabsTrigger>
+                {showTeamChat && (
+                  <TabsTrigger 
+                    value="teamchat" 
+                    className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Team Chat
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -314,18 +376,84 @@ function Chatbar() {
               </div>
             </TabsContent>
 
-            {/* Composer Content */}
-            <TabsContent 
-              value="composer" 
-              className="flex-1 flex flex-col mt-0 data-[state=active]:flex"
-            >
-              <div className="flex-1 p-4">
-                <h3 className="font-medium mb-2">Real-time Composition</h3>
-                <p className="text-sm text-muted-foreground">
-                  Changes will be applied directly to the editor.
-                </p>
-              </div>
-            </TabsContent>
+            {/* Team Chat Content */}
+            {showTeamChat && (
+              <TabsContent 
+                value="teamchat" 
+                className="flex-1 flex flex-col mt-0 data-[state=active]:flex"
+              >
+                {/* Scrollable team chat area */}
+                <ScrollArea className="flex-1 overflow-y-auto px-4">
+                  <div className="space-y-4 py-4">
+                    {teamMessages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={cn(
+                          "flex flex-col gap-1",
+                          message.userId === user?.emailAddresses[0].emailAddress ? 'items-end' : 'items-start'
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          {message.userId !== user?.emailAddresses[0].emailAddress && (
+                            <div className="flex items-center gap-1">
+                              <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
+                                {message.userAvatar ? (
+                                  <img src={message.userAvatar} alt={message.userName} className="w-full h-full object-cover" />
+                                ) : (
+                                  message.userName.charAt(0).toUpperCase()
+                                )}
+                              </div>
+                              <span className="text-xs font-medium">{message.userName}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className={cn(
+                            "rounded-lg px-3 py-2 max-w-[80%]",
+                            message.userId === user?.emailAddresses[0].emailAddress
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          )}
+                        >
+                          {message.content}
+                        </div>
+                        <span className="text-xs text-muted-foreground px-2">
+                          {message.timestamp?.toDate ? 
+                            message.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+                            'Just now'}
+                        </span>
+                      </div>
+                    ))}
+                    <div ref={teamChatEndRef} />
+                  </div>
+                </ScrollArea>
+
+                {/* Fixed Footer for Team Chat */}
+                <div className="shrink-0 border-t p-4 bg-background z-10">
+                  <form onSubmit={handleTeamChatSubmit} className="flex items-center gap-2">
+                    <Textarea
+                      value={teamChatInput}
+                      onChange={(e) => setTeamChatInput(e.target.value)}
+                      placeholder="Message your team..."
+                      className="min-h-[60px] max-h-[120px] resize-none"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleTeamChatSubmit(e);
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="submit" 
+                      size="icon"
+                      className="h-10 w-10 shrink-0"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </form>
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </SheetContent>
       </Sheet>
