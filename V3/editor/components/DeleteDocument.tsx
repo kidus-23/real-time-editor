@@ -8,7 +8,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { useState, useTransition } from "react";
 import { Button } from "./ui/button";
@@ -37,12 +36,18 @@ function DeleteDocument() {
             }
         });
     };
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(true);
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <Button asChild variant="destructive">
-                <DialogTrigger>Delete</DialogTrigger>
-            </Button>
-            <DialogContent>
+            <div onClick={handleClick} className="w-full cursor-pointer">
+                Delete
+            </div>
+            <DialogContent onClick={e => e.stopPropagation()}>
                 <DialogHeader>
                     <DialogTitle>Are you sure you want to Delete?</DialogTitle>
                     <DialogDescription>

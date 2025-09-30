@@ -39,12 +39,18 @@ function InviteUser() {
             }
         });
     };
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(true);
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <Button asChild variant="outline">
-                <DialogTrigger>Invite</DialogTrigger>
-            </Button>
-            <DialogContent>
+            <div onClick={handleClick} className="w-full cursor-pointer">
+                Invite
+            </div>
+            <DialogContent onClick={e => e.stopPropagation()}>
                 <DialogHeader>
                     <DialogTitle>Invite a User to collaborate!</DialogTitle>
                     <DialogDescription>
