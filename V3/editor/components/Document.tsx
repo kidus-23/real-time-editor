@@ -12,16 +12,17 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, User, MoonIcon, SunIcon } from "lucide-react";
+import { Crown, User } from "lucide-react";
 import { updateLastOpened } from "@/actions/actions";
 import TranslateDocument from "./TranslateDocument";
+import { useTheme } from "next-themes";
 
 function Document({ id }: { id: string }) {
     const [data, loading, error] = useDocumentData(doc(db, "documents", id));
     const [input, setInput] = useState("");
     const [isUpdating, startTransition] = useTransition();
     const isOwner = useOwner();
-    const [darkMode, setDarkMode] = useState(false);
+    const { theme } = useTheme();
 
     useEffect(() => {
         if (data) {
@@ -37,19 +38,6 @@ function Document({ id }: { id: string }) {
             });
         }
     }, [id]);
-    
-    // Apply dark mode to body
-    useEffect(() => {
-        if (darkMode) {
-            document.body.classList.add('dark');
-        } else {
-            document.body.classList.remove('dark');
-        }
-
-        return () => {
-            document.body.classList.remove('dark');
-        };
-    }, [darkMode]);
 
     if (loading) {
         return <div className="flex items-center justify-center h-screen">
@@ -129,17 +117,6 @@ function Document({ id }: { id: string }) {
                     
                     {/* Collaboration info */}
                     <div className="flex justify-end mt-2 items-center">
-                        <Button
-                            className={`${darkMode ? 
-                                "text-gray-100 bg-gray-800/90 hover:bg-gray-700/90 border-gray-700" : 
-                                "text-gray-700 bg-white/90 hover:bg-gray-50/90 border-gray-200"} 
-                                border rounded-full w-8 h-8 p-0 flex items-center justify-center shadow-sm transition-all duration-200 backdrop-blur-sm mr-3`}
-                            onClick={() => setDarkMode(!darkMode)}
-                            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-                            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-                        >
-                            {darkMode ? <SunIcon size={14} /> : <MoonIcon size={14} />}
-                        </Button>
                         <Avatars />
                     </div>
                 </div>
@@ -147,7 +124,7 @@ function Document({ id }: { id: string }) {
 
             {/* Main editor area with proper padding */}
             <main className="w-full px-5 py-6">
-                <Editor darkMode={darkMode} />
+                <Editor darkMode={theme === 'dark'} />
             </main>
         </div>
     )

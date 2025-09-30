@@ -55,6 +55,49 @@ function BlockNote({ doc, provider, darkMode, editor }: EditorProps) {
           questionDialog.click();
         }
       }
+      
+      // Undo: Ctrl + Z
+      if (e.ctrlKey && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+        // Check if the target is an input or textarea element
+        const target = e.target as HTMLElement;
+        const tagName = target.tagName.toLowerCase();
+        const isFormElement = tagName === 'input' || tagName === 'textarea';
+        
+        // Only prevent default and handle undo if not in a form element
+        if (!isFormElement) {
+          e.preventDefault();
+          if (editor) {
+            try {
+              editor.undo();
+              console.log('Undo executed');
+            } catch (error) {
+              console.error('Error during undo:', error);
+            }
+          }
+        }
+      }
+      
+      // Redo: Ctrl + Y or Ctrl + Shift + Z
+      if ((e.ctrlKey && (e.key === 'y' || e.key === 'Y')) || 
+          (e.ctrlKey && e.shiftKey && (e.key === 'z' || e.key === 'Z'))) {
+        // Check if the target is an input or textarea element
+        const target = e.target as HTMLElement;
+        const tagName = target.tagName.toLowerCase();
+        const isFormElement = tagName === 'input' || tagName === 'textarea';
+        
+        // Only prevent default and handle redo if not in a form element
+        if (!isFormElement) {
+          e.preventDefault();
+          if (editor) {
+            try {
+              editor.redo();
+              console.log('Redo executed');
+            } catch (error) {
+              console.error('Error during redo:', error);
+            }
+          }
+        }
+      }
 
       // Handle BlockNote suggestion menu scrolling
       const menuOpen = document.querySelector('.bn-suggestion-menu, [data-suggestion-menu], .bn-menu');
@@ -75,7 +118,7 @@ function BlockNote({ doc, provider, darkMode, editor }: EditorProps) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [editor]);
 
   return (
     <div className={`relative mx-auto ${darkMode ? 'dark' : ''}`}>
