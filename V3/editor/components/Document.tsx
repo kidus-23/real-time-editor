@@ -12,10 +12,16 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, User } from "lucide-react";
+import { Crown, MoreHorizontal, User } from "lucide-react";
 import { updateLastOpened } from "@/actions/actions";
 import TranslateDocument from "./TranslateDocument";
 import { useTheme } from "next-themes";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 function Document({ id }: { id: string }) {
     const [data, loading, error] = useDocumentData(doc(db, "documents", id));
@@ -109,16 +115,32 @@ function Document({ id }: { id: string }) {
                                     </div>
                                 )}
                             </div>
-                            <ManageUsers />
-                            <InviteUser />
-                            <DeleteDocument />
+                            
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>
+                                        <ManageUsers />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <InviteUser />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem variant="destructive">
+                                        <DeleteDocument />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <Avatars />
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                     
                     {/* Collaboration info */}
-                    <div className="flex justify-end mt-2 items-center">
-                        <Avatars />
-                    </div>
                 </div>
             </header>
 
