@@ -5,7 +5,8 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "sonner";
 import LiveBlocksProvider from "@/components/LiveBlocksProvider";
-import Chatbar from "@/components/Chatbar"
+import Chatbar from "@/components/Chatbar";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,19 +21,21 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <LiveBlocksProvider>
-        <html lang="en">
-          <body>
-            <Header />
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex-1 bg-gray-100 overflow-y-auto scrollbar-hide">
-                {children}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <html lang="en">
+            <body>
+              <Header />
+              <div className="flex min-h-screen">
+                <Sidebar />
+                <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto scrollbar-hide">
+                  {children}
+                </div>
               </div>
-            </div>
-            <Chatbar />
-            <Toaster position="top-center" />
-          </body>
-        </html>
+              <Chatbar />
+              <Toaster position="top-center" />
+            </body>
+          </html>
+        </ThemeProvider>
       </LiveBlocksProvider>
     </ClerkProvider>
   );
