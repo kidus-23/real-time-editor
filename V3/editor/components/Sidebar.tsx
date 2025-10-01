@@ -32,6 +32,7 @@ function Sidebar() {
     const pathname = usePathname();
     const isHomeActive = pathname === "/";
     const isGraphActive = pathname === "/graph";
+    const isSettingsActive = pathname === "/settings"; // Add this line
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(true);
     
@@ -138,16 +139,20 @@ function Sidebar() {
                     {isExpanded && <p className="text-sm leading-tight font-medium">Graph</p>}
                 </Link>
 
-                {/* Settings */}
-                <button
+                {/* Settings - Replace the button with Link */}
+                <Link
+                    href="/settings"
                     className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
-                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900
-                        ${!isExpanded ? "justify-center" : ""}`}
+                        ${isSettingsActive
+                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                        ${!isExpanded ? "justify-center" : ""}
+                    `}
                     title={!isExpanded ? "Settings" : ""}
                 >
                     <SettingsIcon className="w-4 h-4 flex-shrink-0" />
                     {isExpanded && <p className="text-sm leading-tight font-medium">Settings</p>}
-                </button>
+                </Link>
 
                 {/* New Document Button */}
                 <div className="mt-2 mb-1">
