@@ -19,6 +19,8 @@ import SidebarOption from "./SidebarOption";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SearchDialog from "./SearchDialog";
+// Remove the KnowledgeGraph import since we're now linking to it as a page
+// import KnowledgeGraph from "./KnowledgeGraph";
 
 interface RoomDocument extends DocumentData {
     createdAt: string;
@@ -31,7 +33,10 @@ function Sidebar() {
     const { user } = useUser();
     const pathname = usePathname();
     const isHomeActive = pathname === "/";
+    const isGraphActive = pathname === "/graph";
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    // Remove the isGraphOpen state since we're now linking to a page
+    // const [isGraphOpen, setIsGraphOpen] = useState(false);
     
     const [groupedData, setGroupedData] = useState<{
         owner: RoomDocument[];
@@ -105,14 +110,18 @@ function Sidebar() {
                     <p className="text-sm leading-tight font-medium">Search</p>
                 </button>
                 
-                {/* Graph Button */}
-                <button
-                    className="flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
-                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                {/* Graph Button - Changed to Link */}
+                <Link
+                    href="/graph"
+                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        ${isGraphActive
+                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                    `}
                 >
                     <GitGraphIcon className="w-4 h-4" />
                     <p className="text-sm leading-tight font-medium">Graph</p>
-                </button>
+                </Link>
 
                 {/* settings */}
                 <button
@@ -166,7 +175,8 @@ function Sidebar() {
              {/* Search Dialog */}
              <SearchDialog isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
              
-             {/* Graph Dialog */}
+             {/* Remove the Graph Dialog since we're now linking to a page */}
+             {/* <KnowledgeGraph isOpen={isGraphOpen} onClose={() => setIsGraphOpen(false)} /> */}
         </>
     );
 
@@ -198,4 +208,4 @@ function Sidebar() {
     );
 }
 
-export default Sidebar
+export default Sidebar;
