@@ -135,3 +135,26 @@ export async function updateLastOpened(roomId: string) {
         return { success: false };
     }
 }
+
+// New function to save document content
+export async function saveDocumentContent(roomId: string, content: string) {
+    const session = await auth();
+    if (!session || !session.sessionClaims?.email) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        // Update the document with the content
+        await adminDB
+            .collection('documents')
+            .doc(roomId)
+            .update({
+                content: content,
+                lastUpdated: new Date()
+            });
+        return { success: true };
+    } catch (error) {
+        console.error("Error saving document content:", error);
+        return { success: false };
+    }
+}
