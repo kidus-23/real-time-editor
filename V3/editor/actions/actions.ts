@@ -136,7 +136,7 @@ export async function updateLastOpened(roomId: string) {
     }
 }
 
-// New function to save document content
+// Function to save document content
 export async function saveDocumentContent(roomId: string, content: string) {
     const session = await auth();
     if (!session || !session.sessionClaims?.email) {
@@ -144,7 +144,7 @@ export async function saveDocumentContent(roomId: string, content: string) {
     }
 
     try {
-        // Update the document with the content
+        // Update the document with content
         await adminDB
             .collection('documents')
             .doc(roomId)
@@ -152,9 +152,70 @@ export async function saveDocumentContent(roomId: string, content: string) {
                 content: content,
                 lastUpdated: new Date()
             });
-        return { success: true };
+        
+        return { 
+            success: true, 
+            message: 'Document content saved successfully'
+        };
     } catch (error) {
         console.error("Error saving document content:", error);
-        return { success: false };
+        return { 
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        };
+    }
+}
+
+// Function to generate tags using AI
+export async function generateTags(roomId: string, content: string) {
+    const session = await auth();
+    if (!session || !session.sessionClaims?.email) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        if (!content.trim()) {
+            throw new Error("No content provided");
+        }
+
+        const url = new URL('/api/generate-tags', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+        
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ content }),
+            cache: 'no-store'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to generate tags: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        if (!result.success || !Array.isArray(result.tags)) {
+            throw new Error("Invalid response from tag generation");
+        }
+
+        // Update document with new tags
+        await adminDB
+            .collection('documents')
+            .doc(roomId)
+            .update({
+                tags: result.tags
+            });
+
+        return { 
+            success: true, 
+            tags: result.tags,
+            message: 'Tags generated and saved successfully'
+        };
+    } catch (error) {
+        console.error("Error generating tags:", error);
+        return { 
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        };
     }
 }
