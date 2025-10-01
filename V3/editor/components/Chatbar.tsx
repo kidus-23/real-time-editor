@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
-import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users } from "lucide-react"
+import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -20,6 +20,8 @@ import { usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore"
 import { db } from "@/firebase"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 // Import useRoom but don't use it directly
 import { useRoom } from "@liveblocks/react"
@@ -79,6 +81,8 @@ function Chatbar() {
   const [isLoading, setIsLoading] = useState(false)
   const [activeModel, setActiveModel] = useState('x-ai/grok-4-fast:free') // Default model
   const [showSettings, setShowSettings] = useState(false)
+  const [useDocumentContext, setUseDocumentContext] = useState(false)
+  const [documentContent, setDocumentContent] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const teamChatEndRef = useRef<HTMLDivElement>(null)
   
@@ -135,6 +139,34 @@ function Chatbar() {
     return () => unsubscribe()
   }, [roomId])
 
+  // Function to get document content
+  const getDocumentContent = async () => {
+    if (!isDocumentPage || !roomId) {
+      setDocumentContent(null)
+      return
+    }
+    
+    try {
+      // Get the document content from the DOM
+      const editorContent = document.querySelector('.bn-container')?.textContent || ''
+      setDocumentContent(editorContent)
+      return editorContent
+    } catch (error) {
+      console.error('Error getting document content:', error)
+      setDocumentContent(null)
+      return null
+    }
+  }
+
+  // Toggle document context
+  const toggleDocumentContext = async () => {
+    if (!useDocumentContext) {
+      // If enabling document context, get the document content
+      await getDocumentContent()
+    }
+    setUseDocumentContext(!useDocumentContext)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
@@ -150,12 +182,19 @@ function Chatbar() {
     setIsLoading(true)
 
     try {
+      // If document context is enabled, get the latest content
+      let context = null
+      if (useDocumentContext) {
+        context = await getDocumentContent()
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           messages: [...messages, newMessage],
-          model: activeModel 
+          model: activeModel,
+          documentContext: context
         }),
       })
 
@@ -317,10 +356,24 @@ function Chatbar() {
 
               {/* Fixed Footer */}
               <div className="shrink-0 border-t p-4 space-y-4 bg-background z-10">
+                {isDocumentPage && (
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="document-context"
+                      checked={useDocumentContext}
+                      onCheckedChange={toggleDocumentContext}
+                    />
+                    <Label htmlFor="document-context" className="flex items-center text-sm">
+                      <FileText className="h-4 w-4 mr-1" />
+                      Use document as context
+                    </Label>
+                  </div>
+                )}
+                
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Message AI assistant..."
+                  placeholder={useDocumentContext ? "Ask about this document..." : "Message AI assistant..."}
                   disabled={isLoading}
                   className="min-h-[80px] max-h-[160px] resize-none"
                   onKeyDown={(e) => {
