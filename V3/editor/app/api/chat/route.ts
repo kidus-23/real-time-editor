@@ -2,7 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
     try {
-        const { messages, model } = await req.json();
+        const { messages, model, documentContext } = await req.json();
+
+        // If document context is provided, add it to the messages
+        let chatMessages = [...messages];
+        
+        if (documentContext) {
+            // Add document context as a system message at the beginning
+            chatMessages.unshift({
+                role: "system",
+                content: `The following is a document that the user is asking about. Use this document to answer the user's questions:\n\n${documentContext}\n\nAnswer questions based on the document content above.`
+            });
+        }
 
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -14,8 +25,8 @@ export async function POST(req: NextRequest) {
             },
             body: JSON.stringify({
                 model: model,
-                messages: messages.map(({ role, content }: { role: string, content: string }) => ({
-                    role: role === 'user' ? 'user' : 'assistant',
+                messages: chatMessages.map(({ role, content }: { role: string, content: string }) => ({
+                    role: role === 'user' ? 'user' : role === 'system' ? 'system' : 'assistant',
                     content,
                 })),
                 temperature: 0.7,
