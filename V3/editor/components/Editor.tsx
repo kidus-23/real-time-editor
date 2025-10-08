@@ -1,7 +1,7 @@
 'use client'
 
 import { useRoom, useSelf } from "@liveblocks/react/suspense";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { BlockNoteView } from "@blocknote/shadcn";
@@ -14,6 +14,7 @@ import TranslateDocument from "./TranslateDocument";
 import Summarize from "./Summarize";
 import Composer from "./Composer";
 import QuestionGenerator from "./QuestionGenerator";
+import { saveDocumentContent } from "@/actions/actions";
 
 type EditorProps = {
   doc: Y.Doc;
@@ -22,8 +23,12 @@ type EditorProps = {
   editor: BlockNoteEditor;
 };
 
-function BlockNote({ doc, provider, darkMode, editor }: EditorProps) {
+function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { roomId: string }) {
   const userInfo = useSelf((me) => me.info);
+
+  // Add state to track content changes
+  const [lastSaveTime, setLastSaveTime] = useState<number>(Date.now());
+  const [contentChanged, setContentChanged] = useState<boolean>(false);
 
   const collaborationConfig = useMemo(
     () => ({
@@ -36,6 +41,73 @@ function BlockNote({ doc, provider, darkMode, editor }: EditorProps) {
     }),
     [doc, provider, userInfo?.name, userInfo?.email, userInfo?.color]
   );
+
+  // Function to extract and save document content
+  const saveContent = useCallback(async () => {
+    try {
+      // Get document content from DOM similar to Chatbar component
+      const editorContent = document.querySelector('.bn-container')?.textContent || '';
+      
+      if (editorContent.trim()) {
+        const result = await saveDocumentContent(roomId, editorContent);
+        if (result.success) {
+          setLastSaveTime(Date.now());
+          setContentChanged(false);
+          console.log('Document content saved successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving document content:', error);
+    }
+  }, [roomId]);
+
+  // Save content periodically if changed
+  useEffect(() => {
+    if (!contentChanged) return;
+    
+    // Save content every 30 seconds if there are changes
+    const saveInterval = setInterval(() => {
+      if (contentChanged && Date.now() - lastSaveTime > 30000) {
+        saveContent();
+      }
+    }, 30000);
+
+    return () => clearInterval(saveInterval);
+  }, [contentChanged, lastSaveTime, roomId, saveContent]);
+
+  // Save content when editor changes are detected
+  useEffect(() => {
+    if (!editor) return;
+
+    // Listen for changes in the editor
+    const handleEditorChange = () => {
+      setContentChanged(true);
+    };
+
+    // Subscribe to editor changes
+    editor.onChange(handleEditorChange);
+
+    // No cleanup needed as BlockNote handles this internally
+    return () => {};
+  }, [editor]);
+
+  // Save content when window is closed/refreshed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (contentChanged) {
+        saveContent();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Also save when component unmounts
+      if (contentChanged) {
+        saveContent();
+      }
+    };
+  }, [contentChanged, saveContent]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,6 +125,49 @@ function BlockNote({ doc, provider, darkMode, editor }: EditorProps) {
         const questionDialog = document.querySelector('button:has(svg[data-lucide="help-circle"])') as HTMLButtonElement;
         if (questionDialog) {
           questionDialog.click();
+        }
+      }
+      
+      // Undo: Ctrl + Z
+      if (e.ctrlKey && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+        // Check if the target is an input or textarea element
+        const target = e.target as HTMLElement;
+        const tagName = target.tagName.toLowerCase();
+        const isFormElement = tagName === 'input' || tagName === 'textarea';
+        
+        // Only prevent default and handle undo if not in a form element
+        if (!isFormElement) {
+          e.preventDefault();
+          if (editor) {
+            try {
+              editor.undo();
+              console.log('Undo executed');
+            } catch (error) {
+              console.error('Error during undo:', error);
+            }
+          }
+        }
+      }
+      
+      // Redo: Ctrl + Y or Ctrl + Shift + Z
+      if ((e.ctrlKey && (e.key === 'y' || e.key === 'Y')) || 
+          (e.ctrlKey && e.shiftKey && (e.key === 'z' || e.key === 'Z'))) {
+        // Check if the target is an input or textarea element
+        const target = e.target as HTMLElement;
+        const tagName = target.tagName.toLowerCase();
+        const isFormElement = tagName === 'input' || tagName === 'textarea';
+        
+        // Only prevent default and handle redo if not in a form element
+        if (!isFormElement) {
+          e.preventDefault();
+          if (editor) {
+            try {
+              editor.redo();
+              console.log('Redo executed');
+            } catch (error) {
+              console.error('Error during redo:', error);
+            }
+          }
         }
       }
 
@@ -75,7 +190,7 @@ function BlockNote({ doc, provider, darkMode, editor }: EditorProps) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [editor]);
 
   return (
     <div className={`relative mx-auto ${darkMode ? 'dark' : ''}`}>
@@ -147,7 +262,7 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
         <QuestionGenerator editor={editor} />
       </div>
       <div className="pt-2">
-        <BlockNote doc={doc} provider={provider} editor={editor} darkMode={darkMode} />
+        <BlockNote doc={doc} provider={provider} editor={editor} darkMode={darkMode} roomId={room.id} />
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { useState, useTransition } from "react";
 import { Button } from "./ui/button";
@@ -42,12 +41,18 @@ function ManageUsers() {
         });
     };
     
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(true);
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <Button asChild variant="outline">
-                <DialogTrigger>Users({userInRoom?.docs.length})</DialogTrigger>
-            </Button>
-            <DialogContent>
+            <div onClick={handleClick} className="w-full cursor-pointer">
+                Users({userInRoom?.docs.length})
+            </div>
+            <DialogContent onClick={e => e.stopPropagation()}>
                 <DialogHeader>
                     <DialogTitle>Users with Access</DialogTitle>
                     <DialogDescription>

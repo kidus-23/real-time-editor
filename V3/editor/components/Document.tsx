@@ -12,16 +12,25 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, User, MoonIcon, SunIcon } from "lucide-react";
+import { Crown, MoreHorizontal, User, X, Plus, Wand2 } from "lucide-react";
+import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
-import TranslateDocument from "./TranslateDocument";
+import { useTheme } from "next-themes";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 function Document({ id }: { id: string }) {
     const [data, loading, error] = useDocumentData(doc(db, "documents", id));
     const [input, setInput] = useState("");
     const [isUpdating, startTransition] = useTransition();
+    const [newTag, setNewTag] = useState("");
+    const [isGeneratingTags, setIsGeneratingTags] = useState(false);
     const isOwner = useOwner();
-    const [darkMode, setDarkMode] = useState(false);
+    const { theme } = useTheme();
 
     useEffect(() => {
         if (data) {
@@ -37,19 +46,6 @@ function Document({ id }: { id: string }) {
             });
         }
     }, [id]);
-    
-    // Apply dark mode to body
-    useEffect(() => {
-        if (darkMode) {
-            document.body.classList.add('dark');
-        } else {
-            document.body.classList.remove('dark');
-        }
-
-        return () => {
-            document.body.classList.remove('dark');
-        };
-    }, [darkMode]);
 
     if (loading) {
         return <div className="flex items-center justify-center h-screen">
@@ -81,6 +77,36 @@ function Document({ id }: { id: string }) {
         }
     }
 
+    const handleAddTag = async (e: FormEvent) => {
+        e.preventDefault();
+        if (newTag.trim()) {
+            const newTags = [...(data.tags || []), newTag.trim()];
+            await updateDoc(doc(db, "documents", id), { tags: newTags });
+            setNewTag("");
+        }
+    };
+
+    const handleRemoveTag = async (index: number) => {
+        const newTags = (data.tags || []).filter((_: string, i: number) => i !== index);
+        await updateDoc(doc(db, "documents", id), { tags: newTags });
+    };
+
+    const handleGenerateTags = async () => {
+        if (!data?.content) return;
+        
+        setIsGeneratingTags(true);
+        try {
+            const result = await generateTags(id, data.content);
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Failed to generate tags:', error);
+        } finally {
+            setIsGeneratingTags(false);
+        }
+    };
+
     return (
         <div className="min-h-screen w-full bg-white dark:bg-[#020618] transition-colors duration-200">
             {/* Header with document controls */}
@@ -105,7 +131,53 @@ function Document({ id }: { id: string }) {
                                 {isUpdating ? "Saving..." : "Save"}
                             </Button>
                         </form>
-                        
+
+                        {/* Tags display and management */}
+                        <div className="flex items-center gap-2 overflow-x-auto max-w-md">
+                            {data.tags?.map((tag: string, index: number) => (
+                                <div key={index} className='flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-sm'>
+                                    <span>{tag}</span>
+                                    <button
+                                        onClick={() => handleRemoveTag(index)}
+                                        className='text-gray-500 hover:text-red-500 transition-colors'
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ))}
+                            
+                            {/* Add new tag input */}
+                            <form
+                                onSubmit={handleAddTag}
+                                className='flex items-center gap-1'
+                            >
+                                <Input
+                                    value={newTag}
+                                    onChange={(e) => setNewTag(e.target.value)}
+                                    placeholder="Add tag..."
+                                    className="h-7 w-24 text-sm"
+                                />
+                                <Button
+                                    type="submit"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7"
+                                >
+                                    <Plus size={14} />
+                                </Button>
+                            </form>
+                            <Button
+                                onClick={handleGenerateTags}
+                                disabled={isGeneratingTags}
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-blue-500 hover:text-blue-600 transition-colors"
+                                title="Generate tags with AI"
+                            >
+                                <Wand2 size={14} className={isGeneratingTags ? 'animate-pulse' : ''} />
+                            </Button>
+                        </div>
+
                         {/* Document controls */}
                         <div className="flex items-center gap-3">
                             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-md">
@@ -121,33 +193,38 @@ function Document({ id }: { id: string }) {
                                     </div>
                                 )}
                             </div>
-                            <ManageUsers />
-                            <InviteUser />
-                            <DeleteDocument />
+                            
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>
+                                        <ManageUsers />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <InviteUser />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem variant="destructive">
+                                        <DeleteDocument />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <Avatars />
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                     
                     {/* Collaboration info */}
-                    <div className="flex justify-end mt-2 items-center">
-                        <Button
-                            className={`${darkMode ? 
-                                "text-gray-100 bg-gray-800/90 hover:bg-gray-700/90 border-gray-700" : 
-                                "text-gray-700 bg-white/90 hover:bg-gray-50/90 border-gray-200"} 
-                                border rounded-full w-8 h-8 p-0 flex items-center justify-center shadow-sm transition-all duration-200 backdrop-blur-sm mr-3`}
-                            onClick={() => setDarkMode(!darkMode)}
-                            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-                            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-                        >
-                            {darkMode ? <SunIcon size={14} /> : <MoonIcon size={14} />}
-                        </Button>
-                        <Avatars />
-                    </div>
                 </div>
             </header>
 
             {/* Main editor area with proper padding */}
             <main className="w-full px-5 py-6">
-                <Editor darkMode={darkMode} />
+                <Editor darkMode={theme === 'dark'} />
             </main>
         </div>
     )

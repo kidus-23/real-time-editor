@@ -1,5 +1,5 @@
 "use client"
-import { HomeIcon, MenuIcon, SearchIcon, GitGraphIcon, Settings, SettingsIcon } from "lucide-react";
+import { HomeIcon, MenuIcon, SearchIcon, GitGraphIcon, SettingsIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import NewDocumentButton from "./NewDocumentButton"
 import { useCollection } from "react-firebase-hooks/firestore";
 
@@ -22,7 +22,7 @@ import SearchDialog from "./SearchDialog";
 
 interface RoomDocument extends DocumentData {
     createdAt: string;
-    role: "owner" | "editor"; //add a viewer later
+    role: "owner" | "editor";
     roomId: string;
     userId: string;
 }
@@ -31,7 +31,10 @@ function Sidebar() {
     const { user } = useUser();
     const pathname = usePathname();
     const isHomeActive = pathname === "/";
+    const isGraphActive = pathname === "/graph";
+    const isSettingsActive = pathname === "/settings"; // Add this line
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true);
     
     const [groupedData, setGroupedData] = useState<{
         owner: RoomDocument[];
@@ -40,7 +43,8 @@ function Sidebar() {
         owner: [],
         editor: [],
     });
-    const [data, loading, error] = useCollection(
+    
+    const [data] = useCollection(
         user &&
         query(
             collectionGroup(db, 'rooms'),
@@ -81,7 +85,18 @@ function Sidebar() {
 
     const menuOptions = (
         <>
-            <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mb-4 p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+            >
+                {isExpanded ? (
+                    <ChevronLeftIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                ) : (
+                    <ChevronRightIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                )}
+            </button>
+
+            <div className="flex flex-col gap-3 w-full">
                 {/* Home Button */}
                 <Link
                     href="/"
@@ -89,89 +104,123 @@ function Sidebar() {
                         ${isHomeActive
                             ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                        ${!isExpanded ? "justify-center" : ""}
                     `}
+                    title={!isExpanded ? "Home" : ""}
                 >
-                    <HomeIcon className="w-4 h-4" />
-                    <p className="text-sm leading-tight font-medium">Home</p>
+                    <HomeIcon className="w-4 h-4 flex-shrink-0" />
+                    {isExpanded && <p className="text-sm leading-tight font-medium">Home</p>}
                 </Link>
                 
                 {/* Search Button */}
                 <button
                     onClick={() => setIsSearchOpen(true)}
-                    className="flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
-                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900
+                        ${!isExpanded ? "justify-center" : ""}`}
+                    title={!isExpanded ? "Search" : ""}
                 >
-                    <SearchIcon className="w-4 h-4" />
-                    <p className="text-sm leading-tight font-medium">Search</p>
+                    <SearchIcon className="w-4 h-4 flex-shrink-0" />
+                    {isExpanded && <p className="text-sm leading-tight font-medium">Search</p>}
                 </button>
                 
                 {/* Graph Button */}
-                <button
-                    className="flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
-                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                <Link
+                    href="/graph"
+                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        ${isGraphActive
+                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                        ${!isExpanded ? "justify-center" : ""}
+                    `}
+                    title={!isExpanded ? "Graph" : ""}
                 >
-                    <GitGraphIcon className="w-4 h-4" />
-                    <p className="text-sm leading-tight font-medium">Graph</p>
-                </button>
+                    <GitGraphIcon className="w-4 h-4 flex-shrink-0" />
+                    {isExpanded && <p className="text-sm leading-tight font-medium">Graph</p>}
+                </Link>
 
-                {/* settings */}
-                <button
-                    className="flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
-                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                {/* Settings - Replace the button with Link */}
+                <Link
+                    href="/settings"
+                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                        ${isSettingsActive
+                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                        ${!isExpanded ? "justify-center" : ""}
+                    `}
+                    title={!isExpanded ? "Settings" : ""}
                 >
-                    <SettingsIcon className="w-4 h-4" />
-                    <p className="text-sm leading-tight font-medium">Settings</p>
-                </button>
-                
+                    <SettingsIcon className="w-4 h-4 flex-shrink-0" />
+                    {isExpanded && <p className="text-sm leading-tight font-medium">Settings</p>}
+                </Link>
+
+                {/* New Document Button */}
                 <div className="mt-2 mb-1">
-                    <NewDocumentButton />
+                    <button
+                        onClick={() => isExpanded ? null : setIsExpanded(true)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900 transition-colors text-gray-700 dark:text-gray-300
+                            ${!isExpanded ? "justify-center" : ""}`}
+                        title={!isExpanded ? "New Document" : ""}
+                    >
+                        {!isExpanded && <PlusIcon className="w-4 h-4 flex-shrink-0" />}
+                        {isExpanded && <NewDocumentButton />}
+                    </button>
                 </div>
             </div>
             
-            <div className="flex flex-col gap-3 py-4 w-full max-w-xs divide-y divide-gray-100 dark:divide-neutral-800">
-                {/*My Document List...*/}
-                {groupedData.owner.length === 0 ? (
-                    <h2 className="text-sm text-gray-400 dark:text-neutral-500 font-medium italic px-1">
-                        No documents yet
-                    </h2>
-                ) : (
-                    <>
-                        <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold px-1">
-                            My Documents
+            {isExpanded && (
+                <div className="flex flex-col gap-3 py-4 w-full max-w-[250px] divide-y divide-gray-100 dark:divide-neutral-800">
+                    {/*My Document List...*/}
+                    {groupedData.owner.length === 0 ? (
+                        <h2 className="text-sm text-gray-400 dark:text-neutral-500 font-medium italic px-1">
+                            No documents yet
                         </h2>
-                        <div className="flex flex-col gap-1 pt-2">
-                            {groupedData.owner.map((doc) => (
-                                <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
-                            ))}
-                        </div>
-                    </>
-                )}
-           
-            {/*Shared with Me*/}
-            {groupedData.editor.length > 0 && (
-                <>
-                    <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold pt-3 px-1">
-                        Shared with me
-                    </h2>
-                    <div className="flex flex-col gap-1 pt-2">
-                        {groupedData.editor.map((doc) => (
-                            <SidebarOption key={doc.id} id={doc.id} href={`/doc/${doc.id}`} />
-                        ))}
-                    </div>
-                </>
-
+                    ) : (
+                        <>
+                            <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold px-1">
+                                My Documents
+                            </h2>
+                            <div className="flex flex-col gap-1 pt-2">
+                                {groupedData.owner.map((doc) => (
+                                    <SidebarOption 
+                                        key={doc.id} 
+                                        id={doc.id} 
+                                        href={`/doc/${doc.id}`}
+                                        isExpanded={isExpanded}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+               
+                    {/*Shared with Me*/}
+                    {groupedData.editor.length > 0 && (
+                        <>
+                            <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold pt-3 px-1">
+                                Shared with me
+                            </h2>
+                            <div className="flex flex-col gap-1 pt-2">
+                                {groupedData.editor.map((doc) => (
+                                    <SidebarOption 
+                                        key={doc.id} 
+                                        id={doc.id} 
+                                        href={`/doc/${doc.id}`}
+                                        isExpanded={isExpanded}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
             )}
-             </div>
              
-             {/* Search Dialog */}
-             <SearchDialog isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-             
-             {/* Graph Dialog */}
+            {/* Search Dialog */}
+            <SearchDialog isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         </>
     );
 
     return (
-        <div className="p-3 md:p-5 bg-white min-h-screen dark:bg-[#090e19] border-r border-gray-100 dark:border-neutral-800 h-full">
+        <div className={`p-3 md:p-5 bg-white min-h-screen dark:bg-[#090e19] border-r border-gray-100 dark:border-neutral-800 h-full transition-all duration-200 ${isExpanded ? 'w-[280px]' : 'w-[68px]'}`}>
             <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger>
@@ -185,7 +234,6 @@ function Sidebar() {
                             <div>
                                 {menuOptions}
                             </div>
-
                         </SheetHeader>
                     </SheetContent>
                 </Sheet>
@@ -198,4 +246,4 @@ function Sidebar() {
     );
 }
 
-export default Sidebar
+export default Sidebar;
