@@ -35,7 +35,7 @@ function Sidebar() {
     const isSettingsActive = pathname === "/settings"; // Add this line
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(true);
-    
+
     const [groupedData, setGroupedData] = useState<{
         owner: RoomDocument[];
         editor: RoomDocument[];
@@ -43,7 +43,7 @@ function Sidebar() {
         owner: [],
         editor: [],
     });
-    
+
     const [data] = useCollection(
         user &&
         query(
@@ -111,7 +111,7 @@ function Sidebar() {
                     <HomeIcon className="w-4 h-4 flex-shrink-0" />
                     {isExpanded && <p className="text-sm leading-tight font-medium">Home</p>}
                 </Link>
-                
+
                 {/* Search Button */}
                 <button
                     onClick={() => setIsSearchOpen(true)}
@@ -123,7 +123,7 @@ function Sidebar() {
                     <SearchIcon className="w-4 h-4 flex-shrink-0" />
                     {isExpanded && <p className="text-sm leading-tight font-medium">Search</p>}
                 </button>
-                
+
                 {/* Graph Button */}
                 <Link
                     href="/graph"
@@ -156,18 +156,22 @@ function Sidebar() {
 
                 {/* New Document Button */}
                 <div className="mt-2 mb-1">
-                    <button
-                        onClick={() => isExpanded ? null : setIsExpanded(true)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900 transition-colors text-gray-700 dark:text-gray-300
-                            ${!isExpanded ? "justify-center" : ""}`}
-                        title={!isExpanded ? "New Document" : ""}
-                    >
-                        {!isExpanded && <PlusIcon className="w-4 h-4 flex-shrink-0" />}
-                        {isExpanded && <NewDocumentButton />}
-                    </button>
+                    {!isExpanded ? (
+                        <button
+                            onClick={() => setIsExpanded(true)}
+                            className="w-full flex items-center justify-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900 transition-colors text-gray-700 dark:text-gray-300"
+                            title="New Document"
+                        >
+                            <PlusIcon className="w-4 h-4 flex-shrink-0" />
+                        </button>
+                    ) : (
+                        <div className="w-full">
+                            <NewDocumentButton />
+                        </div>
+                    )}
                 </div>
             </div>
-            
+
             {isExpanded && (
                 <div className="flex flex-col gap-3 py-4 w-full max-w-[250px] divide-y divide-gray-100 dark:divide-neutral-800">
                     {/*My Document List...*/}
@@ -182,9 +186,9 @@ function Sidebar() {
                             </h2>
                             <div className="flex flex-col gap-1 pt-2">
                                 {groupedData.owner.map((doc) => (
-                                    <SidebarOption 
-                                        key={doc.id} 
-                                        id={doc.id} 
+                                    <SidebarOption
+                                        key={doc.id}
+                                        id={doc.id}
                                         href={`/doc/${doc.id}`}
                                         isExpanded={isExpanded}
                                     />
@@ -192,7 +196,7 @@ function Sidebar() {
                             </div>
                         </>
                     )}
-               
+
                     {/*Shared with Me*/}
                     {groupedData.editor.length > 0 && (
                         <>
@@ -201,9 +205,9 @@ function Sidebar() {
                             </h2>
                             <div className="flex flex-col gap-1 pt-2">
                                 {groupedData.editor.map((doc) => (
-                                    <SidebarOption 
-                                        key={doc.id} 
-                                        id={doc.id} 
+                                    <SidebarOption
+                                        key={doc.id}
+                                        id={doc.id}
                                         href={`/doc/${doc.id}`}
                                         isExpanded={isExpanded}
                                     />
@@ -213,7 +217,7 @@ function Sidebar() {
                     )}
                 </div>
             )}
-             
+
             {/* Search Dialog */}
             <SearchDialog isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         </>
@@ -223,10 +227,10 @@ function Sidebar() {
         <div className={`p-3 md:p-5 bg-white min-h-screen dark:bg-[#090e19] border-r border-gray-100 dark:border-neutral-800 h-full transition-all duration-200 ${isExpanded ? 'w-[280px]' : 'w-[68px]'}`}>
             <div className="md:hidden">
                 <Sheet>
-                    <SheetTrigger>
-                        <div className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                    <SheetTrigger asChild>
+                        <button className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
                             <MenuIcon className="text-gray-700 dark:text-gray-200" size={24} />
-                        </div>
+                        </button>
                     </SheetTrigger>
                     <SheetContent side='left'>
                         <SheetHeader>

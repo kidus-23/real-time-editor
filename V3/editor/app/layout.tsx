@@ -21,9 +21,14 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <LiveBlocksProvider>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <html lang="en">
-            <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem={true}
+          storageKey="editor-theme"
+        >
+          <html lang="en" suppressHydrationWarning>
+            <body suppressHydrationWarning>
               <Header />
               <div className="flex min-h-screen">
                 <Sidebar />
