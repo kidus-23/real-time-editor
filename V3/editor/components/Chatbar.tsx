@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import { AI_MODELS, ModelId } from "@/lib/constants"
 import { usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
+import { Badge } from "@/components/ui/badge"
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore"
 import { db } from "@/firebase"
 import { Switch } from "@/components/ui/switch"
@@ -83,27 +84,28 @@ function Chatbar() {
   const [showSettings, setShowSettings] = useState(false)
   const [useDocumentContext, setUseDocumentContext] = useState(false)
   const [documentContent, setDocumentContent] = useState<string | null>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [activeTab, setActiveTab] = useState('chat')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const teamChatEndRef = useRef<HTMLDivElement>(null)
-  
+
   const pathname = usePathname()
   const { user } = useUser()
-  
+
   // Check if we're in a document page
   const isDocumentPage = pathname?.startsWith('/doc/')
   const roomId = isDocumentPage ? pathname.split('/').pop() : null
-  
-  // Only try to use room context if we're in a document page
-  let room: { id: string } | null = null
-  try {
-    // This will throw an error if not in a RoomProvider context
-    if (isDocumentPage) {
-      // @ts-ignore - We're handling the error if this fails
-      room = useRoom()
-    }
-  } catch (error) {
-    console.log('Not in a room context')
-    room = null
+
+  // localStorage utilities for tracking last read timestamp
+  const getLastReadTimestamp = (roomId: string): number => {
+    if (typeof window === 'undefined') return Date.now()
+    const stored = localStorage.getItem(`teamchat-lastread-${roomId}`)
+    return stored ? parseInt(stored) : 0
+  }
+
+  const setLastReadTimestamp = (roomId: string) => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(`teamchat-lastread-${roomId}`, Date.now().toString())
   }
 
   const scrollToBottom = (ref: React.RefObject<HTMLDivElement>) => {
@@ -118,26 +120,69 @@ function Chatbar() {
     scrollToBottom(teamChatEndRef)
   }, [teamMessages])
 
+  // Reset to chat tab when sheet closes
+  useEffect(() => {
+    if (!isOpen) {
+      // If user was viewing Team Chat, save the timestamp before closing
+      if (activeTab === 'teamchat' && roomId) {
+        setLastReadTimestamp(roomId)
+      }
+      setActiveTab('chat')
+    }
+  }, [isOpen, activeTab, roomId])
+
+  // Clear notifications when Team Chat is opened
+  useEffect(() => {
+    if (isOpen && activeTab === 'teamchat' && roomId) {
+      setLastReadTimestamp(roomId)
+      setUnreadCount(0)
+    }
+  }, [isOpen, activeTab, roomId])
+
   // Subscribe to team chat messages for the current document
   useEffect(() => {
-    if (!roomId) return
+    if (!roomId || !user) return
 
     const teamChatRef = collection(db, "teamChats", roomId, "messages")
     const q = query(teamChatRef, orderBy("timestamp", "asc"))
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messages: TeamChatMessage[] = []
+      const isViewingTeamChat = isOpen && activeTab === 'teamchat'
+
+      // Get the last read timestamp from storage
+      const lastRead = getLastReadTimestamp(roomId)
+      let newUnreadCount = 0
+
       snapshot.forEach((doc) => {
+        const data = doc.data() as Omit<TeamChatMessage, 'id'>
         messages.push({
           id: doc.id,
-          ...doc.data() as Omit<TeamChatMessage, 'id'>
+          ...data
         })
+
+        // Count unread messages: not from user, newer than lastRead, and not currently viewing
+        if (!isViewingTeamChat &&
+          data.userId !== user.emailAddresses[0].emailAddress &&
+          data.timestamp?.toMillis &&
+          data.timestamp.toMillis() > lastRead) {
+          newUnreadCount++
+        }
       })
+
       setTeamMessages(messages)
+
+      // If viewing Team Chat, clear badge and update timestamp
+      if (isViewingTeamChat) {
+        setUnreadCount(0)
+        setLastReadTimestamp(roomId)
+      } else {
+        setUnreadCount(newUnreadCount)
+      }
     })
 
     return () => unsubscribe()
-  }, [roomId])
+  }, [roomId, user, isOpen, activeTab])
 
   // Function to get document content
   const getDocumentContent = async () => {
@@ -145,7 +190,7 @@ function Chatbar() {
       setDocumentContent(null)
       return
     }
-    
+
     try {
       // Get the document content from the DOM
       const editorContent = document.querySelector('.bn-container')?.textContent || ''
@@ -191,7 +236,7 @@ function Chatbar() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           messages: [...messages, newMessage],
           model: activeModel,
           documentContext: context
@@ -255,19 +300,29 @@ function Chatbar() {
 
   return (
     <>
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-12 w-12 rounded-full bg-primary shadow-lg hover:shadow-primary/25 transition-all duration-300"
-      >
-        <MessagesSquare className="h-5 w-5" />
-      </Button>
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={() => setIsOpen(true)}
+          className="relative h-12 w-12 rounded-full bg-primary shadow-lg hover:shadow-primary/25 transition-all duration-300"
+        >
+          <MessagesSquare className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 px-1"
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
+          )}
+        </Button>
+      </div>
 
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent 
-          side="right" 
-          className="w-[400px] sm:w-[540px] p-0 flex flex-col h-screen"
+        <SheetContent
+          side="right"
+          className="w-[400px] sm:w-[540px] p-0 flex flex-col h-full"
         >
-          <Tabs defaultValue="chat" className="flex flex-col h-full">
+          <Tabs defaultValue="chat" className="flex flex-col h-full overflow-hidden" onValueChange={(value) => setActiveTab(value as 'chat' | 'teamchat')}>
             {/* Fixed Header */}
             <div className="shrink-0 border-b sticky top-0 z-10 bg-background">
               <div className="px-4 py-2 flex items-center justify-between">
@@ -276,9 +331,9 @@ function Chatbar() {
                   AI Assistant
                 </SheetTitle>
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-8 w-8"
                     onClick={() => setShowSettings(!showSettings)}
                   >
@@ -292,32 +347,40 @@ function Chatbar() {
                 </div>
               </div>
               <TabsList className="w-full justify-start rounded-none border-0 bg-transparent p-0">
-                <TabsTrigger 
-                  value="chat" 
+                <TabsTrigger
+                  value="chat"
                   className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
                 >
                   <MessagesSquare className="h-4 w-4 mr-2" />
                   Chat
                 </TabsTrigger>
                 {showTeamChat && (
-                  <TabsTrigger 
-                    value="teamchat" 
-                    className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  <TabsTrigger
+                    value="teamchat"
+                    className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent relative"
                   >
                     <Users className="h-4 w-4 mr-2" />
                     Team Chat
+                    {unreadCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="ml-2 h-5 min-w-5 flex items-center justify-center p-0 px-1"
+                      >
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </Badge>
+                    )}
                   </TabsTrigger>
                 )}
               </TabsList>
             </div>
 
             {/* Chat Tab */}
-            <TabsContent 
-              value="chat" 
-              className="flex-1 flex flex-col overflow-y-auto mt-0 data-[state=active]:flex relative"
+            <TabsContent
+              value="chat"
+              className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-hidden"
             >
               {/* Scrollable chat area */}
-              <ScrollArea className="flex-1 overflow-y-auto  px-4">
+              <ScrollArea className="flex-1 px-4">
                 <div className="space-y-4 py-4">
                   {messages.map((message, i) => (
                     <div
@@ -330,8 +393,8 @@ function Chatbar() {
                       <div
                         className={cn(
                           "rounded-lg px-3 py-2 max-w-[80%]",
-                          message.role === 'user' 
-                            ? 'bg-primary text-primary-foreground' 
+                          message.role === 'user'
+                            ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
                         )}
                       >
@@ -369,7 +432,7 @@ function Chatbar() {
                     </Label>
                   </div>
                 )}
-                
+
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -383,7 +446,7 @@ function Chatbar() {
                     }
                   }}
                 />
-                
+
                 <div className="flex items-center justify-between">
                   <Select value={activeModel} onValueChange={setActiveModel}>
                     <SelectTrigger className="w-[200px] h-8 text-xs">
@@ -396,8 +459,8 @@ function Chatbar() {
                             {category}
                           </div>
                           {models.map((model) => (
-                            <SelectItem 
-                              key={model.id} 
+                            <SelectItem
+                              key={model.id}
                               value={model.id}
                               className="flex flex-col items-start"
                             >
@@ -412,8 +475,8 @@ function Chatbar() {
                     </SelectContent>
                   </Select>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     onClick={handleSubmit}
                     disabled={isLoading}
                     size="sm"
@@ -431,12 +494,12 @@ function Chatbar() {
 
             {/* Team Chat Content */}
             {showTeamChat && (
-              <TabsContent 
-                value="teamchat" 
-                className="flex-1 flex flex-col mt-0 data-[state=active]:flex"
+              <TabsContent
+                value="teamchat"
+                className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-hidden"
               >
                 {/* Scrollable team chat area */}
-                <ScrollArea className="flex-1 overflow-y-auto px-4">
+                <ScrollArea className="flex-1 px-4">
                   <div className="space-y-4 py-4">
                     {teamMessages.map((message) => (
                       <div
@@ -471,8 +534,8 @@ function Chatbar() {
                           {message.content}
                         </div>
                         <span className="text-xs text-muted-foreground px-2">
-                          {message.timestamp?.toDate ? 
-                            message.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+                          {message.timestamp?.toDate ?
+                            message.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
                             'Just now'}
                         </span>
                       </div>
@@ -496,8 +559,8 @@ function Chatbar() {
                         }
                       }}
                     />
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       size="icon"
                       className="h-10 w-10 shrink-0"
                     >

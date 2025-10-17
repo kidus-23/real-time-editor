@@ -5,33 +5,48 @@ import liveblocks from "@/lib/liveblocks";
 import { auth } from "@clerk/nextjs/server";
 
 export async function createNewDocument() {
+    const { sessionClaims } = await auth();
 
-    //auth().protect();   protect() kept showing errors
-    //const { sessionClaims } = await auth();
+    if (!sessionClaims?.email) {
+        throw new Error("User email not found");
+    }
 
-    const session = await auth();
+    try {
+        // Use batch for faster atomic operations
+        const batch = adminDB.batch();
+        const timestamp = new Date();
 
-    const { sessionClaims } = session;
-
-    const docCollectionRef = adminDB.collection("documents");
-    const docRef = await docCollectionRef.add({
-        title: "New Doc"
-    })
-
-    await adminDB
-        .collection('users')
-        .doc(sessionClaims?.email!)
-        .collection('rooms')
-        .doc(docRef.id)
-        .set({
-            userId: sessionClaims?.email,
-            role: "owner",
-            createAt: new Date(),
-            roomId: docRef.id,
-            lastOpened: new Date(),
+        // Create document reference
+        const docRef = adminDB.collection("documents").doc();
+        batch.set(docRef, {
+            title: "New Doc",
+            createdAt: timestamp,
+            lastOpened: timestamp,
         });
 
-    return { docId: docRef.id };
+        // Create user-room relationship
+        const userRoomRef = adminDB
+            .collection('users')
+            .doc(sessionClaims.email)
+            .collection('rooms')
+            .doc(docRef.id);
+
+        batch.set(userRoomRef, {
+            userId: sessionClaims.email,
+            role: "owner",
+            createAt: timestamp,
+            roomId: docRef.id,
+            lastOpened: timestamp,
+        });
+
+        // Commit both operations at once
+        await batch.commit();
+
+        return { docId: docRef.id };
+    } catch (error) {
+        console.error("Error creating document:", error);
+        throw new Error("Failed to create document");
+    }
 }
 
 export async function deleteDocument(roomId: string) {
@@ -152,14 +167,14 @@ export async function saveDocumentContent(roomId: string, content: string) {
                 content: content,
                 lastUpdated: new Date()
             });
-        
-        return { 
-            success: true, 
+
+        return {
+            success: true,
             message: 'Document content saved successfully'
         };
     } catch (error) {
         console.error("Error saving document content:", error);
-        return { 
+        return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error'
         };
@@ -179,7 +194,7 @@ export async function generateTags(roomId: string, content: string) {
         }
 
         const url = new URL('/api/generate-tags', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
-        
+
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -188,11 +203,11 @@ export async function generateTags(roomId: string, content: string) {
             body: JSON.stringify({ content }),
             cache: 'no-store'
         });
-        
+
         if (!response.ok) {
             throw new Error(`Failed to generate tags: ${response.statusText}`);
         }
-        
+
         const result = await response.json();
         if (!result.success || !Array.isArray(result.tags)) {
             throw new Error("Invalid response from tag generation");
@@ -206,16 +221,93 @@ export async function generateTags(roomId: string, content: string) {
                 tags: result.tags
             });
 
-        return { 
-            success: true, 
+        return {
+            success: true,
             tags: result.tags,
             message: 'Tags generated and saved successfully'
         };
     } catch (error) {
         console.error("Error generating tags:", error);
-        return { 
+        return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error'
         };
+    }
+}
+
+// Comment-related actions
+export async function createComment(roomId: string, commentData: {
+    content: string;
+    highlightedText: string;
+    blockId?: string;
+    position?: { start: number; end: number };
+}) {
+    const { sessionClaims } = await auth();
+    if (!sessionClaims?.email) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const commentRef = await adminDB
+            .collection('documents')
+            .doc(roomId)
+            .collection('comments')
+            .add({
+                ...commentData,
+                createdBy: {
+                    email: sessionClaims.email,
+                    name: sessionClaims.fullName || sessionClaims.email,
+                },
+                createdAt: new Date(),
+                resolved: false,
+                roomId: roomId,
+            });
+
+        return { success: true, commentId: commentRef.id };
+    } catch (error) {
+        console.error("Error creating comment:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+}
+
+export async function resolveComment(commentId: string, roomId: string, resolved: boolean) {
+    const { sessionClaims } = await auth();
+    if (!sessionClaims?.email) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        await adminDB
+            .collection('documents')
+            .doc(roomId)
+            .collection('comments')
+            .doc(commentId)
+            .update({ resolved });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error resolving comment:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+}
+
+export async function deleteComment(commentId: string, roomId: string) {
+    const { sessionClaims } = await auth();
+    if (!sessionClaims?.email) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        await adminDB
+            .collection('documents')
+            .doc(roomId)
+            .collection('comments')
+            .doc(commentId)
+            .delete();
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting comment:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 }

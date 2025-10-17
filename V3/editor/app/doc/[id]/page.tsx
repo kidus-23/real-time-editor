@@ -1,4 +1,8 @@
 import Document from "@/components/Document";
+import { Metadata } from "next";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function DocumentPage({
     params,
@@ -10,10 +14,6 @@ async function DocumentPage({
     return (
         <div
             className="flex flex-col flex-1 min-h-screen"
-            style={{
-                margin: "0 auto",
-                width: "100%",
-            }}
         >
             <Document id={id} />
         </div>
