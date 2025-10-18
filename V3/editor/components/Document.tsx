@@ -1,9 +1,9 @@
 'use client';
 
-import { FormEvent, useEffect, useState, useTransition, useCallback, useMemo } from "react";
+import { FormEvent, useEffect, useState, useTransition, useCallback, useMemo, useRef } from "react";
 import { Input } from "@/components/ui/input"
 import { Button } from "./ui/button";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc, collection, Timestamp, getDocs, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import useOwner from "@/lib/useOwner";
@@ -12,15 +12,16 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare } from "lucide-react";
+import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, History } from "lucide-react";
 import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
 import { useTheme } from "next-themes";
 import CommentsSidebar from "./CommentsSidebar";
 import AddCommentDialog from "./AddCommentDialog";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { query, where, onSnapshot } from "firebase/firestore";
 import { Comment } from "@/types/comment";
 import stringToColor from "@/lib/stringToColor";
+import { useUser } from "@clerk/nextjs";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -42,8 +43,12 @@ function Document({ id }: { id: string }) {
     const [commentMode, setCommentMode] = useState(false);
     const [allComments, setAllComments] = useState<Comment[]>([]);
     const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
+    const [lastSavedContent, setLastSavedContent] = useState("");
+    const [lastSavedTitle, setLastSavedTitle] = useState("");
+    const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isOwner = useOwner();
     const { theme } = useTheme();
+    const { user } = useUser();
 
     // Handle text selection for comments - only works when comment mode is active
     const handleTextSelection = useCallback(() => {
@@ -108,6 +113,84 @@ function Document({ id }: { id: string }) {
                 await updateLastOpened(id);
             });
         }
+    }, [id]);
+
+    // Auto-save snapshots every 5 minutes when content changes
+    useEffect(() => {
+        if (!data || !user) return;
+        
+        // Store initial content
+        setLastSavedContent(data.content || "");
+        setLastSavedTitle(data.title || "");
+        
+        // Set up auto-save timer
+        const autoSaveInterval = 5 * 60 * 1000; // 5 minutes
+        
+        const createSnapshot = async () => {
+            // Only create snapshot if content has changed
+            if (data.content !== lastSavedContent || data.title !== lastSavedTitle) {
+                try {
+                    // Create a new version in the versions subcollection
+                    const versionRef = doc(collection(db, "documents", id, "versions"));
+                    await setDoc(versionRef, {
+                        content: lastSavedContent,
+                        title: lastSavedTitle,
+                        timestamp: Timestamp.now(),
+                        userId: user.id,
+                        userName: user.fullName || user.username || user.id
+                    });
+                    
+                    // Update saved content reference
+                    setLastSavedContent(data.content || "");
+                    setLastSavedTitle(data.title || "");
+                    
+                    console.log("Auto-saved document snapshot");
+                } catch (error) {
+                    console.error("Error creating snapshot:", error);
+                }
+            }
+        };
+        
+        // Clear any existing timer
+        if (autoSaveTimerRef.current) {
+            clearInterval(autoSaveTimerRef.current);
+        }
+        
+        // Set new timer
+        autoSaveTimerRef.current = setInterval(createSnapshot, autoSaveInterval);
+        
+        // Cleanup on unmount
+        return () => {
+            if (autoSaveTimerRef.current) {
+                clearInterval(autoSaveTimerRef.current);
+            }
+        };
+    }, [id, data, user, lastSavedContent, lastSavedTitle]);
+
+    // Clean up old versions (older than 7 days) on component mount
+    useEffect(() => {
+        const cleanupOldVersions = async () => {
+            if (!id) return;
+            
+            try {
+                const versionsRef = collection(db, "documents", id, "versions");
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                
+                const q = query(versionsRef, where("timestamp", "<", Timestamp.fromDate(sevenDaysAgo)));
+                const snapshot = await getDocs(q);
+                
+                snapshot.forEach(async (doc) => {
+                    await deleteDoc(doc.ref);
+                });
+                
+                console.log(`Cleaned up ${snapshot.size} old versions`);
+            } catch (error) {
+                console.error("Error cleaning up old versions:", error);
+            }
+        };
+        
+        cleanupOldVersions();
     }, [id]);
 
     // Add selection listener
@@ -381,6 +464,9 @@ function Document({ id }: { id: string }) {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onSelect={() => window.location.href = `/doc/${id}/history`}>
+                                        Version History
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem>
                                         <ManageUsers />
                                     </DropdownMenuItem>
