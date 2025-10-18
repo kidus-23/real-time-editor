@@ -9,18 +9,22 @@ import "@blocknote/shadcn/style.css";
 import "@blocknote/core/fonts/inter.css";
 import { useCreateBlockNote } from "@blocknote/react";
 import stringToColor from "@/lib/stringToColor";
-import { BlockNoteEditor } from "@blocknote/core";
+import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
 import TranslateDocument from "./TranslateDocument";
 import Summarize from "./Summarize";
 import Composer from "./Composer";
 import QuestionGenerator from "./QuestionGenerator";
 import { saveDocumentContent } from "@/actions/actions";
+import { LinkPreview } from "./embed/LinkPreview";
+import { useLinkPreviewDetection } from "./embed/useLinkPreviewDetection";
+import { VideoEmbed } from "./embed/VideoEmbed";
+import { ImageEmbed } from "./embed/ImageEmbed";
 
 type EditorProps = {
   doc: Y.Doc;
   provider: LiveblocksYjsProvider;
   darkMode: boolean;
-  editor: BlockNoteEditor;
+  editor: any; // Use any to support custom blocks
 };
 
 function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { roomId: string }) {
@@ -29,6 +33,9 @@ function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { 
   // Add state to track content changes
   const [lastSaveTime, setLastSaveTime] = useState<number>(Date.now());
   const [contentChanged, setContentChanged] = useState<boolean>(false);
+
+  // Enable automatic link preview detection
+  useLinkPreviewDetection(editor);
 
   // Memoize collaboration config to prevent unnecessary re-renders
   const collaborationConfig = useMemo(
@@ -208,7 +215,7 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
   const room = useRoom();
   const [doc, setDoc] = useState<Y.Doc | null>(null);
   const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
-  const [editor, setEditor] = useState<BlockNoteEditor | null>(null);
+  const [editor, setEditor] = useState<any>(null); // Use any for custom blocks
 
   useEffect(() => {
     if (!room) {
@@ -220,7 +227,21 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
 
     const initializeEditor = async () => {
       try {
-        const blockNoteEditor = await BlockNoteEditor.create({
+        // Create custom block schema with link preview and improved video/image blocks
+        const schema = BlockNoteSchema.create({
+          blockSpecs: {
+            ...defaultBlockSpecs,
+            // @ts-ignore - Custom block types
+            linkPreview: LinkPreview,
+            // @ts-ignore - Enhanced video block
+            videoEmbed: VideoEmbed,
+            // @ts-ignore - Enhanced image block
+            imageEmbed: ImageEmbed,
+          },
+        });
+
+        const blockNoteEditor = BlockNoteEditor.create({
+          schema,
           collaboration: {
             fragment: yDoc.getXmlFragment("root"),
             user: {
