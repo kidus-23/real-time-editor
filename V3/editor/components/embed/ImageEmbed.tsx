@@ -1,0 +1,258 @@
+'use client';
+
+import React, { useState, useRef } from 'react';
+import { createReactBlockSpec } from '@blocknote/react';
+import { ExternalLink, Copy, Loader2, Image as ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface ImageEmbedProps {
+    block: {
+        props: {
+            url: string;
+            caption?: string;
+            width?: number;
+        };
+    };
+}
+
+const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [showContextMenu, setShowContextMenu] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [resizeWidth, setResizeWidth] = useState<number>(100);
+    const [isResizing, setIsResizing] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const url = block.props.url;
+    const caption = block.props.caption;
+
+    const handleContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setContextMenuPosition({ x: e.clientX, y: e.clientY });
+        setShowContextMenu(true);
+    };
+
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(url);
+        toast.success('Image URL copied to clipboard!');
+        setShowContextMenu(false);
+    };
+
+    const handleCopyImage = async () => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            await navigator.clipboard.write([
+                new ClipboardItem({ [blob.type]: blob })
+            ]);
+            toast.success('Image copied to clipboard!');
+        } catch (error) {
+            console.error('Failed to copy image:', error);
+            toast.error('Failed to copy image');
+        }
+        setShowContextMenu(false);
+    };
+
+    const handleOpenInBrowser = () => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setShowContextMenu(false);
+    };
+
+    const handleResizeStart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsResizing(true);
+        const startX = e.clientX;
+        const startWidth = containerRef.current?.offsetWidth || 0;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const deltaX = e.clientX - startX;
+            const newWidth = Math.max(200, Math.min(startWidth + deltaX, window.innerWidth - 100));
+            if (containerRef.current) {
+                const percentage = (newWidth / containerRef.current.parentElement!.offsetWidth) * 100;
+                setResizeWidth(Math.min(100, Math.max(20, percentage)));
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const setPresetSize = (size: 'small' | 'medium' | 'large' | 'full') => {
+        const sizes = { small: 40, medium: 60, large: 80, full: 100 };
+        setResizeWidth(sizes[size]);
+        toast.success(`Size set to ${size}`);
+    };
+
+    React.useEffect(() => {
+        const handleClickOutside = () => setShowContextMenu(false);
+        if (showContextMenu) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [showContextMenu]);
+
+    if (!url) {
+        return (
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 my-2 bg-gray-50 dark:bg-gray-800/50">
+                <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
+                    No image URL provided
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div
+            ref={containerRef}
+            className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden my-2 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-600 transition-colors group relative"
+            onContextMenu={handleContextMenu}
+            style={{ width: `${resizeWidth}%`, margin: '8px auto' }}
+        >
+            {/* Size Control Buttons */}
+            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-black/50 rounded-md p-1">
+                <button onClick={() => setPresetSize('small')} className="text-white text-xs px-2 py-1 hover:bg-white/20 rounded" title="Small (40%)">S</button>
+                <button onClick={() => setPresetSize('medium')} className="text-white text-xs px-2 py-1 hover:bg-white/20 rounded" title="Medium (60%)">M</button>
+                <button onClick={() => setPresetSize('large')} className="text-white text-xs px-2 py-1 hover:bg-white/20 rounded" title="Large (80%)">L</button>
+                <button onClick={() => setPresetSize('full')} className="text-white text-xs px-2 py-1 hover:bg-white/20 rounded" title="Full (100%)">Full</button>
+            </div>
+
+            {/* Resize Handle */}
+            <div
+                className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize opacity-0 group-hover:opacity-100 hover:bg-blue-500 transition-all z-10"
+                onMouseDown={handleResizeStart}
+                title="Drag to resize"
+            />
+
+            <div className="relative bg-gray-100 dark:bg-gray-900">
+                {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                )}
+                {error ? (
+                    <div className="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+                        <ImageIcon className="h-12 w-12 mb-2" />
+                        <p className="text-sm">Failed to load image</p>
+                    </div>
+                ) : (
+                    <img
+                        src={url}
+                        alt={caption || 'Image'}
+                        className="w-full h-auto max-h-[600px] object-contain"
+                        onLoad={() => setLoading(false)}
+                        onError={() => {
+                            setLoading(false);
+                            setError(true);
+                        }}
+                    />
+                )}
+            </div>
+            {caption && (
+                <div className="p-2 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+                    {caption}
+                </div>
+            )}
+            <div className="p-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <ImageIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                        {url}
+                    </span>
+                </div>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={handleCopyLink}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        title="Copy link"
+                    >
+                        <Copy className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    </button>
+                    <button
+                        onClick={handleOpenInBrowser}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        title="Open in browser"
+                    >
+                        <ExternalLink className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    </button>
+                </div>
+            </div>
+            {showContextMenu && (
+                <ContextMenu
+                    x={contextMenuPosition.x}
+                    y={contextMenuPosition.y}
+                    onCopyLink={handleCopyLink}
+                    onCopyImage={handleCopyImage}
+                    onOpenInBrowser={handleOpenInBrowser}
+                />
+            )}
+        </div>
+    );
+};
+
+const ContextMenu = ({
+    x,
+    y,
+    onCopyLink,
+    onCopyImage,
+    onOpenInBrowser,
+}: {
+    x: number;
+    y: number;
+    onCopyLink: () => void;
+    onCopyImage: () => void;
+    onOpenInBrowser: () => void;
+}) => {
+    return (
+        <div
+            className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[160px]"
+            style={{ top: y, left: x }}
+        >
+            <button
+                onClick={onCopyImage}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            >
+                <Copy className="h-4 w-4" />
+                Copy Image
+            </button>
+            <button
+                onClick={onCopyLink}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            >
+                <Copy className="h-4 w-4" />
+                Copy Link
+            </button>
+            <button
+                onClick={onOpenInBrowser}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            >
+                <ExternalLink className="h-4 w-4" />
+                Open in Browser
+            </button>
+        </div>
+    );
+};
+
+export const ImageEmbed = createReactBlockSpec(
+    {
+        type: 'imageEmbed' as const,
+        propSchema: {
+            url: {
+                default: '',
+            },
+            caption: {
+                default: '',
+            },
+        },
+        content: 'none',
+    },
+    {
+        render: (props) => <ImageEmbedComponent block={props.block as any} />,
+    }
+);
