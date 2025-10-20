@@ -22,44 +22,26 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Fetch metadata using unfurl with timeout
-        const metadata = await Promise.race([
-            unfurl(url, {
-                oembed: true,
-                timeout: 5000,
-            }),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Request timeout')), 6000)
-            )
-        ]) as any;
+        // Fetch metadata using unfurl
+        const metadata = await unfurl(url);
 
-        // Extract relevant metadata with better fallbacks
+        // Extract relevant metadata
         const response = {
             url,
-            title: metadata?.title || metadata?.open_graph?.title || metadata?.oEmbed?.title || '',
-            description: metadata?.description || metadata?.open_graph?.description || metadata?.oEmbed?.description || '',
-            image: metadata?.open_graph?.images?.[0]?.url ||
-                metadata?.twitter_card?.images?.[0]?.url ||
-                metadata?.oEmbed?.thumbnails?.[0]?.url || '',
-            favicon: metadata?.favicon || '',
-            author: metadata?.open_graph?.article?.author ||
-                metadata?.twitter_card?.creator ||
-                metadata?.oEmbed?.author_name || '',
-            siteName: metadata?.open_graph?.site_name ||
-                metadata?.oEmbed?.provider_name || '',
+            title: metadata.title || metadata.open_graph?.title,
+            description: metadata.description || metadata.open_graph?.description,
+            image: metadata.open_graph?.images?.[0]?.url || metadata.twitter_card?.images?.[0]?.url,
+            favicon: metadata.favicon,
+            author: metadata.open_graph?.article?.author || metadata.twitter_card?.creator,
+            siteName: metadata.open_graph?.site_name,
             type: 'website' as const,
         };
 
         return NextResponse.json(response);
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error fetching link preview:', error);
-
-        // Return a more graceful error response
         return NextResponse.json(
-            {
-                error: 'Failed to fetch link preview',
-                message: error?.message || 'Unknown error'
-            },
+            { error: 'Failed to fetch link preview' },
             { status: 500 }
         );
     }
