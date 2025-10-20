@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import LinkifyIt from 'linkify-it';
 
 const linkify = new LinkifyIt();
@@ -50,36 +50,28 @@ function extractUrlFromBlock(block: any): string | null {
  * Hook that automatically detects URLs in the editor and converts them to link preview blocks
  */
 export function useLinkPreviewDetection(editor: any) {
-    const processedBlocks = useRef(new Set<string>());
-    const isProcessing = useRef(false);
-
     useEffect(() => {
         if (!editor) return;
 
-        const checkForLinks = async () => {
-            if (isProcessing.current) return;
-            isProcessing.current = true;
+        const processedBlocks = new Set<string>();
 
+        const checkForLinks = () => {
             try {
                 const blocks = editor.document;
-                if (!blocks || !Array.isArray(blocks)) return;
 
-                for (const block of blocks) {
+                blocks.forEach((block: any) => {
                     // Only process paragraph blocks
-                    if (block.type !== 'paragraph') continue;
+                    if (block.type !== 'paragraph') return;
 
                     // Skip if already processed
-                    if (processedBlocks.current.has(block.id)) continue;
-
-                    // Skip empty blocks
-                    if (!block.content || block.content.length === 0) continue;
+                    if (processedBlocks.has(block.id)) return;
 
                     // Extract URL from block
                     const url = extractUrlFromBlock(block);
 
                     if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
                         // Mark as processed
-                        processedBlocks.current.add(block.id);
+                        processedBlocks.add(block.id);
 
                         // Extract actual image URL if it's a Google Images link
                         const actualUrl = url.includes('google.com/imgres')
@@ -87,35 +79,30 @@ export function useLinkPreviewDetection(editor: any) {
                             : url;
 
                         // Replace the paragraph block with a link preview block
-                        try {
-                            await editor.updateBlock(block.id, {
-                                type: 'linkPreview' as any,
-                                props: { url: actualUrl },
-                            });
-                        } catch (err) {
-                            console.error('Failed to create link preview:', err);
-                            processedBlocks.current.delete(block.id);
-                        }
+                        setTimeout(() => {
+                            try {
+                                editor.updateBlock(block.id, {
+                                    type: 'linkPreview' as any,
+                                    props: { url: actualUrl },
+                                });
+                            } catch (err) {
+                                console.error('Failed to create link preview:', err);
+                                processedBlocks.delete(block.id);
+                            }
+                        }, 100);
                     }
-                }
+                });
             } catch (err) {
                 console.error('Error in link detection:', err);
-            } finally {
-                isProcessing.current = false;
             }
         };
 
-        // Debounce the check to avoid too frequent updates
-        let timeoutId: NodeJS.Timeout;
+        // Listen for text changes
         const unsubscribe = editor.onChange(() => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                checkForLinks();
-            }, 500);
+            checkForLinks();
         });
 
         return () => {
-            clearTimeout(timeoutId);
             if (unsubscribe) {
                 unsubscribe();
             }
