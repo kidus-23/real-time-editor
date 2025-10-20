@@ -19,38 +19,35 @@ import { LinkPreview } from "./embed/LinkPreview";
 import { useLinkPreviewDetection } from "./embed/useLinkPreviewDetection";
 import { VideoEmbed } from "./embed/VideoEmbed";
 import { ImageEmbed } from "./embed/ImageEmbed";
+import { MessageSquare } from "lucide-react";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import {
+  FormattingToolbar,
+  FormattingToolbarController,
+  BlockTypeSelect,
+  BasicTextStyleButton,
+  TextAlignButton,
+  ColorStyleButton,
+  NestBlockButton,
+  UnnestBlockButton,
+  CreateLinkButton,
+} from "@blocknote/react";
 
 type EditorProps = {
   doc: Y.Doc;
   provider: LiveblocksYjsProvider;
   darkMode: boolean;
   editor: any; // Use any to support custom blocks
+  onCommentClick?: (selectedText: string) => void;
 };
 
-function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { roomId: string }) {
+const BlockNote = memo(function BlockNote({ doc, provider, darkMode, editor, roomId, onCommentClick }: EditorProps & { roomId: string }) {
   const userInfo = useSelf((me) => me.info);
-
-  // Add state to track content changes
-  const [lastSaveTime, setLastSaveTime] = useState<number>(Date.now());
-  const [contentChanged, setContentChanged] = useState<boolean>(false);
 
   // Enable automatic link preview detection
   useLinkPreviewDetection(editor);
 
-  // Memoize collaboration config to prevent unnecessary re-renders
-  const collaborationConfig = useMemo(
-    () => ({
-      fragment: doc.getXmlFragment("root"),
-      user: {
-        name: userInfo?.name || "Anonymous",
-        color: userInfo?.color || stringToColor(userInfo?.email || "1"),
-      },
-      provider,
-    }),
-    [doc, provider, userInfo?.name, userInfo?.email, userInfo?.color]
-  );
-
-  // Debounced save function for better performance
+  // Memoize save function
   const saveContent = useCallback(async () => {
     try {
       // Get document content from DOM similar to Chatbar component
@@ -59,8 +56,6 @@ function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { 
       if (editorContent.trim()) {
         const result = await saveDocumentContent(roomId, editorContent);
         if (result.success) {
-          setLastSaveTime(Date.now());
-          setContentChanged(false);
           console.log('Document content saved successfully');
         }
       }
@@ -69,53 +64,24 @@ function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { 
     }
   }, [roomId]);
 
-  // Save content periodically if changed
-  useEffect(() => {
-    if (!contentChanged) return;
+  // Use unified auto-save hook with 2s debounce
+  const { triggerSave } = useAutoSave({
+    saveFunction: saveContent,
+    debounceMs: 2000,    // Save 2 seconds after typing stops
+    minIntervalMs: 30000 // Minimum 30 seconds between saves
+  });
 
-    // Save content every 30 seconds if there are changes
-    const saveInterval = setInterval(() => {
-      if (contentChanged && Date.now() - lastSaveTime > 30000) {
-        saveContent();
-      }
-    }, 30000);
-
-    return () => clearInterval(saveInterval);
-  }, [contentChanged, lastSaveTime, roomId, saveContent]);
-
-  // Save content when editor changes are detected
+  // Trigger save when editor changes
   useEffect(() => {
     if (!editor) return;
 
-    // Listen for changes in the editor
-    const handleEditorChange = () => {
-      setContentChanged(true);
-    };
-
     // Subscribe to editor changes
-    editor.onChange(handleEditorChange);
+    const unsubscribe = editor.onChange(() => {
+      triggerSave();
+    });
 
-    // No cleanup needed as BlockNote handles this internally
-    return () => { };
-  }, [editor]);
-
-  // Save content when window is closed/refreshed
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (contentChanged) {
-        saveContent();
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Also save when component unmounts
-      if (contentChanged) {
-        saveContent();
-      }
-    };
-  }, [contentChanged, saveContent]);
+    return unsubscribe;
+  }, [editor, triggerSave]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -133,49 +99,6 @@ function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { 
         const questionDialog = document.querySelector('button:has(svg[data-lucide="help-circle"])') as HTMLButtonElement;
         if (questionDialog) {
           questionDialog.click();
-        }
-      }
-
-      // Undo: Ctrl + Z
-      if (e.ctrlKey && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
-        // Check if the target is an input or textarea element
-        const target = e.target as HTMLElement;
-        const tagName = target.tagName.toLowerCase();
-        const isFormElement = tagName === 'input' || tagName === 'textarea';
-
-        // Only prevent default and handle undo if not in a form element
-        if (!isFormElement) {
-          e.preventDefault();
-          if (editor) {
-            try {
-              editor.undo();
-              console.log('Undo executed');
-            } catch (error) {
-              console.error('Error during undo:', error);
-            }
-          }
-        }
-      }
-
-      // Redo: Ctrl + Y or Ctrl + Shift + Z
-      if ((e.ctrlKey && (e.key === 'y' || e.key === 'Y')) ||
-        (e.ctrlKey && e.shiftKey && (e.key === 'z' || e.key === 'Z'))) {
-        // Check if the target is an input or textarea element
-        const target = e.target as HTMLElement;
-        const tagName = target.tagName.toLowerCase();
-        const isFormElement = tagName === 'input' || tagName === 'textarea';
-
-        // Only prevent default and handle redo if not in a form element
-        if (!isFormElement) {
-          e.preventDefault();
-          if (editor) {
-            try {
-              editor.redo();
-              console.log('Redo executed');
-            } catch (error) {
-              console.error('Error during redo:', error);
-            }
-          }
         }
       }
 
@@ -206,12 +129,69 @@ function BlockNote({ doc, provider, darkMode, editor, roomId }: EditorProps & { 
         className="min-h-screen"
         editor={editor}
         theme={darkMode ? "dark" : "light"}
-      />
+        formattingToolbar={false}
+      >
+        <FormattingToolbarController
+          formattingToolbar={() => (
+            <FormattingToolbar>
+              <BlockTypeSelect key="blockTypeSelect" />
+              <BasicTextStyleButton basicTextStyle="bold" key="boldStyleButton" />
+              <BasicTextStyleButton basicTextStyle="italic" key="italicStyleButton" />
+              <BasicTextStyleButton basicTextStyle="underline" key="underlineStyleButton" />
+              <BasicTextStyleButton basicTextStyle="strike" key="strikeStyleButton" />
+              <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />
+              <TextAlignButton textAlignment="left" key="textAlignLeftButton" />
+              <TextAlignButton textAlignment="center" key="textAlignCenterButton" />
+              <TextAlignButton textAlignment="right" key="textAlignRightButton" />
+              <ColorStyleButton key="colorStyleButton" />
+              <NestBlockButton key="nestBlockButton" />
+              <UnnestBlockButton key="unnestBlockButton" />
+              <CreateLinkButton key="createLinkButton" />
+              <button
+                className="bn-button bn-toolbar-button"
+                data-test="comment-button"
+                aria-label="Add Comment"
+                onClick={() => {
+                  const selectedText = editor?.getSelectedText() || "";
+                  if (selectedText && onCommentClick) {
+                    onCommentClick(selectedText);
+                  }
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "4px",
+                  minWidth: "28px",
+                  minHeight: "28px",
+                  borderRadius: "6px",
+                  transition: "background-color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
+                key="commentButton"
+              >
+                <MessageSquare size={18} strokeWidth={2} />
+              </button>
+            </FormattingToolbar>
+          )}
+        />
+      </BlockNoteView>
     </div>
   );
-}
+});
 
-function Editor({ darkMode = false }: { darkMode?: boolean }) {
+type EditorComponentProps = {
+  darkMode?: boolean;
+  onEditorReady?: (editor: BlockNoteEditor | null) => void;
+  onCommentClick?: (selectedText: string) => void;
+};
+
+function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorComponentProps) {
   const room = useRoom();
   const [doc, setDoc] = useState<Y.Doc | null>(null);
   const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
@@ -231,11 +211,11 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
         const schema = BlockNoteSchema.create({
           blockSpecs: {
             ...defaultBlockSpecs,
-            // @ts-ignore - Custom block types
+            // @ts-expect-error - Custom block types
             linkPreview: LinkPreview,
-            // @ts-ignore - Enhanced video block
+            // @ts-expect-error - Enhanced video block
             videoEmbed: VideoEmbed,
-            // @ts-ignore - Enhanced image block
+            // @ts-expect-error - Enhanced image block
             imageEmbed: ImageEmbed,
           },
         });
@@ -250,8 +230,17 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
             },
             provider: yProvider,
           },
+          // Enable default keyboard shortcuts including undo/redo
+          _tiptapOptions: {
+            editorProps: {
+              attributes: {
+                spellcheck: 'false',
+              },
+            },
+          },
         });
         setEditor(blockNoteEditor);
+        onEditorReady?.(blockNoteEditor);
         setDoc(yDoc);
         setProvider(yProvider);
       } catch (error) {
@@ -262,17 +251,30 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
     initializeEditor();
 
     return () => {
+      onEditorReady?.(null);
       yProvider?.destroy();
       yDoc?.destroy();
     };
-  }, [room]);
+  }, [onEditorReady, room]);
 
   if (!room) {
-    return <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">No room available</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground text-sm">Initializing workspace...</div>
+      </div>
+    );
   }
 
   if (!doc || !provider || !editor) {
-    return <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">Loading editor...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="relative w-12 h-12">
+          <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-transparent border-t-primary border-r-primary rounded-full animate-spin"></div>
+        </div>
+        <div className="text-muted-foreground text-sm">Loading editor...</div>
+      </div>
+    );
   }
 
   return (
@@ -284,7 +286,7 @@ function Editor({ darkMode = false }: { darkMode?: boolean }) {
         <QuestionGenerator editor={editor} />
       </div>
       <div className="pt-2">
-        <BlockNote doc={doc} provider={provider} editor={editor} darkMode={darkMode} roomId={room.id} />
+        <BlockNote doc={doc} provider={provider} editor={editor} darkMode={darkMode} roomId={room.id} onCommentClick={onCommentClick} />
       </div>
     </div>
   );

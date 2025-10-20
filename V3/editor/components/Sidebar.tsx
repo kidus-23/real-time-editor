@@ -19,6 +19,7 @@ import SidebarOption from "./SidebarOption";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SearchDialog from "./SearchDialog";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface RoomDocument extends DocumentData {
     createdAt: string;
@@ -35,6 +36,7 @@ function Sidebar() {
     const isSettingsActive = pathname === "/settings"; // Add this line
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(true);
+    const { t } = useTranslation();
 
     const [groupedData, setGroupedData] = useState<{
         owner: RoomDocument[];
@@ -106,10 +108,10 @@ function Sidebar() {
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
                         ${!isExpanded ? "justify-center" : ""}
                     `}
-                    title={!isExpanded ? "Home" : ""}
+                    title={!isExpanded ? t("sidebar.home") : ""}
                 >
                     <HomeIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">Home</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.home")}</p>}
                 </Link>
 
                 {/* Search Button */}
@@ -118,10 +120,10 @@ function Sidebar() {
                     className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
                         text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900
                         ${!isExpanded ? "justify-center" : ""}`}
-                    title={!isExpanded ? "Search" : ""}
+                    title={!isExpanded ? t("sidebar.search") : ""}
                 >
                     <SearchIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">Search</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.search")}</p>}
                 </button>
 
                 {/* Graph Button */}
@@ -133,10 +135,10 @@ function Sidebar() {
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
                         ${!isExpanded ? "justify-center" : ""}
                     `}
-                    title={!isExpanded ? "Graph" : ""}
+                    title={!isExpanded ? t("sidebar.graph") : ""}
                 >
                     <GitGraphIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">Graph</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.graph")}</p>}
                 </Link>
 
                 {/* Settings - Replace the button with Link */}
@@ -148,10 +150,10 @@ function Sidebar() {
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
                         ${!isExpanded ? "justify-center" : ""}
                     `}
-                    title={!isExpanded ? "Settings" : ""}
+                    title={!isExpanded ? t("sidebar.settings") : ""}
                 >
                     <SettingsIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">Settings</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.settings")}</p>}
                 </Link>
 
                 {/* New Document Button */}
@@ -160,7 +162,7 @@ function Sidebar() {
                         <button
                             onClick={() => setIsExpanded(true)}
                             className="w-full flex items-center justify-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900 transition-colors text-gray-700 dark:text-gray-300"
-                            title="New Document"
+                            title={t("sidebar.newDocument")}
                         >
                             <PlusIcon className="w-4 h-4 flex-shrink-0" />
                         </button>
@@ -177,12 +179,12 @@ function Sidebar() {
                     {/*My Document List...*/}
                     {groupedData.owner.length === 0 ? (
                         <h2 className="text-sm text-gray-400 dark:text-neutral-500 font-medium italic px-1">
-                            No documents yet
+                            {t("sidebar.noDocuments")}
                         </h2>
                     ) : (
                         <>
                             <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold px-1">
-                                My Documents
+                                {t("sidebar.myDocuments")}
                             </h2>
                             <div className="flex flex-col gap-1 pt-2">
                                 {groupedData.owner.map((doc) => (
@@ -201,7 +203,7 @@ function Sidebar() {
                     {groupedData.editor.length > 0 && (
                         <>
                             <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold pt-3 px-1">
-                                Shared with me
+                                {t("sidebar.sharedWithMe")}
                             </h2>
                             <div className="flex flex-col gap-1 pt-2">
                                 {groupedData.editor.map((doc) => (
@@ -234,7 +236,7 @@ function Sidebar() {
                     </SheetTrigger>
                     <SheetContent side='left'>
                         <SheetHeader>
-                            <SheetTitle className="text-lg font-semibold">Menu</SheetTitle>
+                            <SheetTitle className="text-lg font-semibold">{t("sidebar.menu")}</SheetTitle>
                             <div>
                                 {menuOptions}
                             </div>

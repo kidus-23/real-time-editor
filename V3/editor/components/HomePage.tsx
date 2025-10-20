@@ -30,19 +30,27 @@ interface SearchResult extends DocumentData {
 }
 
 function DocumentCard({ id }: { id: string }) {
-  const [data, loading, error] = useDocument(doc(db, "documents", id));
-  
+  const [data, loading] = useDocument(doc(db, "documents", id));
+  const router = useRouter();
+
+  // Prefetch document on hover for instant navigation
+  const handleMouseEnter = () => {
+    router.prefetch(`/doc/${id}`);
+  };
+
   if (loading) return (
     <div className="min-w-[240px] h-[160px] bg-gray-50 dark:bg-neutral-800/30 rounded-lg p-4 flex items-center justify-center">
       <div className="animate-pulse h-4 w-24 bg-gray-200 dark:bg-neutral-700 rounded"></div>
     </div>
   );
 
-  if (!data || error) return null;
+  if (!data) return null;
 
   return (
-    <Link 
+    <Link
       href={`/doc/${id}`}
+      onMouseEnter={handleMouseEnter}
+      prefetch={true}
       className="min-w-[240px] h-[160px] bg-white dark:bg-neutral-800/50 rounded-lg p-5 border border-gray-100 dark:border-neutral-800 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/40 transition-all duration-200 flex flex-col justify-between group"
     >
       <div className="flex items-start justify-between">
@@ -100,35 +108,35 @@ function HomePage() {
   // Search function
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
-    
+
     setIsSearching(true);
     setSearchResults([]);
-    
+
     try {
       // Get all user's documents
       const roomsQuery = query(
         collectionGroup(db, 'rooms'),
         where('userId', '==', user.emailAddresses[0].toString())
       );
-      
+
       const roomsSnapshot = await getDocs(roomsQuery);
       const roomDocs = roomsSnapshot.docs.map(doc => ({
         id: doc.id,
         roomId: doc.data().roomId,
       }));
-      
+
       // For each room, get the document content and check if it matches the search query
       const results = [];
-      
+
       for (const roomDoc of roomDocs) {
         const docRef = doc(db, 'documents', roomDoc.roomId);
         const docSnap = await getDoc(docRef);
-        
+
         if (docSnap.exists()) {
           const docData = docSnap.data();
           const title = docData.title || 'Untitled';
           const content = docData.content || '';
-          
+
           // Check if title or content contains the search query (case insensitive)
           const lowerQuery = searchQuery.toLowerCase();
           if (
@@ -145,7 +153,7 @@ function HomePage() {
           }
         }
       }
-      
+
       setSearchResults(results);
     } catch (error) {
       console.error('Error searching documents:', error);
@@ -209,8 +217,8 @@ function HomePage() {
             onKeyDown={handleKeyDown}
             className="pl-12 py-3 h-14 bg-white dark:bg-neutral-800/50 border-gray-200 dark:border-neutral-700 w-full max-w-3xl shadow-sm rounded-xl text-lg"
           />
-          <Button 
-            onClick={handleSearch} 
+          <Button
+            onClick={handleSearch}
             className="absolute right-2 top-2 bottom-2 h-10"
             disabled={isSearching}
           >
@@ -226,10 +234,10 @@ function HomePage() {
                 Search Results
               </h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-4">
               {searchResults.map((result) => (
-                <div 
+                <div
                   key={result.id}
                   onClick={() => router.push(`/doc/${result.roomId}`)}
                   className="min-w-[240px] h-[160px] bg-white dark:bg-neutral-800/50 rounded-lg p-5 border border-gray-100 dark:border-neutral-800 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/40 transition-all duration-200 flex flex-col justify-between group cursor-pointer"
@@ -267,7 +275,7 @@ function HomePage() {
               View all
             </Button>
           </div>
-          
+
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (

@@ -10,6 +10,7 @@ import { BlockNoteEditor } from "@blocknote/core";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type QuestionGeneratorProps = {
   editor: BlockNoteEditor;
@@ -37,11 +38,12 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const handleStartQuiz = async (e: FormEvent) => {
     e.preventDefault();
     if (!questionType) {
-      toast.error("Please select a question type");
+      toast.error(t("editor.questionGenerator.selectTypeError"));
       return;
     }
 
@@ -70,7 +72,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
       console.log("Request body:", { documentData, questionType });
 
       if (!documentData || documentData === "No content available") {
-        toast.error("No document content to generate questions");
+        toast.error(t("editor.questionGenerator.noContent"));
         return;
       }
 
@@ -99,14 +101,13 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
             setCurrentQuestionIndex(0);
             setUserAnswer("");
             setEvaluation(null);
-            toast.success("Questions generated successfully!");
             return;
           } else {
             const { error } = await res.json();
             console.error(`Attempt ${attempt} failed: ${error}`);
             if (attempt === maxRetries) {
               setError(error);
-              toast.error(`Failed to generate questions: ${error}`);
+              toast.error(`${t("editor.questionGenerator.error")}: ${error}`);
             }
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
@@ -114,7 +115,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
           console.error(`Attempt ${attempt} error:`, err.message);
           if (attempt === maxRetries) {
             setError(err.message);
-            toast.error(`Failed to generate questions: ${err.message}`);
+            toast.error(`${t("editor.questionGenerator.error")}: ${err.message}`);
           }
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
@@ -125,7 +126,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
   const handleSubmitAnswer = async (e: FormEvent) => {
     e.preventDefault();
     if (!userAnswer) {
-      toast.error("Please provide an answer");
+      toast.error(t("editor.questionGenerator.yourAnswer"));
       return;
     }
 
@@ -171,7 +172,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
       } else {
         const { error } = await res.json();
         setError(error);
-        toast.error(`Failed to evaluate answer: ${error}`);
+        toast.error(`${t("editor.questionGenerator.error")}: ${error}`);
       }
     });
   };
@@ -187,7 +188,6 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
       setCurrentQuestionIndex(0);
       setUserAnswer("");
       setEvaluation(null);
-      toast.success("Quiz completed!");
     }
   };
 
@@ -196,20 +196,20 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
       <Button asChild variant="outline">
         <DialogTrigger>
           <HelpCircleIcon />
-          Q&A
+          {t("editor.questionGenerator.button")}
         </DialogTrigger>
       </Button>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Question Generator</DialogTitle>
+          <DialogTitle>{t("editor.questionGenerator.title")}</DialogTitle>
           <DialogDescription>
-            Select a question type to generate a quiz based on the document content.
+            {t("editor.questionGenerator.description")}
           </DialogDescription>
         </DialogHeader>
 
         {error && (
           <div className="p-4 bg-red-100 text-red-700 rounded">
-            Error: {error}
+            {t("editor.questionGenerator.error")}: {error}
           </div>
         )}
 
@@ -217,22 +217,22 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
           <form className="flex gap-2" onSubmit={handleStartQuiz}>
             <Select value={questionType} onValueChange={setQuestionType}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select question type..." />
+                <SelectValue placeholder={t("editor.questionGenerator.selectType")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="trueFalse">True/False</SelectItem>
-                <SelectItem value="multipleChoice">Multiple Choice</SelectItem>
-                <SelectItem value="shortAnswer">Short Answer</SelectItem>
+                <SelectItem value="trueFalse">{t("editor.questionGenerator.types.trueFalse")}</SelectItem>
+                <SelectItem value="multipleChoice">{t("editor.questionGenerator.types.multipleChoice")}</SelectItem>
+                <SelectItem value="shortAnswer">{t("editor.questionGenerator.types.shortAnswer")}</SelectItem>
               </SelectContent>
             </Select>
             <Button type="submit" disabled={!questionType || isPending}>
-              {isPending ? "Generating..." : "Start Quiz"}
+              {isPending ? t("editor.questionGenerator.starting") : t("editor.questionGenerator.startQuiz")}
             </Button>
           </form>
         ) : (
           <div className="flex flex-col gap-4">
             <h3 className="font-bold">
-              Question {currentQuestionIndex + 1} of {questions.length}
+              {t("editor.questionGenerator.question", { number: currentQuestionIndex + 1, total: questions.length })}
             </h3>
             <p>{questions[currentQuestionIndex].question}</p>
 
@@ -277,14 +277,14 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                 <Textarea
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  placeholder="Enter your answer..."
+                  placeholder={t("editor.questionGenerator.yourAnswer")}
                   disabled={isPending || evaluation !== null}
                 />
               )}
 
               {!evaluation && (
                 <Button type="submit" disabled={!userAnswer || isPending}>
-                  {isPending ? "Evaluating..." : "Submit Answer"}
+                  {isPending ? t("editor.questionGenerator.starting") : t("editor.questionGenerator.submitAnswer")}
                 </Button>
               )}
             </form>
@@ -293,10 +293,10 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
               <div className="p-4 bg-gray-100 rounded">
                 <p className="font-bold">
                   {evaluation.isCorrect
-                    ? "Correct!"
+                    ? t("editor.questionGenerator.correctAnswer")
                     : questionType === "shortAnswer"
-                    ? `Score: ${evaluation.score}%`
-                    : "Incorrect"}
+                      ? t("editor.questionGenerator.score", { score: evaluation.score })
+                      : t("editor.questionGenerator.tryAgain")}
                 </p>
                 <p>{evaluation.explanation}</p>
                 <Button
@@ -304,7 +304,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                   onClick={handleNextQuestion}
                   disabled={isPending}
                 >
-                  {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Finish Quiz"}
+                  {currentQuestionIndex < questions.length - 1 ? t("editor.questionGenerator.nextQuestion") : t("editor.questionGenerator.startQuiz")}
                 </Button>
               </div>
             )}

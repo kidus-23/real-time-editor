@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState, useTransition, useCallback, useMemo, useRef } from "react";
+import { FormEvent, useEffect, useState, useTransition, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input"
 import { Button } from "./ui/button";
 import { doc, updateDoc, setDoc, collection, Timestamp, getDocs, deleteDoc } from "firebase/firestore";
@@ -12,7 +12,7 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, History } from "lucide-react";
+import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare } from "lucide-react";
 import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
 import { useTheme } from "next-themes";
@@ -28,10 +28,20 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import ImportExportMenu from "./ImportExportMenu";
+import { useTranslation } from "@/hooks/useTranslation";
+import { BlockNoteEditor } from "@blocknote/core";
 
-function Document({ id }: { id: string }) {
+type FirestoreDocument = {
+    title?: string;
+    content?: string;
+    tags?: string[];
+    [key: string]: unknown;
+};
+
+function Document({ id, initialData }: { id: string; initialData?: FirestoreDocument | null }) {
     // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-    const [data, loading, error] = useDocumentData(doc(db, "documents", id));
+    const [liveData, loading, error] = useDocumentData(doc(db, "documents", id));
     const [input, setInput] = useState("");
     const [isUpdating, startTransition] = useTransition();
     const [newTag, setNewTag] = useState("");
@@ -40,7 +50,6 @@ function Document({ id }: { id: string }) {
     const [isAddCommentDialogOpen, setIsAddCommentDialogOpen] = useState(false);
     const [selectedText, setSelectedText] = useState("");
     const [activeCommentsCount, setActiveCommentsCount] = useState(0);
-    const [commentMode, setCommentMode] = useState(false);
     const [allComments, setAllComments] = useState<Comment[]>([]);
     const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
     const [lastSavedContent, setLastSavedContent] = useState("");
@@ -49,26 +58,23 @@ function Document({ id }: { id: string }) {
     const isOwner = useOwner();
     const { theme } = useTheme();
     const { user } = useUser();
+    const { t } = useTranslation();
+    const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
 
-    // Handle text selection for comments - only works when comment mode is active
-    const handleTextSelection = useCallback(() => {
-        if (!commentMode) return; // Only trigger in comment mode
+    // Use initialData for immediate rendering, fall back to liveData
+    const data = liveData ?? initialData ?? null;
 
-        const selection = window.getSelection();
-        const text = selection?.toString().trim();
-
-        if (text && text.length > 0) {
-            setSelectedText(text);
-            setIsAddCommentDialogOpen(true);
-            setCommentMode(false); // Auto-disable after opening dialog
-        }
-    }, [commentMode]);
+    // Handler for comment button click in formatting toolbar
+    const handleCommentClick = useCallback((text: string) => {
+        setSelectedText(text);
+        setIsAddCommentDialogOpen(true);
+    }, []);
 
     useEffect(() => {
-        if (data) {
+        if (typeof data?.title === "string") {
             setInput(data.title);
         }
-    }, [data]);
+    }, [data?.title]);
 
     // Track active comments count with optimized query
     useEffect(() => {
@@ -118,17 +124,20 @@ function Document({ id }: { id: string }) {
     // Auto-save snapshots every 5 minutes when content changes
     useEffect(() => {
         if (!data || !user) return;
-        
+
+        const currentContent = typeof data.content === "string" ? data.content : "";
+        const currentTitle = typeof data.title === "string" ? data.title : "";
+
         // Store initial content
-        setLastSavedContent(data.content || "");
-        setLastSavedTitle(data.title || "");
-        
+        setLastSavedContent(currentContent);
+        setLastSavedTitle(currentTitle);
+
         // Set up auto-save timer
         const autoSaveInterval = 5 * 60 * 1000; // 5 minutes
-        
+
         const createSnapshot = async () => {
             // Only create snapshot if content has changed
-            if (data.content !== lastSavedContent || data.title !== lastSavedTitle) {
+            if (currentContent !== lastSavedContent || currentTitle !== lastSavedTitle) {
                 try {
                     // Create a new version in the versions subcollection
                     const versionRef = doc(collection(db, "documents", id, "versions"));
@@ -139,78 +148,59 @@ function Document({ id }: { id: string }) {
                         userId: user.id,
                         userName: user.fullName || user.username || user.id
                     });
-                    
+
                     // Update saved content reference
-                    setLastSavedContent(data.content || "");
-                    setLastSavedTitle(data.title || "");
-                    
+                    setLastSavedContent(currentContent);
+                    setLastSavedTitle(currentTitle);
+
                     console.log("Auto-saved document snapshot");
                 } catch (error) {
                     console.error("Error creating snapshot:", error);
                 }
             }
         };
-        
+
         // Clear any existing timer
         if (autoSaveTimerRef.current) {
             clearInterval(autoSaveTimerRef.current);
         }
-        
+
         // Set new timer
         autoSaveTimerRef.current = setInterval(createSnapshot, autoSaveInterval);
-        
+
         // Cleanup on unmount
         return () => {
             if (autoSaveTimerRef.current) {
                 clearInterval(autoSaveTimerRef.current);
             }
         };
-    }, [id, data, user, lastSavedContent, lastSavedTitle]);
+    }, [id, data?.content, data?.title, user, lastSavedContent, lastSavedTitle]);
 
     // Clean up old versions (older than 7 days) on component mount
     useEffect(() => {
         const cleanupOldVersions = async () => {
             if (!id) return;
-            
+
             try {
                 const versionsRef = collection(db, "documents", id, "versions");
                 const sevenDaysAgo = new Date();
                 sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                
+
                 const q = query(versionsRef, where("timestamp", "<", Timestamp.fromDate(sevenDaysAgo)));
                 const snapshot = await getDocs(q);
-                
+
                 snapshot.forEach(async (doc) => {
                     await deleteDoc(doc.ref);
                 });
-                
+
                 console.log(`Cleaned up ${snapshot.size} old versions`);
             } catch (error) {
                 console.error("Error cleaning up old versions:", error);
             }
         };
-        
+
         cleanupOldVersions();
     }, [id]);
-
-    // Add selection listener
-    useEffect(() => {
-        document.addEventListener('mouseup', handleTextSelection);
-        return () => document.removeEventListener('mouseup', handleTextSelection);
-    }, [handleTextSelection]);
-
-    // Add keyboard shortcut for comment mode (Ctrl/Cmd + Shift + C)
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                setCommentMode(prev => !prev);
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, []);
 
     // Highlight text in the editor when a comment is selected
     useEffect(() => {
@@ -271,27 +261,27 @@ function Document({ id }: { id: string }) {
     }, [highlightedCommentId, allComments]);
 
     // NOW safe to do conditional returns after all hooks are called
-    if (loading) {
+    if (loading && !data) {
         return (
             <div className="flex flex-col items-center justify-center h-screen gap-4">
                 <div className="relative w-16 h-16">
                     <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
                     <div className="absolute inset-0 border-4 border-transparent border-t-primary border-r-primary rounded-full animate-spin"></div>
                 </div>
-                <div className="text-muted-foreground text-sm font-medium">Loading document...</div>
+                <div className="text-muted-foreground text-sm font-medium">{t("document.status.loading")}</div>
             </div>
         );
     }
 
     if (error) {
         return <div className="flex items-center justify-center h-screen">
-            <div className="text-red-500 dark:text-red-400 text-lg">Error loading document: {error.message}</div>
+            <div className="text-red-500 dark:text-red-400 text-lg">{t("document.status.errorWithMessage", { message: error.message })}</div>
         </div>;
     }
 
     if (!data) {
         return <div className="flex items-center justify-center h-screen">
-            <div className="text-gray-500 dark:text-gray-400 text-lg">Document not found</div>
+            <div className="text-gray-500 dark:text-gray-400 text-lg">{t("document.status.notFound")}</div>
         </div>;
     }
 
@@ -350,21 +340,20 @@ function Document({ id }: { id: string }) {
                 <div className="w-full">
                     <div className="flex items-center justify-between gap-4">
                         {/* Document title form */}
-                        <form className="flex-1 flex items-center gap-2" onSubmit={updateTitle}>
+                        <form className="flex-1 flex items-center gap-2 group" onSubmit={updateTitle}>
                             <Input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 className="font-medium text-xl border-transparent focus-visible:ring-0 focus-visible:border-transparent bg-transparent px-1 py-1 h-auto w-full max-w-md"
-                                placeholder="Untitled"
+                                placeholder={t("document.placeholders.title")}
                             />
                             <Button
                                 disabled={isUpdating}
                                 type="submit"
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                {isUpdating ? "Saving..." : "Save"}
+                                {isUpdating ? t("document.actions.saving") : t("document.actions.save")}
                             </Button>
                         </form>
 
@@ -390,7 +379,7 @@ function Document({ id }: { id: string }) {
                                 <Input
                                     value={newTag}
                                     onChange={(e) => setNewTag(e.target.value)}
-                                    placeholder="Add tag..."
+                                    placeholder={t("document.placeholders.addTag")}
                                     className="h-7 w-24 text-sm"
                                 />
                                 <Button
@@ -408,7 +397,7 @@ function Document({ id }: { id: string }) {
                                 size="icon"
                                 variant="ghost"
                                 className="h-7 w-7 text-blue-500 hover:text-blue-600 transition-colors"
-                                title="Generate tags with AI"
+                                title={t("document.actions.generateTagsTitle")}
                             >
                                 <Wand2 size={14} className={isGeneratingTags ? 'animate-pulse' : ''} />
                             </Button>
@@ -416,43 +405,18 @@ function Document({ id }: { id: string }) {
 
                         {/* Document controls */}
                         <div className="flex items-center gap-3">
-                            {/* Add Comment Mode Toggle */}
-                            <Button
-                                variant={commentMode ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setCommentMode(!commentMode)}
-                                className="relative transition-all"
-                                title="Toggle Comment Mode (Ctrl+Shift+C)"
-                            >
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                {commentMode ? 'Select Text to Comment' : 'Add Comment'}
-                            </Button>
-
-                            {/* View Comments Button */}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsCommentsSidebarOpen(true)}
-                                className="relative"
-                            >
-                                View Comments
-                                {activeCommentsCount > 0 && (
-                                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
-                                        {activeCommentsCount}
-                                    </span>
-                                )}
-                            </Button>
+                            <ImportExportMenu editor={blockEditor} />
 
                             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-md">
                                 {isOwner ? (
                                     <div className="flex items-center gap-1.5">
                                         <Crown size={14} className="text-amber-500" />
-                                        <span className="font-medium">Owner</span>
+                                        <span className="font-medium">{t("document.roles.owner")}</span>
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-1.5">
                                         <User size={14} className="text-blue-500" />
-                                        <span className="font-medium">Editor</span>
+                                        <span className="font-medium">{t("document.roles.editor")}</span>
                                     </div>
                                 )}
                             </div>
@@ -464,8 +428,21 @@ function Document({ id }: { id: string }) {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onSelect={() => setIsCommentsSidebarOpen(true)}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-2">
+                                                <MessageSquare className="h-4 w-4" />
+                                                {t("document.actions.viewComments")}
+                                            </div>
+                                            {activeCommentsCount > 0 && (
+                                                <span className="px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                                                    {activeCommentsCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => window.location.href = `/doc/${id}/history`}>
-                                        Version History
+                                        {t("document.menu.versionHistory")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem>
                                         <ManageUsers />
@@ -490,12 +467,7 @@ function Document({ id }: { id: string }) {
 
             {/* Main editor area with proper padding */}
             <main className="w-full px-5 py-6 relative">
-                {commentMode && (
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg animate-pulse">
-                        📝 Comment Mode Active - Select text to add a comment
-                    </div>
-                )}
-                <Editor darkMode={theme === 'dark'} />
+                <Editor darkMode={theme === 'dark'} onEditorReady={setBlockEditor} onCommentClick={handleCommentClick} />
             </main>
 
             {/* Comment Components */}

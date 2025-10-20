@@ -15,6 +15,7 @@ import { BotIcon, LanguagesIcon } from "lucide-react";
 import { toast } from "sonner";
 import Markdown from "react-markdown";
 import { BlockNoteEditor } from "@blocknote/core";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Map frontend language names to ISO 639-1 codes for M2M100 model
 const languageMap: Record<string, string> = {
@@ -45,6 +46,7 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
   const [summary, setSummary] = useState<string>("");
   const [question, setQuestion] = useState<string>("");
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslation();
 
   const handleAskQuestion = async (e: FormEvent) => {
     e.preventDefault();
@@ -75,11 +77,11 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
       console.log("Request body:", { documentData, targetLang }); // Debug: Inspect request body
 
       if (!documentData || documentData === "No content available") {
-        toast.error("No document content to translate");
+        toast.error(t("editor.translate.noContent"));
         return;
       }
       if (!targetLang) {
-        toast.error("Please select a valid language");
+        toast.error(t("editor.translate.selectLanguageError"));
         return;
       }
 
@@ -100,10 +102,10 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
       if (res.ok) {
         const { translated_text } = await res.json();
         setSummary(translated_text);
-        toast.success("Document translated successfully!");
+        toast.success(t("editor.translate.success"));
       } else {
         const { error } = await res.json();
-        toast.error(`Translation failed: ${error}`);
+        toast.error(`${t("editor.translate.error")}: ${error}`);
       }
     });
   };
@@ -113,15 +115,14 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
       <Button asChild variant="outline">
         <DialogTrigger>
           <LanguagesIcon />
-          Translate
+          {t("editor.translate.button")}
         </DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Translate the Document</DialogTitle>
+          <DialogTitle>{t("editor.translate.title")}</DialogTitle>
           <DialogDescription>
-            Select the language you want to translate the document to and AI will translate a summary 
-            of the document in the selected language.
+            {t("editor.translate.description")}
           </DialogDescription>
           <hr className="mt-5" />
           {question && <p className="mt-5 text-gray-500">Q: {question}</p>}
@@ -132,17 +133,17 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
             <div className="flex">
               <BotIcon className="w-10 flex-shrink-0" />
               <p className="font-bold">
-                GPT {isPending ? "is thinking..." : "Says"}:
+                GPT {isPending ? t("editor.translate.translating") : "Says"}:
               </p>
             </div>
-            <p>{isPending ? "Thinking..." : <Markdown>{summary}</Markdown>}</p>
+            <p>{isPending ? t("editor.translate.translating") : <Markdown>{summary}</Markdown>}</p>
           </div>
         )}
 
         <form className="flex gap-2" onSubmit={handleAskQuestion}>
           <Select value={language} onValueChange={(value) => setLanguage(value)}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a language..." />
+              <SelectValue placeholder={t("editor.translate.selectLanguage")} />
             </SelectTrigger>
             <SelectContent>
               {languages.map((language) => (
@@ -153,7 +154,7 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
             </SelectContent>
           </Select>
           <Button type="submit" disabled={!language || isPending}>
-            {isPending ? "Translating..." : "Translate"}
+            {isPending ? t("editor.translate.translating") : t("editor.translate.button")}
           </Button>
         </form>
       </DialogContent>
