@@ -3,18 +3,25 @@
 import { db } from "@/firebase";
 import { doc } from "firebase/firestore";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { FileTextIcon } from "lucide-react";
+import { memo } from "react";
 
-function SidebarOption({ href, id, isExpanded }: {
+const SidebarOption = memo(function SidebarOption({ href, id, isExpanded }: {
     href: string;
     id: string;
     isExpanded: boolean;
 }) {
-    const [data, loading, error] = useDocument(doc(db, "documents", id));
+    const [data, loading] = useDocument(doc(db, "documents", id));
     const pathname = usePathname();
+    const router = useRouter();
     const isActive = href.includes(pathname) && pathname !== "/";
+
+    // Prefetch document on hover for instant navigation
+    const handleMouseEnter = () => {
+        router.prefetch(href);
+    };
 
     if (!data) return null;
 
@@ -24,6 +31,8 @@ function SidebarOption({ href, id, isExpanded }: {
     return (
         <Link
             href={href}
+            onMouseEnter={handleMouseEnter}
+            prefetch={true}
             className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
                 ${isActive
                     ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
@@ -36,6 +45,6 @@ function SidebarOption({ href, id, isExpanded }: {
             {isExpanded && <p className="truncate text-sm leading-tight max-w-[180px]">{truncatedTitle}</p>}
         </Link>
     )
-}
+})
 
 export default SidebarOption

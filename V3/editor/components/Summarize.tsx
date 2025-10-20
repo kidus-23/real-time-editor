@@ -7,6 +7,7 @@ import { BotIcon, FileTextIcon } from "lucide-react";
 import { toast } from "sonner";
 import Markdown from "react-markdown";
 import { BlockNoteEditor } from "@blocknote/core";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type SummarizeProps = {
   editor: BlockNoteEditor;
@@ -16,6 +17,7 @@ function Summarize({ editor }: SummarizeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [summary, setSummary] = useState<string>("");
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslation();
 
   const handleSummarize = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,7 +49,7 @@ function Summarize({ editor }: SummarizeProps) {
       console.log("Request body:", { documentData }); // Debug: Inspect request body
 
       if (!documentData || documentData === "No content available") {
-        toast.error("No document content to summarize");
+        toast.error(t("editor.summarize.noContent"));
         return;
       }
 
@@ -67,10 +69,10 @@ function Summarize({ editor }: SummarizeProps) {
       if (res.ok) {
         const { summary: summaryText } = await res.json();
         setSummary(summaryText);
-        toast.success("Document summarized successfully!");
+        toast.success(t("editor.summarize.success"));
       } else {
         const { error } = await res.json();
-        toast.error(`Summarization failed: ${error}`);
+        toast.error(`${t("editor.summarize.error")}: ${error}`);
       }
     });
   };
@@ -80,14 +82,14 @@ function Summarize({ editor }: SummarizeProps) {
       <Button asChild variant="outline">
         <DialogTrigger>
           <FileTextIcon />
-          Summarize
+          {t("editor.summarize.button")}
         </DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Summarize the Document</DialogTitle>
+          <DialogTitle>{t("editor.summarize.title")}</DialogTitle>
           <DialogDescription>
-            AI will generate a summary of the document content.
+            {t("editor.summarize.description")}
           </DialogDescription>
           <hr className="mt-5" />
         </DialogHeader>
@@ -97,16 +99,16 @@ function Summarize({ editor }: SummarizeProps) {
             <div className="flex">
               <BotIcon className="w-10 flex-shrink-0" />
               <p className="font-bold">
-                AI {isPending ? "is thinking..." : "Summary"}:
+                AI {isPending ? t("editor.summarize.generating") : "Summary"}:
               </p>
             </div>
-            <p>{isPending ? "Thinking..." : <Markdown>{summary}</Markdown>}</p>
+            <p>{isPending ? t("editor.summarize.generating") : <Markdown>{summary}</Markdown>}</p>
           </div>
         )}
 
         <form className="flex gap-2" onSubmit={handleSummarize}>
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Summarizing..." : "Summarize"}
+            {isPending ? t("editor.summarize.generating") : t("editor.summarize.button")}
           </Button>
         </form>
       </DialogContent>

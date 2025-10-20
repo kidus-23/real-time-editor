@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback, memo } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { resolveComment, deleteComment } from "@/actions/actions"
 import { toast } from "sonner"
-import { collection, query, orderBy, onSnapshot, where } from "firebase/firestore"
+import { collection, query, orderBy, onSnapshot, limit } from "firebase/firestore"
 import { db } from "@/firebase"
 import { Comment } from "@/types/comment"
 import { Check, Trash2, MessageSquare, CheckCircle2 } from "lucide-react"
@@ -22,19 +22,23 @@ interface CommentsSidebarProps {
     onCommentClick?: (commentId: string) => void
 }
 
-export default function CommentsSidebar({ isOpen, onClose, roomId, onCommentClick }: CommentsSidebarProps) {
+const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId, onCommentClick }: CommentsSidebarProps) {
     const [comments, setComments] = useState<Comment[]>([])
-    const [activeComments, setActiveComments] = useState<Comment[]>([])
-    const [resolvedComments, setResolvedComments] = useState<Comment[]>([])
     const { user } = useUser()
+
+    // Memoize filtered comments to avoid recalculating on every render
+    const activeComments = useMemo(() => comments.filter(c => !c.resolved), [comments])
+    const resolvedComments = useMemo(() => comments.filter(c => c.resolved), [comments])
 
     useEffect(() => {
         if (!roomId) return
 
         const commentsRef = collection(db, "documents", roomId, "comments")
-        const q = query(commentsRef, orderBy("createdAt", "desc"))
+        // Limit to 50 most recent comments, no metadata changes for better performance
+        const q = query(commentsRef, orderBy("createdAt", "desc"), limit(50))
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        let timeoutId: NodeJS.Timeout
+        const unsubscribe = onSnapshot(q, { includeMetadataChanges: false }, (snapshot) => {
             const fetchedComments: Comment[] = []
             snapshot.forEach((doc) => {
                 fetchedComments.push({
@@ -43,24 +47,29 @@ export default function CommentsSidebar({ isOpen, onClose, roomId, onCommentClic
                 } as Comment)
             })
 
-            setComments(fetchedComments)
-            setActiveComments(fetchedComments.filter(c => !c.resolved))
-            setResolvedComments(fetchedComments.filter(c => c.resolved))
+            // Debounce state updates to reduce re-renders (200ms)
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                setComments(fetchedComments)
+            }, 200)
         })
 
-        return () => unsubscribe()
+        return () => {
+            clearTimeout(timeoutId)
+            unsubscribe()
+        }
     }, [roomId])
 
-    const handleResolve = async (commentId: string, resolved: boolean) => {
+    const handleResolve = useCallback(async (commentId: string, resolved: boolean) => {
         const result = await resolveComment(commentId, roomId, resolved)
         if (result.success) {
             toast.success(resolved ? "Comment resolved" : "Comment reopened")
         } else {
             toast.error("Failed to update comment")
         }
-    }
+    }, [roomId])
 
-    const handleDelete = async (commentId: string) => {
+    const handleDelete = useCallback(async (commentId: string) => {
         if (!confirm("Are you sure you want to delete this comment?")) return
 
         const result = await deleteComment(commentId, roomId)
@@ -69,7 +78,7 @@ export default function CommentsSidebar({ isOpen, onClose, roomId, onCommentClic
         } else {
             toast.error("Failed to delete comment")
         }
-    }
+    }, [roomId])
 
     const CommentCard = ({ comment, showResolveButton }: { comment: Comment, showResolveButton: boolean }) => {
         const isOwner = user?.emailAddresses[0].emailAddress === comment.createdBy.email
@@ -219,4 +228,6 @@ export default function CommentsSidebar({ isOpen, onClose, roomId, onCommentClic
             </SheetContent>
         </Sheet>
     )
-}
+})
+
+export default CommentsSidebar

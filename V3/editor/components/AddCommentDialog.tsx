@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { CommentFormData } from "@/types/comment"
 import { useUser } from "@clerk/nextjs"
 import stringToColor from "@/lib/stringToColor"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface AddCommentDialogProps {
     isOpen: boolean
@@ -32,6 +33,7 @@ export default function AddCommentDialog({
     const [comment, setComment] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const { user } = useUser()
+    const { t } = useTranslation()
 
     // Get user's unique color
     const userColor = user?.emailAddresses[0]?.emailAddress
@@ -40,7 +42,7 @@ export default function AddCommentDialog({
 
     const handleSubmit = async () => {
         if (!comment.trim()) {
-            toast.error("Please enter a comment")
+            toast.error(t("addCommentDialog.toast.required"))
             return
         }
 
@@ -52,14 +54,14 @@ export default function AddCommentDialog({
             })
 
             if (result.success) {
-                toast.success("Comment added successfully")
+                toast.success(t("addCommentDialog.toast.success"))
                 setComment("")
                 onClose()
             } else {
-                toast.error(result.error || "Failed to add comment")
+                toast.error(result.error || t("addCommentDialog.toast.failure"))
             }
         } catch (error) {
-            toast.error("An error occurred")
+            toast.error(t("addCommentDialog.toast.error"))
         } finally {
             setIsSubmitting(false)
         }
@@ -74,13 +76,13 @@ export default function AddCommentDialog({
         <Dialog open={isOpen} onOpenChange={handleClose}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Add Comment</DialogTitle>
+                    <DialogTitle>{t("addCommentDialog.title")}</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">
-                            Selected Text
+                            {t("addCommentDialog.labels.selectedText")}
                         </label>
                         <div
                             className="p-3 rounded-md border-l-4"
@@ -94,11 +96,11 @@ export default function AddCommentDialog({
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Your Comment</label>
+                        <label className="text-sm font-medium">{t("addCommentDialog.labels.yourComment")}</label>
                         <Textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder="Add your comment..."
+                            placeholder={t("addCommentDialog.placeholder")}
                             className="min-h-[100px] resize-none"
                             autoFocus
                         />
@@ -107,10 +109,10 @@ export default function AddCommentDialog({
 
                 <DialogFooter>
                     <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
-                        Cancel
+                        {t("addCommentDialog.buttons.cancel")}
                     </Button>
                     <Button onClick={handleSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? "Adding..." : "Add Comment"}
+                        {isSubmitting ? t("addCommentDialog.buttons.submitting") : t("addCommentDialog.buttons.submit")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

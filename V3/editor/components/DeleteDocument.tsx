@@ -14,8 +14,10 @@ import { Button } from "./ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import { deleteDocument } from "@/actions/actions";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function DeleteDocument() {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false)
     const [isPending, startTransition] = useTransition();
     const pathname = usePathname();
@@ -30,9 +32,9 @@ function DeleteDocument() {
             if (success) {
                 setIsOpen(false);
                 router.push("/");
-                toast.success("Room deleted successfully");
+                toast.success(t("deleteDocument.success"));
             } else {
-                toast.error("Failed to delete room");
+                toast.error(t("deleteDocument.error"));
             }
         });
     };
@@ -45,22 +47,21 @@ function DeleteDocument() {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <div onClick={handleClick} className="w-full cursor-pointer">
-                Delete
+                {t("deleteDocument.button")}
             </div>
             <DialogContent onClick={e => e.stopPropagation()}>
                 <DialogHeader>
-                    <DialogTitle>Are you sure you want to Delete?</DialogTitle>
+                    <DialogTitle>{t("deleteDocument.title")}</DialogTitle>
                     <DialogDescription>
-                        This will delete the document and all its contents, removing
-                        all users from the document.
+                        {t("deleteDocument.description")}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="sm:justify-end gap-2">
                     <Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending}>
-                        {isPending ? "Deleting..." : "Delete"}
+                        {isPending ? t("deleteDocument.deleting") : t("deleteDocument.button")}
                     </Button>
                     <DialogClose asChild>
-                        <Button type="button" variant="secondary">Close</Button>
+                        <Button type="button" variant="secondary">{t("deleteDocument.close")}</Button>
                     </DialogClose>
                 </DialogFooter>
             </DialogContent>

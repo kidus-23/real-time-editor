@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Input } from "./ui/input";
 import { BlockNoteEditor, Block } from "@blocknote/core";
 import { marked } from "marked";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type ComposerProps = {
   editor: BlockNoteEditor;
@@ -17,6 +18,7 @@ function Composer({ editor }: ComposerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [prompt, setPrompt] = useState<string>("");
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslation();
 
   // Parse Markdown to BlockNote blocks
   const markdownToBlockNote = (markdown: string): Block[] => {
@@ -101,7 +103,7 @@ function Composer({ editor }: ComposerProps) {
 
     startTransition(async () => {
       if (!prompt) {
-        toast.error("Please enter a prompt");
+        toast.error(t("editor.compose.noPrompt"));
         return;
       }
 
@@ -123,17 +125,17 @@ function Composer({ editor }: ComposerProps) {
         // Parse Markdown and convert to BlockNote blocks
         const blocks = markdownToBlockNote(generated);
         if (blocks.length === 0) {
-          toast.error("No valid content generated");
+          toast.error(t("editor.compose.error"));
           return;
         }
         // Insert blocks at current cursor position
         editor.insertBlocks(blocks, editor.getTextCursorPosition().block);
-        toast.success("Content generated and inserted!");
+        toast.success(t("editor.compose.insertBelow"));
         setIsOpen(false);
         setPrompt("");
       } else {
         const { error } = await res.json();
-        toast.error(`Generation failed: ${error}`);
+        toast.error(`${t("editor.compose.error")}: ${error}`);
       }
     });
   };
@@ -143,14 +145,14 @@ function Composer({ editor }: ComposerProps) {
       <Button asChild variant="outline">
         <DialogTrigger>
           <PencilIcon />
-          AI Composer
+          {t("editor.compose.button")}
         </DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>AI Composer</DialogTitle>
+          <DialogTitle>{t("editor.compose.title")}</DialogTitle>
           <DialogDescription>
-            Enter a prompt and AI will generate content to insert at your cursor.
+            {t("editor.compose.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -158,11 +160,11 @@ function Composer({ editor }: ComposerProps) {
           <Input
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Enter your prompt (e.g., 'A short poem about love')"
+            placeholder={t("editor.compose.placeholder")}
             disabled={isPending}
           />
           <Button type="submit" disabled={!prompt || isPending}>
-            {isPending ? "Generating..." : "Generate"}
+            {isPending ? t("editor.compose.generating") : t("editor.compose.button")}
           </Button>
         </form>
       </DialogContent>

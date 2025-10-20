@@ -23,6 +23,7 @@ import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 
 import { db } from "@/firebase"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { useTranslation } from "@/hooks/useTranslation"
 
 // Import useRoom but don't use it directly
 import { useRoom } from "@liveblocks/react"
@@ -91,6 +92,7 @@ function Chatbar() {
 
   const pathname = usePathname()
   const { user } = useUser()
+  const { t } = useTranslation()
 
   // Check if we're in a document page
   const isDocumentPage = pathname?.startsWith('/doc/')
@@ -257,7 +259,7 @@ function Chatbar() {
     } catch (error) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Sorry, something went wrong. Please try again.',
+        content: t("chatbar.error"),
         timestamp: new Date(),
         status: 'error'
       }])
@@ -328,7 +330,7 @@ function Chatbar() {
               <div className="px-4 py-2 flex items-center justify-between">
                 <SheetTitle className="flex items-center gap-2 text-sm">
                   <Bot className="h-4 w-4" />
-                  AI Assistant
+                  {t("chatbar.title")}
                 </SheetTitle>
                 <div className="flex items-center gap-2">
                   <Button
@@ -352,7 +354,7 @@ function Chatbar() {
                   className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
                 >
                   <MessagesSquare className="h-4 w-4 mr-2" />
-                  Chat
+                  {t("chatbar.tabs.chat")}
                 </TabsTrigger>
                 {showTeamChat && (
                   <TabsTrigger
@@ -360,7 +362,7 @@ function Chatbar() {
                     className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent relative"
                   >
                     <Users className="h-4 w-4 mr-2" />
-                    Team Chat
+                    {t("chatbar.tabs.teamChat")}
                     {unreadCount > 0 && (
                       <Badge
                         variant="destructive"
@@ -402,7 +404,7 @@ function Chatbar() {
                       </div>
                       {message.model && (
                         <span className="text-xs text-muted-foreground px-2">
-                          {message.model} • {message.usage?.total_tokens} tokens
+                          {message.model} • {t("chatbar.tokens", { count: message.usage?.total_tokens })}
                         </span>
                       )}
                     </div>
@@ -410,7 +412,7 @@ function Chatbar() {
                   {isLoading && (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Thinking...
+                      {t("chatbar.loading")}
                     </div>
                   )}
                   <div ref={messagesEndRef} />
@@ -428,7 +430,7 @@ function Chatbar() {
                     />
                     <Label htmlFor="document-context" className="flex items-center text-sm">
                       <FileText className="h-4 w-4 mr-1" />
-                      Use document as context
+                      {t("chatbar.buttons.useDocumentContext")}
                     </Label>
                   </div>
                 )}
@@ -436,7 +438,7 @@ function Chatbar() {
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={useDocumentContext ? "Ask about this document..." : "Message AI assistant..."}
+                  placeholder={useDocumentContext ? t("chatbar.placeholders.chatWithContext") : t("chatbar.placeholders.chat")}
                   disabled={isLoading}
                   className="min-h-[80px] max-h-[160px] resize-none"
                   onKeyDown={(e) => {
@@ -536,7 +538,7 @@ function Chatbar() {
                         <span className="text-xs text-muted-foreground px-2">
                           {message.timestamp?.toDate ?
                             message.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
-                            'Just now'}
+                            t("chatbar.justNow")}
                         </span>
                       </div>
                     ))}
@@ -550,7 +552,7 @@ function Chatbar() {
                     <Textarea
                       value={teamChatInput}
                       onChange={(e) => setTeamChatInput(e.target.value)}
-                      placeholder="Message your team..."
+                      placeholder={t("chatbar.placeholders.teamChat")}
                       className="min-h-[60px] max-h-[120px] resize-none"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {

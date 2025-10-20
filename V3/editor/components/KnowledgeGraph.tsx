@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { useUser } from '@clerk/nextjs';
@@ -25,7 +25,7 @@ interface GraphData {
   links: GraphLink[];
 }
 
-function KnowledgeGraph() {
+const KnowledgeGraph = memo(function KnowledgeGraph() {
   const { user } = useUser();
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState<boolean>(true);
@@ -35,7 +35,7 @@ function KnowledgeGraph() {
 
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchDocumentsAndBuildGraph = async () => {
       setLoading(true);
       try {
@@ -43,18 +43,18 @@ function KnowledgeGraph() {
         const roomsQuery = query(
           collection(db, 'users', user.emailAddresses[0].toString(), 'rooms')
         );
-        
+
         const roomsSnapshot = await getDocs(roomsQuery);
         const roomIds = roomsSnapshot.docs.map(doc => doc.data().roomId);
-        
+
         // Fetch document data including tags
         const documents: Array<{ id: string; title: string; tags: string[] }> = [];
-        
+
         for (const roomId of roomIds) {
           const docRef = collection(db, 'documents');
           const docQuery = query(docRef, where('__name__', '==', roomId));
           const docSnapshot = await getDocs(docQuery);
-          
+
           docSnapshot.forEach(doc => {
             const data = doc.data();
             documents.push({
@@ -64,12 +64,12 @@ function KnowledgeGraph() {
             });
           });
         }
-        
+
         // Build graph data
         const nodes: GraphNode[] = [];
         const links: GraphLink[] = [];
         const tagMap: Record<string, string[]> = {}; // Maps tags to document IDs
-        
+
         // Add document nodes
         documents.forEach(doc => {
           nodes.push({
@@ -78,7 +78,7 @@ function KnowledgeGraph() {
             val: 5, // Document nodes are larger
             color: '#4f46e5' // Indigo for documents
           });
-          
+
           // Process tags
           doc.tags.forEach(tag => {
             if (!tagMap[tag]) {
@@ -87,11 +87,11 @@ function KnowledgeGraph() {
             tagMap[tag].push(doc.id);
           });
         });
-        
+
         // Add tag nodes and create links
         Object.entries(tagMap).forEach(([tag, docIds]) => {
           const tagId = `tag-${tag}`;
-          
+
           // Only add tags that connect multiple documents
           if (docIds.length > 0) {
             nodes.push({
@@ -100,7 +100,7 @@ function KnowledgeGraph() {
               val: 3, // Tag nodes are smaller
               color: isDarkMode ? '#10b981' : '#059669' // Green for tags
             });
-            
+
             // Create links between tags and documents
             docIds.forEach(docId => {
               links.push({
@@ -109,18 +109,18 @@ function KnowledgeGraph() {
                 value: 1
               });
             });
-            
+
             // Create links between documents that share tags
             if (docIds.length > 1) {
               for (let i = 0; i < docIds.length; i++) {
                 for (let j = i + 1; j < docIds.length; j++) {
                   // Check if this link already exists
                   const existingLink = links.find(
-                    link => 
+                    link =>
                       (link.source === docIds[i] && link.target === docIds[j]) ||
                       (link.source === docIds[j] && link.target === docIds[i])
                   );
-                  
+
                   if (existingLink) {
                     existingLink.value += 1; // Strengthen existing link
                   } else {
@@ -135,7 +135,7 @@ function KnowledgeGraph() {
             }
           }
         });
-        
+
         setGraphData({ nodes, links });
       } catch (error) {
         console.error('Error building knowledge graph:', error);
@@ -143,10 +143,10 @@ function KnowledgeGraph() {
         setLoading(false);
       }
     };
-    
+
     fetchDocumentsAndBuildGraph();
   }, [user, isDarkMode]);
-  
+
   useEffect(() => {
     if (graphRef.current && graphData.nodes.length > 0) {
       // Center and zoom the graph for better visibility
@@ -167,40 +167,40 @@ function KnowledgeGraph() {
           <p>No connections found</p>
         </div>
       ) : (
-              <ForceGraph2D
-                ref={graphRef}
-                graphData={graphData}
-                nodeLabel="name"
-                nodeColor="color"
-                nodeVal="val"
-                linkWidth={link => Math.sqrt(link.value)}
-                linkColor={() => isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}
-                backgroundColor={isDarkMode ? "#090e19" : "#ffffff"}
-                nodeCanvasObject={(node, ctx, globalScale) => {
-                  const label = node.name as string;
-                  const fontSize = 14/globalScale;
-                  ctx.font = `${fontSize}px Sans-Serif`;
-                  
-                  ctx.fillStyle = node.color as string;
-                  ctx.beginPath();
-                  ctx.arc(node.x as number, node.y as number, node.val as number, 0, 2 * Math.PI);
-                  ctx.fill();
-                  
-                  ctx.textAlign = 'center';
-                  ctx.textBaseline = 'middle';
-                  ctx.fillStyle = isDarkMode ? 'white' : 'black';
-                  ctx.fillText(label, node.x as number, (node.y as number) + node.val as number + fontSize);
-                }}
-                onNodeClick={(node) => {
-                  // Navigate to document if it's a document node
-                  if (!node.id.toString().startsWith('tag-')) {
-                    window.open(`/doc/${node.id}`, '_blank');
-                  }
-                }}
-              />
-            )}
+        <ForceGraph2D
+          ref={graphRef}
+          graphData={graphData}
+          nodeLabel="name"
+          nodeColor="color"
+          nodeVal="val"
+          linkWidth={link => Math.sqrt(link.value)}
+          linkColor={() => isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}
+          backgroundColor={isDarkMode ? "#090e19" : "#ffffff"}
+          nodeCanvasObject={(node, ctx, globalScale) => {
+            const label = node.name as string;
+            const fontSize = 14 / globalScale;
+            ctx.font = `${fontSize}px Sans-Serif`;
+
+            ctx.fillStyle = node.color as string;
+            ctx.beginPath();
+            ctx.arc(node.x as number, node.y as number, node.val as number, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = isDarkMode ? 'white' : 'black';
+            ctx.fillText(label, node.x as number, (node.y as number) + node.val as number + fontSize);
+          }}
+          onNodeClick={(node) => {
+            // Navigate to document if it's a document node
+            if (!node.id.toString().startsWith('tag-')) {
+              window.open(`/doc/${node.id}`, '_blank');
+            }
+          }}
+        />
+      )}
     </div>
   );
-}
+})
 
 export default KnowledgeGraph;

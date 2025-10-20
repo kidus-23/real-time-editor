@@ -13,11 +13,13 @@ import {
 import { FormEvent, useState, useTransition } from "react";
 import { Button } from "./ui/button";
 import { usePathname } from "next/navigation";
-import { inviteUserToDocument } from "@/actions/actions";
+import { sendRoomInviteNotification } from "@/actions/actions";
 import { toast } from "sonner";
 import { Input } from "./ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function InviteUser() {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false)
     const [isPending, startTransition] = useTransition();
     const pathname = usePathname();
@@ -29,13 +31,13 @@ function InviteUser() {
         if (!roomId) return;
 
         startTransition(async () => {
-            const { success } = await inviteUserToDocument(roomId, email);
+            const { success } = await sendRoomInviteNotification(roomId, email);
             if (success) {
                 setIsOpen(false);
                 setEmail('');
-                toast.success("User Added to room successfully");
+                toast.success(t("notifications.inviteSent"));
             } else {
-                toast.error("Failed to Add user to the room!");
+                toast.error(t("notifications.inviteError"));
             }
         });
     };
@@ -48,25 +50,25 @@ function InviteUser() {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <div onClick={handleClick} className="w-full cursor-pointer">
-                Invite
+                {t("inviteUser.button")}
             </div>
             <DialogContent onClick={e => e.stopPropagation()}>
                 <DialogHeader>
-                    <DialogTitle>Invite a User to collaborate!</DialogTitle>
+                    <DialogTitle>{t("inviteUser.title")}</DialogTitle>
                     <DialogDescription>
-                        Enter the email address of the user you want to invite.
+                        {t("inviteUser.description")}
                     </DialogDescription>
                 </DialogHeader>
                 <form className="flex gap-2" onSubmit={handleInvite}>
                     <Input
                         type="email"
-                        placeholder="email@example.com"
+                        placeholder={t("inviteUser.placeholder")}
                         className="w-full"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
                     <Button type="submit" disabled={!email || isPending}>
-                        {isPending ? "Inviting..." : "Invite"}
+                        {isPending ? t("inviteUser.inviting") : t("inviteUser.button")}
                     </Button>
                 </form>
             </DialogContent>

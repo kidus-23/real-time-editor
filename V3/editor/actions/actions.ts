@@ -311,3 +311,94 @@ export async function deleteComment(commentId: string, roomId: string) {
         return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 }
+
+// Room invitation notifications
+export async function sendRoomInviteNotification(roomId: string, inviteeEmail: string) {
+    const { sessionClaims } = await auth();
+    if (!sessionClaims?.email) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        // Get document title
+        const docSnap = await adminDB.collection('documents').doc(roomId).get();
+        const docData = docSnap.data();
+        const documentTitle = docData?.title || "Untitled Document";
+
+        // Get inviter name
+        const inviterName = sessionClaims.fullName || sessionClaims.email;
+
+        // Send notification via Liveblocks
+        await liveblocks.triggerInboxNotification({
+            userId: inviteeEmail,
+            kind: "$roomInvite",
+            subjectId: roomId,
+            activityData: {
+                roomId,
+                documentTitle,
+                inviterEmail: sessionClaims.email,
+                inviterName,
+                invitedAt: new Date().toISOString(),
+            },
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error sending room invite notification:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+}
+
+export async function acceptRoomInvite(roomId: string, inviteeEmail: string, notificationId: string) {
+    const { sessionClaims } = await auth();
+    if (!sessionClaims?.email || sessionClaims.email !== inviteeEmail) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        // Add user to room
+        await adminDB
+            .collection('users')
+            .doc(inviteeEmail)
+            .collection('rooms')
+            .doc(roomId)
+            .set({
+                userId: inviteeEmail,
+                role: "editor",
+                createAt: new Date(),
+                roomId: roomId,
+                lastOpened: new Date(),
+            });
+
+        // Mark notification as read
+        await liveblocks.markInboxNotificationAsRead({
+            userId: inviteeEmail,
+            inboxNotificationId: notificationId,
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error accepting room invite:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+}
+
+export async function declineRoomInvite(inviteeEmail: string, notificationId: string) {
+    const { sessionClaims } = await auth();
+    if (!sessionClaims?.email || sessionClaims.email !== inviteeEmail) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        // Just mark notification as read without adding to room
+        await liveblocks.markInboxNotificationAsRead({
+            userId: inviteeEmail,
+            inboxNotificationId: notificationId,
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error declining room invite:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+}
