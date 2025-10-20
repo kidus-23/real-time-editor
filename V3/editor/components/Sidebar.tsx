@@ -87,16 +87,23 @@ function Sidebar() {
 
     const menuOptions = (
         <>
-            <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="mb-4 p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-            >
-                {isExpanded ? (
-                    <ChevronLeftIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                ) : (
-                    <ChevronRightIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+            <div className="flex items-center mb-4 gap-2">
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                >
+                    {isExpanded ? (
+                        <ChevronLeftIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    ) : (
+                        <ChevronRightIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    )}
+                </button>
+                {isExpanded && user && (
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {(user.firstName || user.fullName || user.username || user.primaryEmailAddress?.emailAddress)}'s Space
+                    </div>
                 )}
-            </button>
+            </div>
 
             <div className="flex flex-col gap-3 w-full">
                 {/* Home Button */}

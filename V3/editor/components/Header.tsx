@@ -32,17 +32,18 @@ function Header() {
 
     return (
         <div className="flex items-center justify-between p-5">
-            {user && (
-                <h1 className="text-2xl">
-                    {t("header.spaceTitle", { name: userDisplayName })}
-                </h1>
-            )}
+            <div className="h-8">
+                {mounted && theme === 'dark' ? (
+                    <img src="/kenlogodark.png" alt="Ken Logo" className="h-full" />
+                ) : (
+                    <img src="/kenlogo.png" alt="Ken Logo" className="h-full" />
+                )}
+            </div>
 
             {/* Breadcrumbs */}
             <Breadcrumbs />
 
             <div className="flex items-center gap-3">
-                <LanguageSwitcher />
                 {mounted && (
                     <Button
                         className={`${theme === 'dark' ?

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { useUser } from '@clerk/nextjs'
 import { Button } from './ui/button'
+import LanguageSwitcher from './LanguageSwitcher'
 import { Switch } from './ui/switch'
 import { Label } from './ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
@@ -63,6 +64,13 @@ function Settings() {
                     <SelectItem value="system">System</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="flex items-center justify-between mt-4">
+                <Label>Language</Label>
+                <div className="w-[180px]">
+                  <LanguageSwitcher />
+                </div>
               </div>
             </div>
           </div>
