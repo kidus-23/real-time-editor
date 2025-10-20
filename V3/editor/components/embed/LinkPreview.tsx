@@ -41,6 +41,7 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
         const loadMetadata = async () => {
             try {
                 setLoading(true);
+                setError(false);
                 const data = await fetchLinkMetadata(url);
                 setMetadata(data);
                 setError(false);

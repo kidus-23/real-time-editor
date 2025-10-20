@@ -102,21 +102,35 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
             };
         }
 
-        // Fetch metadata from API
-        const response = await fetch('/api/link-preview', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ url }),
-        });
+        // Fetch metadata from API with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch link metadata');
+        try {
+            const response = await fetch('/api/link-preview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url }),
+                signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch link metadata: ${response.status}`);
+            }
+
+            const metadata: LinkMetadata = await response.json();
+            return metadata;
+        } catch (fetchError: any) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                console.error('Request timeout for URL:', url);
+            }
+            throw fetchError;
         }
-
-        const metadata: LinkMetadata = await response.json();
-        return metadata;
     } catch (error) {
         console.error('Error fetching link metadata:', error);
         // Return basic metadata as fallback
