@@ -455,7 +455,7 @@ function Chatbar({ className = '' }: { className?: string }) {
                       <div className="relative group">
                         <div
                           className={cn(
-                            "rounded-lg px-3 py-2 w-fit max-w-[90%] break-words",
+                            "rounded-lg px-3 py-2 w-fit",
                             message.role === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
@@ -465,7 +465,7 @@ function Chatbar({ className = '' }: { className?: string }) {
                             message.content
                           ) : (
                             <>
-                              <div className="relative pb-8">
+                              <div className="relative pb-8 max-w-[90%] break-words">
                                 <ReactMarkdown
                                 components={{
                                   code: ({ node, inline, children, ...props }) => {
