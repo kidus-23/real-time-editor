@@ -237,7 +237,7 @@ function Sidebar({ className = '' }: { className?: string }) {
             <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger asChild>
-                        <button className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                        <button className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors" suppressHydrationWarning={true}>
                             <MenuIcon className="text-gray-700 dark:text-gray-200" size={24} />
                         </button>
                     </SheetTrigger>

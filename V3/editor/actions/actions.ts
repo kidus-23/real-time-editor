@@ -376,8 +376,8 @@ export async function acceptRoomInvite(roomId: string, inviteeEmail: string, not
                 lastOpened: new Date(),
             });
 
-        // Mark notification as read
-        await liveblocks.markInboxNotificationAsRead({
+        // Delete the notification since the invite is accepted
+        await liveblocks.deleteInboxNotification({
             userId: inviteeEmail,
             inboxNotificationId: notificationId,
         });
@@ -396,8 +396,8 @@ export async function declineRoomInvite(inviteeEmail: string, notificationId: st
     }
 
     try {
-        // Just mark notification as read without adding to room
-        await liveblocks.markInboxNotificationAsRead({
+        // Just delete the notification since the invite is declined
+        await liveblocks.deleteInboxNotification({
             userId: inviteeEmail,
             inboxNotificationId: notificationId,
         });

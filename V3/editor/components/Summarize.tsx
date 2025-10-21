@@ -102,7 +102,7 @@ function Summarize({ editor }: SummarizeProps) {
                 AI {isPending ? t("editor.summarize.generating") : "Summary"}:
               </p>
             </div>
-            <p>{isPending ? t("editor.summarize.generating") : <Markdown>{summary}</Markdown>}</p>
+            <div>{isPending ? t("editor.summarize.generating") : <Markdown>{summary}</Markdown>}</div>
           </div>
         )}
 
