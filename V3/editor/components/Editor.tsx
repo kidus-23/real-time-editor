@@ -126,7 +126,7 @@ const BlockNote = memo(function BlockNote({ doc, provider, darkMode, editor, roo
   return (
     <div className={`relative mx-auto ${darkMode ? 'dark' : ''}`}>
       <BlockNoteView
-        className="min-h-screen"
+        className="min-h-[60vh] notion-editor"
         editor={editor}
         theme={darkMode ? "dark" : "light"}
         formattingToolbar={false}
@@ -279,13 +279,13 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
 
   return (
     <div className="relative">
-      <div className="flex gap-2 mb-2">
+      <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-gray-200/30 dark:border-gray-700/30">
         <TranslateDocument doc={doc} editor={editor} />
         <Summarize editor={editor} />
         <Composer editor={editor} />
         <QuestionGenerator editor={editor} />
       </div>
-      <div className="pt-2">
+      <div className="pt-4">
         <BlockNote doc={doc} provider={provider} editor={editor} darkMode={darkMode} roomId={room.id} onCommentClick={onCommentClick} />
       </div>
     </div>

@@ -11,76 +11,84 @@ export default function LandingPage() {
   const router = useRouter()
 
   return (
-    <main className="min-h-screen bg-white text-black font-sans">
+    <main className="min-h-screen bg-[#fafafa] dark:bg-[#0f0f0f] text-gray-900 dark:text-gray-100 font-['Recursive','Inter',system-ui] transition-colors duration-300">
 
-      {/* Navbar */}
-      <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto">
-        <div className="text-3xl font-bold">KEN</div>
-        <ul className="flex gap-6 items-center">
-          <li className="hover:text-gray-600 cursor-pointer">About</li>
-          <li className="hover:text-gray-600 cursor-pointer">Features</li>
-          <li className="hover:text-gray-600 cursor-pointer">Docs</li>
-          <li>
-            <SignInButton mode="modal">
-              <button className="hover:text-gray-600">Login</button>
-            </SignInButton>
-          </li>
-          <li>
-            <SignInButton mode="modal">
-              <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition">
-                Get Started
-              </button>
-            </SignInButton>
-          </li>
-        </ul>
+      {/* Navbar - Enhanced with glassmorphism */}
+      <nav className="sticky top-0 z-50 bg-white/60 dark:bg-[#0a0a0a]/60 backdrop-blur-[12px] border-b border-gray-200/20 dark:border-gray-800/20">
+        <div className="flex justify-between items-center p-5 max-w-7xl mx-auto">
+          <div className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">KEN</div>
+          <ul className="flex gap-8 items-center">
+            <li className="hover:text-primary cursor-pointer transition-colors font-medium text-sm">About</li>
+            <li className="hover:text-primary cursor-pointer transition-colors font-medium text-sm">Features</li>
+            <li className="hover:text-primary cursor-pointer transition-colors font-medium text-sm">Docs</li>
+            <li>
+              <SignInButton mode="modal">
+                <button className="hover:text-primary transition-colors font-medium text-sm">Login</button>
+              </SignInButton>
+            </li>
+            <li>
+              <SignInButton mode="modal">
+                <button className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all font-semibold shadow-sm">
+                  Get Started
+                </button>
+              </SignInButton>
+            </li>
+          </ul>
+        </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center text-center py-36 px-6 overflow-hidden">
+      {/* Hero Section - Enhanced with gradient and glass */}
+      <section className="relative flex flex-col items-center justify-center text-center py-32 px-6 overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-[#0a0a0a] dark:to-[#0f0f0f]">
+        {/* Subtle background glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 dark:from-blue-600/10 dark:via-transparent dark:to-purple-600/10"></div>
         <motion.h1
-          className="text-5xl md:text-6xl font-bold mb-6 leading-tight"
-          initial={{ y: -50, opacity: 0 }}
+          className="relative z-10 text-5xl md:text-7xl font-bold mb-8 leading-[1.1] tracking-tight"
+          initial={{ y: -30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1 }}
+          transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
         >
-          Collaborate. Create. Think<br/>
-          <span className="bg-black text-white px-3 py-1 inline-block"> — in real time.</span>
+          <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+            Collaborate. Create. Think
+          </span>
+          <br/>
+          <span className="inline-block mt-3 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 text-white px-6 py-3 rounded-2xl shadow-lg"> — in real time.</span>
         </motion.h1>
         <motion.p
-          className="text-gray-600 text-lg max-w-xl mb-8"
+          className="relative z-10 text-gray-600 dark:text-gray-300 text-xl max-w-2xl mb-10 leading-relaxed font-light"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          style={{ lineHeight: 1.8 }}
         >
           AI-powered, real-time collaborative document editor with advanced features for modern teams.
         </motion.p>
-        <motion.div className="flex gap-4 mb-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
+        <motion.div className="relative z-10 flex gap-5 mb-16" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.8 }}>
           <SignInButton mode="modal">
-            <button className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition">Start Editing</button>
+            <button className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-4 rounded-xl hover:scale-105 active:scale-95 transition-all font-semibold text-base shadow-md">Start Editing</button>
           </SignInButton>
-          <button onClick={() => router.push("/about")} className="border border-gray-400 px-6 py-3 rounded-md hover:border-black transition">
+          <button onClick={() => router.push("/about")} className="border-2 border-gray-300 dark:border-gray-700 px-8 py-4 rounded-xl hover:border-gray-900 dark:hover:border-white hover:scale-105 active:scale-95 transition-all font-semibold text-base">
             See How It Works
           </button>
         </motion.div>
 
-        {/* Collaborators mock */}
+        {/* Collaborators mock - Enhanced glass card */}
         <motion.div
-          className="bg-gray-50 rounded-xl p-6 w-full max-w-2xl"
+          className="relative z-10 bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-[10px] border border-gray-200/20 dark:border-gray-700/20 rounded-2xl p-8 w-full max-w-2xl shadow-sm"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
+          transition={{ delay: 0.9, duration: 0.8 }}
         >
-          <div className="flex items-center mb-2">
+          <div className="flex items-center mb-4">
             <div className="flex -space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gray-300"></div>
-              <div className="w-8 h-8 rounded-full bg-gray-400"></div>
-              <div className="w-8 h-8 rounded-full bg-gray-500"></div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white dark:border-gray-900"></div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white dark:border-gray-900"></div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-white dark:border-gray-900"></div>
             </div>
-            <span className="ml-3 text-gray-600 text-sm">3 collaborators editing</span>
+            <span className="ml-4 text-gray-700 dark:text-gray-300 text-sm font-medium">3 collaborators editing</span>
           </div>
-          <div className="bg-white rounded-md border border-gray-200 p-3 text-left text-gray-700">
-            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></span>
-            Alex is typing...
+          <div className="bg-white dark:bg-[#0a0a0a] rounded-xl border border-gray-200/30 dark:border-gray-700/30 p-4 text-left text-gray-800 dark:text-gray-200">
+            <span className="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+            <span className="font-medium">Alex is typing...</span>
           </div>
         </motion.div>
       </section>
@@ -103,13 +111,13 @@ export default function LandingPage() {
       {/* CTA Section */}
       <CTASection />
 
-      {/* Footer */}
-      <footer className="py-12 bg-white text-gray-500 text-center border-t border-gray-200">
-        <div className="flex justify-center gap-6 mb-4">
-          <a href="#" className="hover:text-black transition">About</a>
-          <a href="#" className="hover:text-black transition">Docs</a>
-          <a href="#" className="hover:text-black transition">Privacy</a>
-          <a href="#" className="hover:text-black transition">Contact</a>
+      {/* Footer - Enhanced */}
+      <footer className="py-16 bg-white dark:bg-[#0a0a0a] text-gray-500 dark:text-gray-400 text-center border-t border-gray-200/30 dark:border-gray-800/30">
+        <div className="flex justify-center gap-8 mb-6">
+          <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About</a>
+          <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Docs</a>
+          <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Privacy</a>
+          <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Contact</a>
         </div>
         <div className="text-sm">&copy; 2025 KEN. All rights reserved.</div>
       </footer>
@@ -127,9 +135,9 @@ function FeaturesSection() {
   ]
 
   return (
-    <section className="py-24 px-6 text-center max-w-7xl mx-auto bg-white">
+    <section className="py-28 px-6 text-center max-w-7xl mx-auto bg-white dark:bg-[#0f0f0f]">
       <motion.h2 
-        className="text-4xl font-bold mb-16"
+        className="text-5xl font-bold mb-20 tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -137,27 +145,27 @@ function FeaturesSection() {
       >
         Features
       </motion.h2>
-      <div className="grid md:grid-cols-4 gap-8">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {features.map((f, i) => (
           <motion.div 
             key={i} 
-            className="p-8 rounded-2xl cursor-pointer group bg-gradient-to-b from-white to-gray-50"
+            className="p-8 rounded-2xl cursor-pointer group bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-[8px] border border-gray-200/20 dark:border-gray-700/20 hover:border-gray-300/40 dark:hover:border-gray-600/40 transition-all"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: i * 0.1 }}
             whileHover={{ 
-              backgroundColor: '#FAFAFA',
-              scale: 1.02 
+              scale: 1.03,
+              y: -4
             }}
           >
             <div className="mb-6 flex justify-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-black transition-colors">
-                <div className="text-xl text-black group-hover:text-white transition-colors">{f.icon}</div>
+              <div className="w-14 h-14 bg-gray-100/80 dark:bg-gray-800/80 rounded-xl flex items-center justify-center group-hover:bg-gray-900 dark:group-hover:bg-white transition-colors">
+                <div className="text-2xl text-gray-900 dark:text-gray-100 group-hover:text-white dark:group-hover:text-gray-900 transition-colors">{f.icon}</div>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-4 text-black">{f.title}</h3>
-            <p className="text-gray-600 leading-relaxed">{f.description}</p>
+            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">{f.title}</h3>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed" style={{ lineHeight: 1.7 }}>{f.description}</p>
           </motion.div>
         ))}
       </div>
