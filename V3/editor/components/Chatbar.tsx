@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useTranslation } from "@/hooks/useTranslation"
 import APIKeySettings from "@/components/APIKeySettings"
+import ReactMarkdown from 'react-markdown'
 
 // Import useRoom but don't use it directly
 import { useRoom } from "@liveblocks/react"
@@ -452,13 +453,19 @@ function Chatbar({ className = '' }: { className?: string }) {
                     >
                       <div
                         className={cn(
-                          "rounded-lg px-3 py-2 max-w-[80%]",
+                          "rounded-lg px-3 py-2 max-w-[80%] prose dark:prose-invert prose-sm",
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
                         )}
                       >
-                        {message.content}
+                        {message.role === 'user' ? (
+                          message.content
+                        ) : (
+                          <ReactMarkdown>
+                            {message.content}
+                          </ReactMarkdown>
+                        )}
                       </div>
                       {message.model && (
                         <span className="text-xs text-muted-foreground px-2">
