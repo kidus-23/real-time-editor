@@ -120,7 +120,7 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                         onClick={() => onCommentClick?.(comment.id!)}
                         title="Click to view in document"
                     >
-                        <p className="text-xs italic text-muted-foreground">"{comment.highlightedText}"</p>
+                            <p className="text-xs italic text-muted-foreground">&quot;{comment.highlightedText}&quot;</p>
                     </div>
 
                     <p className="text-sm">{comment.content}</p>
@@ -131,9 +131,9 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleResolve(comment.id!, true)}
-                                className="text-xs"
+                                className="text-xs hover-scale rounded-lg"
                             >
-                                <Check className="h-3 w-3 mr-1" />
+                                <Check className="h-3.5 w-3.5 mr-1.5" />
                                 Resolve
                             </Button>
                         )}
@@ -143,7 +143,7 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleResolve(comment.id!, false)}
-                                className="text-xs"
+                                className="text-xs hover-scale rounded-lg"
                             >
                                 Reopen
                             </Button>
@@ -154,9 +154,9 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleDelete(comment.id!)}
-                                className="text-xs text-destructive hover:text-destructive"
+                                className="text-xs text-destructive hover:text-destructive hover-scale rounded-lg"
                             >
-                                <Trash2 className="h-3 w-3 mr-1" />
+                                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                                 Delete
                             </Button>
                         )}
@@ -168,12 +168,12 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
 
     return (
         <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent side="right" className="w-[400px] sm:w-[500px] p-0 flex flex-col h-full">
-                <SheetHeader className="p-4 border-b">
-                    <SheetTitle className="flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5" />
+            <SheetContent side="right" className="w-[400px] sm:w-[500px] p-0 flex flex-col h-full glass-intense">
+                <SheetHeader className="p-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                    <SheetTitle className="flex items-center gap-3 text-2xl font-bold tracking-tight">
+                        <MessageSquare className="h-6 w-6" />
                         Comments
-                        <Badge variant="secondary">{comments.length}</Badge>
+                        <Badge variant="secondary" className="rounded-full px-3 py-1">{comments.length}</Badge>
                     </SheetTitle>
                 </SheetHeader>
 
@@ -195,9 +195,9 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                         <ScrollArea className="h-full p-4">
                             <div className="space-y-3">
                                 {activeComments.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                                        <p className="text-sm">No active comments</p>
+                                    <div className="glass rounded-2xl p-10 text-center">
+                                        <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                                        <p className="text-base text-gray-600 dark:text-gray-400 font-medium">No active comments</p>
                                     </div>
                                 ) : (
                                     activeComments.map((comment) => (
@@ -212,9 +212,9 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                         <ScrollArea className="h-full p-4">
                             <div className="space-y-3">
                                 {resolvedComments.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <CheckCircle2 className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                                        <p className="text-sm">No resolved comments</p>
+                                    <div className="glass rounded-2xl p-10 text-center">
+                                        <CheckCircle2 className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                                        <p className="text-base text-gray-600 dark:text-gray-400 font-medium">No resolved comments</p>
                                     </div>
                                 ) : (
                                     resolvedComments.map((comment) => (

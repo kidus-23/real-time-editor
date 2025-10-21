@@ -2,13 +2,10 @@
 
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { FormEvent, useState, useTransition } from "react";
 import { Button } from "./ui/button";
@@ -52,22 +49,22 @@ function InviteUser() {
             <div onClick={handleClick} className="w-full cursor-pointer">
                 {t("inviteUser.button")}
             </div>
-            <DialogContent onClick={e => e.stopPropagation()}>
+            <DialogContent onClick={e => e.stopPropagation()} className="glass-intense rounded-3xl border-0">
                 <DialogHeader>
-                    <DialogTitle>{t("inviteUser.title")}</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-2xl font-bold tracking-tight">{t("inviteUser.title")}</DialogTitle>
+                    <DialogDescription className="text-base text-gray-600 dark:text-gray-400">
                         {t("inviteUser.description")}
                     </DialogDescription>
                 </DialogHeader>
-                <form className="flex gap-2" onSubmit={handleInvite}>
+                <form className="flex gap-3 mt-4" onSubmit={handleInvite}>
                     <Input
                         type="email"
                         placeholder={t("inviteUser.placeholder")}
-                        className="w-full"
+                        className="w-full h-12 rounded-xl"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
-                    <Button type="submit" disabled={!email || isPending}>
+                    <Button type="submit" disabled={!email || isPending} size="lg" className="hover-scale">
                         {isPending ? t("inviteUser.inviting") : t("inviteUser.button")}
                     </Button>
                 </form>

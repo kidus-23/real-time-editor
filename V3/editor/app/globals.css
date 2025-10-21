@@ -785,30 +785,6 @@
   }
 }
 
-.dark @keyframes flash-highlight {
-
-  0%,
-  100% {
-    background-color: #a16207;
-    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
-  }
-
-  25% {
-    background-color: #ca8a04;
-    box-shadow: 0 0 20px 10px rgba(234, 179, 8, 0.4);
-  }
-
-  50% {
-    background-color: #eab308;
-    box-shadow: 0 0 30px 15px rgba(234, 179, 8, 0.6);
-  }
-
-  75% {
-    background-color: #ca8a04;
-    box-shadow: 0 0 20px 10px rgba(234, 179, 8, 0.4);
-  }
-}
-
 .comment-highlight-active {
   animation: flash-highlight 1.5s ease-in-out 2;
   border-left: 4px solid #facc15 !important;
