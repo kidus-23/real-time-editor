@@ -193,9 +193,8 @@ export async function generateTags(roomId: string, content: string) {
             throw new Error("No content provided");
         }
 
-        const url = new URL('/api/generate-tags', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
-
-        const response = await fetch(url, {
+        // Make request to the Cloudflare backend
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/generate-tags`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -204,13 +203,20 @@ export async function generateTags(roomId: string, content: string) {
             cache: 'no-store'
         });
 
+        const result = await response.json();
+
         if (!response.ok) {
-            throw new Error(`Failed to generate tags: ${response.statusText}`);
+            throw new Error(result.error || `Failed to generate tags: ${response.statusText}`);
         }
 
-        const result = await response.json();
         if (!result.success || !Array.isArray(result.tags)) {
+            console.error('Invalid tag generation response:', result);
             throw new Error("Invalid response from tag generation");
+        }
+
+        // Validate tags
+        if (!result.tags.length || result.tags.length < 5) {
+            throw new Error("Expected at least 5 tags from generation");
         }
 
         // Update document with new tags

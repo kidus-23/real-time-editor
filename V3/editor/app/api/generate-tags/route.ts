@@ -24,13 +24,18 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        const prompt = `Extract exactly 3 most important and relevant tags from the following document content.
-        Focus on the main themes and concepts.
-        Return ONLY a JSON array of 3 strings with no explanation or other text.
-        Make tags specific, concise, and highly relevant to the core topics.
-        Example response format: ["tag1", "tag2", "tag3"]
-        
-        Document content: ${content}`;
+        const prompt = `Analyze the following document content and extract exactly 3 most relevant tags.
+
+Rules:
+1. Respond ONLY with a valid JSON array containing exactly 3 string tags
+2. Each tag should be a single word or short phrase (2-3 words maximum)
+3. Tags should represent the main topics, themes, or concepts
+4. Do not include any explanations, markdown, or additional text
+5. Format must be exactly: ["tag1","tag2","tag3"]
+
+Example valid response: ["web development","react hooks","typescript"]
+
+Document content to analyze: ${content}`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
@@ -38,17 +43,40 @@ export async function POST(req: NextRequest) {
         
         // Parse the response as JSON
         try {
-            // Handle cases where the model might include markdown code blocks
-            const cleanedText = text.replace(/```json\s*|```\s*/g, '');
+            // First clean any potential markdown or extra whitespace
+            const cleanedText = text
+                .replace(/```json\s*|```\s*/g, '')  // Remove code blocks
+                .replace(/[\n\r\t]/g, '')           // Remove newlines and tabs
+                .trim();
+                
+            // Ensure the text starts with [ and ends with ]
+            if (!cleanedText.startsWith('[') || !cleanedText.endsWith(']')) {
+                throw new Error("Response is not in the expected JSON array format");
+            }
+            
             const tags = JSON.parse(cleanedText);
             
             if (!Array.isArray(tags)) {
                 throw new Error("Response is not an array");
             }
+
+            // Validate tags
+            if (tags.length !== 3) {
+                throw new Error("Expected exactly 3 tags");
+            }
+
+            // Ensure all items are strings and clean them
+            const cleanedTags = tags
+                .map(tag => String(tag).trim())
+                .filter(tag => tag.length > 0);
+
+            if (cleanedTags.length !== 3) {
+                throw new Error("Invalid tags received");
+            }
             
             return NextResponse.json({ 
                 success: true,
-                tags: tags
+                tags: cleanedTags
             });
         } catch (parseError) {
             console.error('Failed to parse tags JSON:', parseError);
