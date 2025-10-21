@@ -9,7 +9,12 @@ import Chatbar from "@/components/Chatbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import LocaleProvider from "@/components/LocaleProvider";
 import { cookies } from "next/headers";
-import { defaultLocale, getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import {
+  defaultLocale,
+  getDictionary,
+  isLocale,
+  type Locale,
+} from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -26,8 +31,11 @@ export default async function RootLayout({
   const locale: Locale = isLocale(localeCookie) ? localeCookie : defaultLocale;
   const dictionary = await getDictionary(locale);
 
+  // pass publishable key explicitly to surface misconfiguration quickly
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={publishableKey}>
       <LiveBlocksProvider>
         <html lang={locale} suppressHydrationWarning>
           <body suppressHydrationWarning>

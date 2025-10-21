@@ -1,49 +1,64 @@
-'use server';
-
-import { db } from "@/firebase-admin";
-import { auth } from "@clerk/nextjs";
+"use server";
+import { adminDB as db } from "@/firebase-admin";
+import { auth } from "@clerk/nextjs/server";
 import { Timestamp } from "firebase-admin/firestore";
 
-// Create a snapshot of the document
-export async function createSnapshot(documentId: string) {
-  const { userId } = auth();
-  
+// Create a snapshot of the document with Markdown content
+export async function createSnapshot(
+  documentId: string,
+  title: string,
+  markdownContent: string
+) {
+  // Ensure auth errors are handled gracefully (auth() can throw if Clerk isn't available)
+  let session;
+  try {
+    session = await auth();
+  } catch (err) {
+    console.error("Auth error in createSnapshot:", err);
+    return { success: false, error: "Authentication error" };
+  }
+
+  const userId = (session as any)?.userId;
   if (!userId) {
     return { success: false, error: "Not authenticated" };
   }
 
+  if (!documentId) {
+    return { success: false, error: "Missing documentId" };
+  }
+
   try {
-    // Get the current document data
     const docRef = db.collection("documents").doc(documentId);
-    const docSnap = await docRef.get();
-    
-    if (!docSnap.exists) {
-      return { success: false, error: "Document not found" };
-    }
-    
-    const data = docSnap.data();
-    
+
     // Create a new version in the versions subcollection
     const versionRef = docRef.collection("versions").doc();
     await versionRef.set({
-      content: data?.content || "",
-      title: data?.title || "Untitled",
+      content: markdownContent, // Store as Markdown string
+      title: title,
       timestamp: Timestamp.now(),
       userId: userId,
-      userName: data?.userName || userId
+      userName: userId, // You can enhance this with actual user name if available
     });
-    
+
     return { success: true };
   } catch (error) {
     console.error("Error creating snapshot:", error);
-    return { success: false, error: "Failed to create snapshot" };
+    const msg = (error as any)?.message || String(error);
+    return { success: false, error: `Failed to create snapshot: ${msg}` };
   }
 }
 
 // Delete versions older than 7 days
 export async function cleanupOldVersions(documentId: string) {
-  const { userId } = auth();
-  
+  let session;
+  try {
+    session = await auth();
+  } catch (err) {
+    console.error("Auth error in cleanupOldVersions:", err);
+    return { success: false, error: "Authentication error" };
+  }
+
+  const userId = (session as any)?.userId;
   if (!userId) {
     return { success: false, error: "Not authenticated" };
   }
@@ -52,21 +67,22 @@ export async function cleanupOldVersions(documentId: string) {
     const docRef = db.collection("documents").doc(documentId);
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const oldVersionsQuery = await docRef.collection("versions")
+
+    const oldVersionsQuery = await docRef
+      .collection("versions")
       .where("timestamp", "<", Timestamp.fromDate(sevenDaysAgo))
       .get();
-    
+
     const batch = db.batch();
-    oldVersionsQuery.docs.forEach(doc => {
+    oldVersionsQuery.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
-    
+
     await batch.commit();
-    
-    return { 
-      success: true, 
-      deletedCount: oldVersionsQuery.size 
+
+    return {
+      success: true,
+      deletedCount: oldVersionsQuery.size,
     };
   } catch (error) {
     console.error("Error cleaning up old versions:", error);
@@ -76,8 +92,15 @@ export async function cleanupOldVersions(documentId: string) {
 
 // Restore a specific version
 export async function restoreVersion(documentId: string, versionId: string) {
-  const { userId } = auth();
-  
+  let session;
+  try {
+    session = await auth();
+  } catch (err) {
+    console.error("Auth error in restoreVersion:", err);
+    return { success: false, error: "Authentication error" };
+  }
+
+  const userId = (session as any)?.userId;
   if (!userId) {
     return { success: false, error: "Not authenticated" };
   }
@@ -85,33 +108,20 @@ export async function restoreVersion(documentId: string, versionId: string) {
   try {
     const docRef = db.collection("documents").doc(documentId);
     const versionRef = docRef.collection("versions").doc(versionId);
-    
     const versionSnap = await versionRef.get();
+
     if (!versionSnap.exists) {
       return { success: false, error: "Version not found" };
     }
-    
+
     const versionData = versionSnap.data();
-    
-    // Update the document with the version data
-    await docRef.update({
-      content: versionData?.content,
-      title: versionData?.title,
-      lastUpdated: Timestamp.now()
-    });
-    
-    // Create a new version recording this restoration
-    const newVersionRef = docRef.collection("versions").doc();
-    await newVersionRef.set({
-      content: versionData?.content,
-      title: versionData?.title,
-      timestamp: Timestamp.now(),
-      userId: userId,
-      userName: `${userId} (restored version)`,
-      restoredFromId: versionId
-    });
-    
-    return { success: true };
+
+    // The server action should only read the historical version and return it.
+    return {
+      success: true,
+      markdownContent: versionData?.content || "",
+      title: versionData?.title || "Untitled",
+    };
   } catch (error) {
     console.error("Error restoring version:", error);
     return { success: false, error: "Failed to restore version" };
