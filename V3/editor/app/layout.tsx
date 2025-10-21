@@ -38,14 +38,7 @@ export default async function RootLayout({
               storageKey="editor-theme"
             >
               <LocaleProvider locale={locale} dictionary={dictionary}>
-                <Header />
-                <div className="flex min-h-screen">
-                  <Sidebar />
-                  <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto scrollbar-hide">
-                    {children}
-                  </div>
-                </div>
-                <Chatbar />
+                {children}
                 <Toaster position="top-center" />
               </LocaleProvider>
             </ThemeProvider>
