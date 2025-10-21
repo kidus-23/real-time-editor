@@ -40,8 +40,8 @@ function DocumentCard({ id }: { id: string }) {
   };
 
   if (loading) return (
-    <div className="min-w-[240px] h-[160px] glass rounded-2xl p-5 flex items-center justify-center">
-      <div className="animate-pulse h-4 w-24 bg-gray-200/50 dark:bg-gray-700/50 rounded-full"></div>
+    <div className="min-w-[240px] h-[160px] bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-5 flex items-center justify-center border border-gray-200 dark:border-gray-700">
+      <div className="animate-pulse h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
     </div>
   );
 
@@ -52,7 +52,7 @@ function DocumentCard({ id }: { id: string }) {
       href={`/doc/${id}`}
       onMouseEnter={handleMouseEnter}
       prefetch={true}
-      className="min-w-[240px] h-[160px] glass rounded-2xl p-6 hover-lift hover-scale transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+      className="min-w-[240px] h-[160px] bg-white dark:bg-[#1a1a1a] rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-all duration-300 flex flex-col justify-between group cursor-pointer border border-gray-200 dark:border-gray-700"
     >
       <div className="flex items-start justify-between">
         <div className="p-2 rounded-xl bg-blue-500/10 dark:bg-blue-400/10 group-hover:bg-blue-500/20 dark:group-hover:bg-blue-400/20 transition-colors">
@@ -186,7 +186,7 @@ function HomePage() {
         </div>
 
         {/* Hero banner - Glassmorphism with subtle gradient */}
-        <div className="relative overflow-hidden rounded-3xl glass p-12 mb-14 group animate-scale-in border border-blue-500/20 dark:border-blue-400/20">
+        <div className="relative overflow-hidden rounded-lg bg-white dark:bg-[#1a1a1a] p-12 mb-14 group animate-scale-in border border-gray-200 dark:border-gray-700">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-600/20 dark:via-indigo-600/20 dark:to-purple-600/20"></div>
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-5 tracking-tight">
@@ -211,7 +211,7 @@ function HomePage() {
 
         {/* Search bar - Floating glass design */}
         <div className="relative mb-14">
-          <div className="glass-intense rounded-2xl p-2 max-w-3xl mx-auto hover-lift">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-2 max-w-3xl mx-auto border border-gray-200 dark:border-gray-700">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
@@ -249,7 +249,7 @@ function HomePage() {
                 <div
                   key={result.id}
                   onClick={() => router.push(`/doc/${result.roomId}`)}
-                  className="min-w-[240px] h-[160px] glass rounded-2xl p-6 hover-lift hover-scale transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                  className="min-w-[240px] h-[160px] bg-white dark:bg-[#1a1a1a] rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-all duration-300 flex flex-col justify-between group cursor-pointer border border-gray-200 dark:border-gray-700"
                 >
                   <div className="flex items-start justify-between">
                     <div className="p-2 rounded-xl bg-green-500/10 dark:bg-green-400/10 group-hover:bg-green-500/20 dark:group-hover:bg-green-400/20 transition-colors">
@@ -290,7 +290,7 @@ function HomePage() {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-[160px] glass rounded-2xl animate-pulse"></div>
+                <div key={i} className="h-[160px] bg-gray-50 dark:bg-[#1a1a1a] rounded-lg animate-pulse border border-gray-200 dark:border-gray-700"></div>
               ))}
             </div>
           ) : recentDocs.length > 0 ? (
@@ -300,7 +300,7 @@ function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="glass-intense rounded-3xl p-12 text-center animate-fade-in">
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-12 text-center animate-fade-in border border-gray-200 dark:border-gray-700">
               <div className="p-4 rounded-2xl bg-gray-100/50 dark:bg-gray-800/50 w-fit mx-auto mb-6">
                 <FileText className="h-12 w-12 text-gray-400 dark:text-gray-500" />
               </div>

@@ -28,7 +28,7 @@ interface RoomDocument extends DocumentData {
     userId: string;
 }
 
-function Sidebar({ className = '' }: { className?: string }) {
+function Sidebar({ className = '', forceCollapsed = false }: { className?: string; forceCollapsed?: boolean }) {
     const { user } = useUser();
     const pathname = usePathname();
     const isHomeActive = pathname === "/";
@@ -37,6 +37,9 @@ function Sidebar({ className = '' }: { className?: string }) {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(true);
     const { t } = useTranslation();
+    
+    // Auto-collapse when forceCollapsed is true
+    const effectiveExpanded = forceCollapsed ? false : isExpanded;
 
     const [groupedData, setGroupedData] = useState<{
         owner: RoomDocument[];
@@ -88,19 +91,21 @@ function Sidebar({ className = '' }: { className?: string }) {
     const menuOptions = (
         <>
             <div className="flex items-center mb-6 gap-2">
-                <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="p-2.5 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 rounded-xl transition-all duration-200 hover-scale glass border-0"
-                >
-                    {isExpanded ? (
-                        <ChevronLeftIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                    ) : (
-                        <ChevronRightIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                    )}
-                </button>
-                {isExpanded && user && (
+                {!forceCollapsed && (
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200"
+                    >
+                        {effectiveExpanded ? (
+                            <ChevronLeftIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                        ) : (
+                            <ChevronRightIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                        )}
+                    </button>
+                )}
+                {effectiveExpanded && user && (
                     <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 tracking-tight">
-                        {(user.firstName || user.fullName || user.username || user.primaryEmailAddress?.emailAddress)}'s Space
+                        {(user.firstName || user.fullName || user.username || user.primaryEmailAddress?.emailAddress)}&apos;s Space
                     </div>
                 )}
             </div>
@@ -113,12 +118,12 @@ function Sidebar({ className = '' }: { className?: string }) {
                         ${isHomeActive
                             ? "bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold shadow-sm"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"}
-                        ${!isExpanded ? "justify-center" : ""}
+                        ${!effectiveExpanded ? "justify-center" : ""}
                     `}
-                    title={!isExpanded ? t("sidebar.home") : ""}
+                    title={!effectiveExpanded ? t("sidebar.home") : ""}
                 >
                     <HomeIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.home")}</p>}
+                    {effectiveExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.home")}</p>}
                 </Link>
 
                 {/* Search Button */}
@@ -126,11 +131,11 @@ function Sidebar({ className = '' }: { className?: string }) {
                     onClick={() => setIsSearchOpen(true)}
                     className={`flex items-center w-full gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 ease-out hover-scale
                         text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80
-                        ${!isExpanded ? "justify-center" : ""}`}
-                    title={!isExpanded ? t("sidebar.search") : ""}
+                        ${!effectiveExpanded ? "justify-center" : ""}`}
+                    title={!effectiveExpanded ? t("sidebar.search") : ""}
                 >
                     <SearchIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.search")}</p>}
+                    {effectiveExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.search")}</p>}
                 </button>
 
                 {/* Graph Button */}
@@ -140,12 +145,12 @@ function Sidebar({ className = '' }: { className?: string }) {
                         ${isGraphActive
                             ? "bg-purple-500/10 dark:bg-purple-400/10 text-purple-600 dark:text-purple-400 font-semibold shadow-sm"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"}
-                        ${!isExpanded ? "justify-center" : ""}
+                        ${!effectiveExpanded ? "justify-center" : ""}
                     `}
-                    title={!isExpanded ? t("sidebar.graph") : ""}
+                    title={!effectiveExpanded ? t("sidebar.graph") : ""}
                 >
                     <GitGraphIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.graph")}</p>}
+                    {effectiveExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.graph")}</p>}
                 </Link>
 
                 {/* Settings */}
@@ -155,21 +160,22 @@ function Sidebar({ className = '' }: { className?: string }) {
                         ${isSettingsActive
                             ? "bg-gray-500/10 dark:bg-gray-400/10 text-gray-700 dark:text-gray-300 font-semibold shadow-sm"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"}
-                        ${!isExpanded ? "justify-center" : ""}
+                        ${!effectiveExpanded ? "justify-center" : ""}
                     `}
-                    title={!isExpanded ? t("sidebar.settings") : ""}
+                    title={!effectiveExpanded ? t("sidebar.settings") : ""}
                 >
                     <SettingsIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.settings")}</p>}
+                    {effectiveExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.settings")}</p>}
                 </Link>
 
                 {/* New Document Button */}
                 <div className="mt-4 mb-2">
-                    {!isExpanded ? (
+                    {!effectiveExpanded ? (
                         <button
-                            onClick={() => setIsExpanded(true)}
+                            onClick={() => !forceCollapsed && setIsExpanded(true)}
                             className="w-full flex items-center justify-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-blue-500/10 dark:hover:bg-blue-400/10 transition-all duration-200 text-blue-600 dark:text-blue-400 hover-scale"
                             title={t("sidebar.newDocument")}
+                            disabled={forceCollapsed}
                         >
                             <PlusIcon className="w-4 h-4 flex-shrink-0" />
                         </button>
@@ -181,7 +187,7 @@ function Sidebar({ className = '' }: { className?: string }) {
                 </div>
             </div>
 
-            {isExpanded && (
+            {effectiveExpanded && (
                 <div className="flex flex-col gap-4 py-5 w-full max-w-[250px]">
                     {/*My Document List...*/}
                     {groupedData.owner.length === 0 ? (
@@ -199,7 +205,7 @@ function Sidebar({ className = '' }: { className?: string }) {
                                         key={doc.id}
                                         id={doc.id}
                                         href={`/doc/${doc.id}`}
-                                        isExpanded={isExpanded}
+                                        isExpanded={effectiveExpanded}
                                     />
                                 ))}
                             </div>
@@ -219,7 +225,7 @@ function Sidebar({ className = '' }: { className?: string }) {
                                         key={doc.id}
                                         id={doc.id}
                                         href={`/doc/${doc.id}`}
-                                        isExpanded={isExpanded}
+                                        isExpanded={effectiveExpanded}
                                     />
                                 ))}
                             </div>
@@ -234,7 +240,7 @@ function Sidebar({ className = '' }: { className?: string }) {
     );
 
     return (
-        <div className={`p-4 md:p-6 glass min-h-screen border-r border-gray-200/50 dark:border-gray-800/50 h-full transition-all duration-300 ease-out ${isExpanded ? 'w-[280px]' : 'w-[76px]'} ${className}`}>
+        <div className={`p-4 md:p-6 bg-white dark:bg-[#0f0f0f] min-h-screen border-r border-gray-200 dark:border-gray-800 h-full transition-all duration-300 ease-out ${effectiveExpanded ? 'w-[280px]' : 'w-[76px]'} ${className}`}>
             <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger asChild>
@@ -242,7 +248,7 @@ function Sidebar({ className = '' }: { className?: string }) {
                             <MenuIcon className="text-gray-700 dark:text-gray-200" size={24} />
                         </button>
                     </SheetTrigger>
-                    <SheetContent side='left' className="glass-intense">
+                    <SheetContent side='left' className="bg-white dark:bg-[#0f0f0f] border-r border-gray-200 dark:border-gray-800">
                         <SheetHeader>
                             <SheetTitle className="text-xl font-bold tracking-tight">{t("sidebar.menu")}</SheetTitle>
                             <div>

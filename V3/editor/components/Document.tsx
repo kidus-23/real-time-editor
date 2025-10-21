@@ -12,15 +12,15 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, ChevronRight, Clock, FileText, Users2, UserPlus, Users, Trash2, Tag, Maximize2, Minimize2 } from "lucide-react";
+import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, ChevronRight, Clock, FileText, Users2, UserPlus, Users, Trash2, Tag, Maximize2, Minimize2, Expand } from "lucide-react";
 import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
 import { useTheme } from "next-themes";
 import CommentsSidebar from "./CommentsSidebar";
 import AddCommentDialog from "./AddCommentDialog";
+import TableOfContents from "./TableOfContents";
 import { query, where, onSnapshot } from "firebase/firestore";
 import { Comment } from "@/types/comment";
-import stringToColor from "@/lib/stringToColor";
 import { useUser } from "@clerk/nextjs";
 import {
     DropdownMenu,
@@ -68,6 +68,8 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     const { t } = useTranslation();
     const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
     const { zenMode, setZenMode } = useZenMode();
+    const [fullWidth, setFullWidth] = useState(false);
+    const [isTocOpen, setIsTocOpen] = useState(true);
 
     // Use initialData for immediate rendering, fall back to liveData
     const data = liveData ?? initialData ?? null;
@@ -182,7 +184,7 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                 clearInterval(autoSaveTimerRef.current);
             }
         };
-    }, [id, data?.content, data?.title, user, lastSavedContent, lastSavedTitle]);
+    }, [id, data, user, lastSavedContent, lastSavedTitle]);
 
     // Clean up old versions (older than 7 days) on component mount
     useEffect(() => {
@@ -370,7 +372,7 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     return (
         <div className="min-h-screen w-full bg-[#fafafa] dark:bg-[#0f0f0f] transition-colors duration-300">
             {/* Header with document controls */}
-            <header className="sticky top-0 z-10 bg-white/60 dark:bg-[#1a1a1a]/60 backdrop-filter backdrop-blur-[10px] border-b border-gray-200/30 dark:border-gray-800/30 px-6 py-3 transition-all duration-300">
+            <header className="sticky top-0 z-10 bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-all duration-300">
                 <div className="w-full">
                     <div className="flex items-center justify-between gap-4">
                         {/* Document title form */}
@@ -494,6 +496,18 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                             <ImportExportMenu editor={blockEditor} asMenuItem />
                                         </div>
                                     </DropdownMenuItem>
+                                    {/* Full Width Toggle */}
+                                    <DropdownMenuItem onSelect={() => setFullWidth(!fullWidth)}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-2">
+                                                <Expand className="h-4 w-4" />
+                                                <span>Full Width</span>
+                                            </div>
+                                            <div className={`w-9 h-5 rounded-full transition-colors ${fullWidth ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'} relative`}>
+                                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${fullWidth ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </div>
+                                        </div>
+                                    </DropdownMenuItem>
 
                                     {/* Document Tags Submenu */}
                                     <DropdownMenu>
@@ -595,17 +609,20 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                             </DropdownMenu>
                         </div>
                     </div>
-
-                    {/* Collaboration info */}
                 </div>
             </header>
 
             {/* Main editor area with proper padding */}
-            <main className={`w-full px-4 md:px-8 lg:px-12 py-6 relative ${zenMode ? 'max-w-[95vw]' : 'max-w-[1400px]'} mx-auto transition-all duration-300`}>
-                <div className="bg-white/30 dark:bg-[#0a0a0a]/50 backdrop-blur-[4px] rounded-2xl p-6 md:p-10 lg:p-16 min-h-[80vh] animate-fade-in border border-gray-200/10 dark:border-gray-800/20 shadow-sm">
+            <main className={`w-full ${fullWidth ? 'px-4 md:px-8' : 'px-4 md:px-8 lg:px-12'} py-6 relative ${
+                fullWidth ? 'max-w-full' : zenMode ? 'max-w-[1400px]' : 'max-w-[1400px]'
+            } mx-auto transition-all duration-300`}>
+                <div className="min-h-[80vh]">
                     <Editor darkMode={theme === 'dark'} onEditorReady={setBlockEditor} onCommentClick={handleCommentClick} />
                 </div>
             </main>
+
+            {/* Table of Contents */}
+            {!fullWidth && <TableOfContents isOpen={isTocOpen} onToggle={() => setIsTocOpen(!isTocOpen)} />}
 
             {/* Comment Components */}
             <CommentsSidebar
