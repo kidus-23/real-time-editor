@@ -17,7 +17,7 @@ function NewDocumentButton() {
             router.push(`/doc/${docId}`)
         });
     }
-    return <Button onClick={handleCreateNewDocument} disabled={isPending}>
+    return <Button onClick={handleCreateNewDocument} disabled={isPending} className="hover-scale" size="default">
         {isPending ? t("newDocumentButton.creating") : t("newDocumentButton.button")}
     </Button>;
 }

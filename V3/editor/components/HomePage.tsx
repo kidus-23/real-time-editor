@@ -7,7 +7,7 @@ import { collectionGroup, DocumentData, query, where, orderBy, limit, Timestamp,
 import { db } from "@/firebase";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, FileText, Clock, PlusCircle } from "lucide-react";
+import { Search, FileText, Clock } from "lucide-react";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { doc, getDoc } from "firebase/firestore";
 import { Button } from "./ui/button";
@@ -85,7 +85,7 @@ function HomePage() {
   const [isSearching, setIsSearching] = useState(false);
 
   // Fetch user's documents
-  const [data, loading, error] = useCollection(
+  const [data, loading] = useCollection(
     user &&
     query(
       collectionGroup(db, 'rooms'),

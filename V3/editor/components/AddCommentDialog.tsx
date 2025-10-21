@@ -12,7 +12,6 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { createComment } from "@/actions/actions"
 import { toast } from "sonner"
-import { CommentFormData } from "@/types/comment"
 import { useUser } from "@clerk/nextjs"
 import stringToColor from "@/lib/stringToColor"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -60,7 +59,7 @@ export default function AddCommentDialog({
             } else {
                 toast.error(result.error || t("addCommentDialog.toast.failure"))
             }
-        } catch (error) {
+        } catch {
             toast.error(t("addCommentDialog.toast.error"))
         } finally {
             setIsSubmitting(false)
@@ -91,7 +90,7 @@ export default function AddCommentDialog({
                                 borderLeftColor: userColor
                             }}
                         >
-                            <p className="text-sm italic text-gray-700 dark:text-gray-300">"{selectedText}"</p>
+                            <p className="text-sm italic text-gray-700 dark:text-gray-300">&quot;{selectedText}&quot;</p>
                         </div>
                     </div>
 

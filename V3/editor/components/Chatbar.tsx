@@ -338,11 +338,11 @@ function Chatbar({ className = '' }: { className?: string }) {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent
           side="right"
-          className="w-[400px] sm:w-[540px] p-0 flex flex-col h-full"
+          className="w-[400px] sm:w-[540px] p-0 flex flex-col h-full glass-intense border-0"
         >
           <Tabs defaultValue="chat" className="flex flex-col h-full overflow-hidden" onValueChange={(value) => setActiveTab(value as 'chat' | 'teamchat')}>
             {/* Fixed Header */}
-            <div className="shrink-0 border-b sticky top-0 z-10 bg-background">
+            <div className="shrink-0 border-b border-gray-200/20 dark:border-gray-700/30 sticky top-0 z-10 glass">
               <div className="px-4 py-2 flex items-center justify-between">
                 <SheetTitle className="flex items-center gap-2 text-sm">
                   <Bot className="h-4 w-4" />
@@ -365,10 +365,10 @@ function Chatbar({ className = '' }: { className?: string }) {
                   </SheetClose>
                 </div>
               </div>
-              <TabsList className="w-full justify-start rounded-none border-0 bg-transparent p-0">
+              <TabsList className="w-full justify-start rounded-none border-0 bg-transparent p-0 glass">
                 <TabsTrigger
                   value="chat"
-                  className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent hover:bg-gray-100/50 dark:hover:bg-gray-800/30 transition-colors"
                 >
                   <MessagesSquare className="h-4 w-4 mr-2" />
                   {t("chatbar.tabs.chat")}
@@ -376,7 +376,7 @@ function Chatbar({ className = '' }: { className?: string }) {
                 {showTeamChat && (
                   <TabsTrigger
                     value="teamchat"
-                    className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent relative"
+                    className="flex-1 rounded-none border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent hover:bg-gray-100/50 dark:hover:bg-gray-800/30 transition-colors relative"
                   >
                     <Users className="h-4 w-4 mr-2" />
                     {t("chatbar.tabs.teamChat")}
@@ -411,10 +411,10 @@ function Chatbar({ className = '' }: { className?: string }) {
                     >
                       <div
                         className={cn(
-                          "rounded-lg px-3 py-2 max-w-[80%]",
+                          "rounded-xl px-4 py-3 max-w-[80%] transition-all duration-200",
                           message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
+                            ? 'bg-primary text-primary-foreground shadow-md hover-lift'
+                            : 'glass border border-gray-200/20 dark:border-gray-700/30 hover-lift'
                         )}
                       >
                         {message.content}
@@ -437,7 +437,7 @@ function Chatbar({ className = '' }: { className?: string }) {
               </ScrollArea>
 
               {/* Fixed Footer */}
-              <div className="shrink-0 border-t p-4 space-y-4 bg-background z-10">
+              <div className="shrink-0 border-t border-gray-200/20 dark:border-gray-700/30 p-4 space-y-4 glass z-10">
                 {isDocumentPage && (
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -457,7 +457,7 @@ function Chatbar({ className = '' }: { className?: string }) {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={useDocumentContext ? t("chatbar.placeholders.chatWithContext") : t("chatbar.placeholders.chat")}
                   disabled={isLoading}
-                  className="min-h-[80px] max-h-[160px] resize-none"
+                  className="min-h-[80px] max-h-[160px] resize-none glass border-gray-200/40 dark:border-gray-700/40 rounded-xl focus:border-primary/50 transition-all"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -468,7 +468,7 @@ function Chatbar({ className = '' }: { className?: string }) {
 
                 <div className="flex items-center justify-between">
                   <Select value={activeModel} onValueChange={setActiveModel}>
-                    <SelectTrigger className="w-[200px] h-8 text-xs">
+                    <SelectTrigger className="w-[200px] h-8 text-xs glass border-gray-200/40 dark:border-gray-700/40 rounded-xl hover-scale">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -499,7 +499,7 @@ function Chatbar({ className = '' }: { className?: string }) {
                     onClick={handleSubmit}
                     disabled={isLoading}
                     size="sm"
-                    className="h-8"
+                    className="h-8 hover-scale rounded-xl"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -544,10 +544,10 @@ function Chatbar({ className = '' }: { className?: string }) {
                         </div>
                         <div
                           className={cn(
-                            "rounded-lg px-3 py-2 max-w-[80%]",
+                            "rounded-xl px-4 py-3 max-w-[80%] transition-all duration-200",
                             message.userId === user?.emailAddresses[0].emailAddress
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
+                              ? 'bg-primary text-primary-foreground shadow-md hover-lift'
+                              : 'glass border border-gray-200/20 dark:border-gray-700/30 hover-lift'
                           )}
                         >
                           {message.content}
@@ -564,13 +564,13 @@ function Chatbar({ className = '' }: { className?: string }) {
                 </ScrollArea>
 
                 {/* Fixed Footer for Team Chat */}
-                <div className="shrink-0 border-t p-4 bg-background z-10">
+                <div className="shrink-0 border-t border-gray-200/20 dark:border-gray-700/30 p-4 glass z-10">
                   <form onSubmit={handleTeamChatSubmit} className="flex items-center gap-2">
                     <Textarea
                       value={teamChatInput}
                       onChange={(e) => setTeamChatInput(e.target.value)}
                       placeholder={t("chatbar.placeholders.teamChat")}
-                      className="min-h-[60px] max-h-[120px] resize-none"
+                      className="min-h-[60px] max-h-[120px] resize-none glass border-gray-200/40 dark:border-gray-700/40 rounded-xl focus:border-primary/50 transition-all"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -581,7 +581,7 @@ function Chatbar({ className = '' }: { className?: string }) {
                     <Button
                       type="submit"
                       size="icon"
-                      className="h-10 w-10 shrink-0"
+                      className="h-10 w-10 shrink-0 hover-scale rounded-xl"
                     >
                       <Send className="h-4 w-4" />
                     </Button>
