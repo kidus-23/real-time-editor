@@ -1,6 +1,13 @@
-'use client'
+"use client";
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import { Button } from "./ui/button";
 import { FormEvent, useState, useTransition } from "react";
 import { BotIcon, PencilIcon } from "lucide-react";
@@ -21,76 +28,138 @@ function Composer({ editor }: ComposerProps) {
   const { t } = useTranslation();
 
   // Parse Markdown to BlockNote blocks
+  // Small helper types to describe a minimal inline text node used below
+  type InlineText = {
+    type: "text";
+    text: string;
+    styles?: Record<string, unknown>;
+  };
+
+  // Minimal token variants we expect from marked. Keep unknown for unmodeled fields.
+  type HeadingToken = { type: "heading"; depth: number; text: string };
+  type ParagraphToken = { type: "paragraph"; text: string };
+  type ListItem = { text: string };
+  type ListToken = { type: "list"; items: ListItem[]; ordered?: boolean };
+  type MarkedToken =
+    | HeadingToken
+    | ParagraphToken
+    | ListToken
+    | { type?: string; [key: string]: unknown };
+
   const markdownToBlockNote = (markdown: string): Block[] => {
-    const tokens = marked.lexer(markdown);
+    const tokens = marked.lexer(markdown) as unknown as MarkedToken[];
     const blocks: Block[] = [];
 
-    tokens.forEach((token: any) => {
+    tokens.forEach((token) => {
       if (token.type === "heading") {
-        blocks.push({
-          id: Math.random().toString(36).substr(2, 9), // Unique ID
+        const t = token as HeadingToken;
+        const headingBlock = {
+          id: Math.random().toString(36).substr(2, 9),
           type: "heading",
-          props: { level: token.depth },
-          content: [{ type: "text", text: token.text, styles: {} }],
-        });
-      } else if (token.type === "paragraph") {
-        const content = [];
-        // Parse inline tokens for bold, italic, etc.
-        const inlineTokens = marked.lexer(token.text)[0]?.tokens || [];
-        let currentText = "";
-        let currentStyles: any = {};
+          props: { level: t.depth },
+          content: [{ type: "text", text: t.text, styles: {} } as InlineText],
+        };
 
-        inlineTokens.forEach((inline: any) => {
+        blocks.push(headingBlock as unknown as Block);
+      } else if (token.type === "paragraph") {
+        const t = token as ParagraphToken;
+        const content: InlineText[] = [];
+
+        // marked's inline tokens live inside the first child token's `tokens` array
+        const first = marked.lexer(t.text)[0] as unknown as
+          | { tokens?: unknown[] }
+          | undefined;
+        const inlineTokens = (first?.tokens ?? []) as unknown[];
+
+        let currentText = "";
+        let currentStyles: Record<string, unknown> = {};
+
+        inlineTokens.forEach((inlineRaw) => {
+          const inline = inlineRaw as { type?: string; text?: string };
           if (inline.type === "strong") {
             if (currentText) {
-              content.push({ type: "text", text: currentText, styles: currentStyles });
+              content.push({
+                type: "text",
+                text: currentText,
+                styles: currentStyles,
+              });
               currentText = "";
               currentStyles = {};
             }
-            content.push({ type: "text", text: inline.text, styles: { bold: true } });
+            content.push({
+              type: "text",
+              text: inline.text ?? "",
+              styles: { bold: true },
+            });
           } else if (inline.type === "text") {
-            currentText += inline.text;
+            currentText += inline.text ?? "";
           }
         });
 
         if (currentText) {
-          content.push({ type: "text", text: currentText, styles: currentStyles });
+          content.push({
+            type: "text",
+            text: currentText,
+            styles: currentStyles,
+          });
         }
 
-        blocks.push({
+        const paraBlock = {
           id: Math.random().toString(36).substr(2, 9),
           type: "paragraph",
-          content,
-        });
-      } else if (token.type === "list") {
-        token.items.forEach((item: any) => {
-          const content = [];
-          const inlineTokens = marked.lexer(item.text)[0]?.tokens || [];
-          let currentText = "";
-          let currentStyles: any = {};
+          content: content as unknown,
+        };
 
-          inlineTokens.forEach((inline: any) => {
+        blocks.push(paraBlock as unknown as Block);
+      } else if (token.type === "list") {
+        const t = token as ListToken;
+        t.items.forEach((item) => {
+          const content: InlineText[] = [];
+          const first = marked.lexer(item.text)[0] as unknown as
+            | { tokens?: unknown[] }
+            | undefined;
+          const inlineTokens = (first?.tokens ?? []) as unknown[];
+
+          let currentText = "";
+          let currentStyles: Record<string, unknown> = {};
+
+          inlineTokens.forEach((inlineRaw) => {
+            const inline = inlineRaw as { type?: string; text?: string };
             if (inline.type === "strong") {
               if (currentText) {
-                content.push({ type: "text", text: currentText, styles: currentStyles });
+                content.push({
+                  type: "text",
+                  text: currentText,
+                  styles: currentStyles,
+                });
                 currentText = "";
                 currentStyles = {};
               }
-              content.push({ type: "text", text: inline.text, styles: { bold: true } });
+              content.push({
+                type: "text",
+                text: inline.text ?? "",
+                styles: { bold: true },
+              });
             } else if (inline.type === "text") {
-              currentText += inline.text;
+              currentText += inline.text ?? "";
             }
           });
 
           if (currentText) {
-            content.push({ type: "text", text: currentText, styles: currentStyles });
+            content.push({
+              type: "text",
+              text: currentText,
+              styles: currentStyles,
+            });
           }
 
-          blocks.push({
+          const listItem = {
             id: Math.random().toString(36).substr(2, 9),
-            type: token.ordered ? "numberedListItem" : "bulletListItem",
-            content,
-          });
+            type: t.ordered ? "numberedListItem" : "bulletListItem",
+            content: content as unknown,
+          };
+
+          blocks.push(listItem as unknown as Block);
         });
       }
     });
@@ -107,18 +176,15 @@ function Composer({ editor }: ComposerProps) {
         return;
       }
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/composer`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            prompt,
-          }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/composer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+        }),
+      });
 
       if (res.ok) {
         const { generated } = await res.json();
@@ -164,7 +230,9 @@ function Composer({ editor }: ComposerProps) {
             disabled={isPending}
           />
           <Button type="submit" disabled={!prompt || isPending}>
-            {isPending ? t("editor.compose.generating") : t("editor.compose.button")}
+            {isPending
+              ? t("editor.compose.generating")
+              : t("editor.compose.button")}
           </Button>
         </form>
       </DialogContent>

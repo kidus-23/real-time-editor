@@ -1,82 +1,112 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { db } from "@/firebase";
-import { collection, query, orderBy, getDocs, doc, updateDoc, setDoc, Timestamp, onSnapshot, getDoc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  Timestamp,
+  onSnapshot,
+  doc,
+} from "firebase/firestore";
 import { useUser } from "@clerk/nextjs";
 import { ArrowLeft, Clock, RotateCcw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { diffChars } from "diff";
+import { diffChars, type Change } from "diff";
 import { toast } from "sonner";
+import { createSnapshot, restoreVersion } from "@/actions/versionHistory";
+
+// Import BlockNote components and conversion utilities
+import {
+  BlockNoteEditor,
+  PartialBlock,
+  Block,
+  blocksToMarkdown,
+  markdownToBlocks,
+} from "@blocknote/core";
+import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteView } from "@blocknote/shadcn";
 
 interface Version {
   id: string;
-  content: string;
+  content: string; // This is now Markdown
   title: string;
   timestamp: Timestamp;
   userId: string;
   userName: string;
 }
 
-import { BlockNoteEditor } from "@blocknote/core";
-import { useCreateBlockNote } from "@blocknote/react";
-import { BlockNoteView } from "@blocknote/shadcn";
-
 interface VersionHistoryProps {
   documentId: string;
-  editor: BlockNoteEditor;
+  editor?: BlockNoteEditor | null;
+  isOpen?: boolean;
   onClose?: () => void;
 }
 
-function PreviewEditor({ content }: { content: string }) {
-  // Try to parse content as JSON; if it fails, fall back to a simple paragraph block
-  let initialContent: any;
-  if (typeof content === 'string') {
-    try {
-      initialContent = JSON.parse(content);
-    } catch (e) {
-      initialContent = [
-        {
-          type: 'paragraph',
-          content: [
-            {
-              type: 'text',
-              text: content,
-            },
-          ],
-        },
-      ];
-    }
-  } else {
-    initialContent = content;
-  }
+// Sub-component to render a read-only preview of a version
+function PreviewEditor({ markdownContent }: { markdownContent: string }) {
+  const [blocks, setBlocks] = useState<Block[] | undefined>(undefined);
 
-  const previewEditor = useCreateBlockNote({
-    initialContent,
-    domAttributes: {
-      editor: {
-        class: 'read-only-editor'
-      }
-    }
-  });
-
-  // Wait for editor to be fully initialized
-  const [isEditorReady, setIsEditorReady] = useState(false);
+  // Create preview editor first so we can use its pmSchema for parsing
+  // NOTE: do not pass an empty initialContent array — the hook validates that initialContent is non-empty.
+  const previewEditor = useCreateBlockNote();
 
   useEffect(() => {
-    if (previewEditor) {
-      // Set editor as read-only after initialization
-      previewEditor.isEditable = false;
-      setIsEditorReady(true);
-    }
-  }, [previewEditor]);
+    const convert = async () => {
+      if (!markdownContent) {
+        setBlocks([]);
+        return;
+      }
 
-  if (!previewEditor || !isEditorReady) {
+      if (!previewEditor) {
+        // wait until preview editor is created
+        return;
+      }
+
+      try {
+        // Use the previewEditor's pmSchema when parsing markdown to blocks
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const parsedBlocks = await (markdownToBlocks as any)(
+          markdownContent,
+          (previewEditor as any).pmSchema
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pb = parsedBlocks as any;
+        setBlocks(pb);
+
+        // Apply parsed blocks to the preview editor so the view renders properly
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (previewEditor as any).isEditable = false;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (previewEditor as any).replaceBlocks(
+            (previewEditor as any).topLevelBlocks,
+            pb as any
+          );
+        } catch (innerErr) {
+          // Non-fatal: render will still show blocks via BlockNoteView initial content
+          console.error(
+            "Failed to apply parsed blocks to preview editor:",
+            innerErr
+          );
+        }
+      } catch (err) {
+        console.error("Error parsing markdown to blocks for preview:", err);
+        setBlocks([]);
+      }
+    };
+
+    convert();
+  }, [markdownContent, previewEditor]);
+
+  if (!previewEditor || !blocks) {
     return (
-      <div className="flex items-center justify-center p-4 text-muted-foreground">
+      <div className="p-4 text-center text-muted-foreground">
         Loading preview...
       </div>
     );
@@ -84,222 +114,187 @@ function PreviewEditor({ content }: { content: string }) {
 
   return (
     <div className="prose dark:prose-invert max-w-none">
-      <BlockNoteView
-        editor={previewEditor}
-        theme="light"
-      />
+      <BlockNoteView editor={previewEditor} theme="light" />
     </div>
   );
 }
 
-export default function VersionHistory({ documentId, editor, onClose }: VersionHistoryProps) {
+export default function VersionHistory({
+  documentId,
+  editor,
+  isOpen,
+  onClose,
+}: VersionHistoryProps) {
   const [versions, setVersions] = useState<Version[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
-
   const [currentContent, setCurrentContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const { user } = useUser();
 
-  // Fetch versions on component mount
+  // Fetch versions and current document content when the sheet is opened
   useEffect(() => {
-    let unsubscribe: () => void;
-    
-    const fetchVersions = async () => {
-      setLoading(true);
-      try {
-        // Get current document content
-        const docRef = doc(db, "documents", documentId);
-        // Subscribe to document updates
-        unsubscribe = onSnapshot(docRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setCurrentContent(docSnap.data().content || "");
-          }
-        });
+    if (!isOpen) return;
 
-        // Get versions
-        const versionsRef = collection(db, "documents", documentId, "versions");
-        const q = query(versionsRef, orderBy("timestamp", "desc"));
-        
-        const versionsSnapshot = await getDocs(q);
-        const versionsData = versionsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Version));
-        
-        setVersions(versionsData);
-        
-        // Select the most recent version by default
-        if (versionsData.length > 0) {
-          setSelectedVersion(versionsData[0]);
+    setLoading(true);
+
+    // Fetch and listen for updates to the current document's content
+    const docUnsubscribe = onSnapshot(
+      doc(db, "documents", documentId),
+      async (docSnap) => {
+        if (!docSnap.exists()) return;
+
+        const data = docSnap.data() as Record<string, unknown> | undefined;
+
+        // If the server is storing canonical markdown in the document (preferred), use it
+        if (data && typeof data.content === "string") {
+          setCurrentContent(data.content as string);
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching versions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchVersions();
+        // Otherwise, attempt to convert the live editor blocks to markdown, but only if
+        // the editor and its pmSchema are initialized. Guard to avoid runtime errors
+        // from underlying tiptap/pm serializers (e.g., domSerializer undefined).
+        try {
+          const hasEditor = !!(editor as any);
+          const hasPmSchema = !!(editor as any)?.pmSchema;
+
+          if (hasEditor && hasPmSchema) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const contentInBlocks = (editor as any).topLevelBlocks;
+            // Pass the editor instance as the 3rd argument to blocksToMarkdown (matches ImportExportMenu usage)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const markdown = await (blocksToMarkdown as any)(
+              contentInBlocks,
+              (editor as any).pmSchema,
+              editor as any
+            );
+            setCurrentContent(markdown ?? "");
+          } else {
+            // Editor not ready and no server markdown available — fallback to empty string
+            setCurrentContent("");
+          }
+        } catch (err) {
+          console.error("Error converting editor blocks to markdown:", err);
+          setCurrentContent("");
+        }
+      }
+    );
+
+    // Fetch all historical versions
+    const versionsRef = collection(db, "documents", documentId, "versions");
+    const q = query(versionsRef, orderBy("timestamp", "desc"));
+    const versionsUnsubscribe = onSnapshot(q, (snapshot) => {
+      const versionsData = snapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Version)
+      );
+
+      setVersions(versionsData);
+      if (versionsData.length > 0 && !selectedVersion) {
+        setSelectedVersion(versionsData[0]);
+      }
+      setLoading(false);
+    });
+
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      docUnsubscribe();
+      versionsUnsubscribe();
     };
-  }, [documentId]);
+  }, [documentId, isOpen, editor, selectedVersion]);
 
-  // Create a new version snapshot (for demonstration - in production this would be on a timer)
-  useEffect(() => {
-    if (!documentId || !user) return;
+  // Client-side handler to create a snapshot
+  const handleCreateSnapshot = async () => {
+    if (!user || !editor) return;
 
-    let lastContent = '';
-    let lastTitle = '';
-
-    // Create automatic snapshot every 30 seconds
-    const intervalId = setInterval(async () => {
-      try {
-        const docRef = doc(db, "documents", documentId);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          
-          // Only save if content or title has changed
-          if (data.content !== lastContent || data.title !== lastTitle) {
-            lastContent = data.content;
-            lastTitle = data.title;
-            
-            // Create a new version
-            const versionRef = doc(collection(db, "documents", documentId, "versions"));
-            await setDoc(versionRef, {
-              content: data.content,
-              title: data.title,
-              timestamp: Timestamp.now(),
-              userId: user.id,
-              userName: user.fullName || user.username || user.id,
-              autoSaved: true // Flag to indicate this was auto-saved
-            });
-            
-            // Refresh versions list
-            const versionsRef = collection(db, "documents", documentId, "versions");
-            const q = query(versionsRef, orderBy("timestamp", "desc"));
-            const versionsSnapshot = await getDocs(q);
-            const versionsData = versionsSnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            } as Version));
-            
-            setVersions(versionsData);
-          }
-        }
-      } catch (error) {
-        console.error("Error in auto-save:", error);
-      }
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(intervalId);
-  }, [documentId, user]);
-
-  // Fix the createSnapshot function
-  const createSnapshot = async () => {
-    if (!user) return;
-    
+    startTransition(true);
     try {
-      const docRef = doc(db, "documents", documentId);
-      const docSnap = await getDoc(docRef); // Changed from getDocs(query(docRef))
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        
-        // Create a new version
-        const versionRef = doc(collection(db, "documents", documentId, "versions"));
-        await setDoc(versionRef, {
-          content: data.content,
-          title: data.title,
-          timestamp: Timestamp.now(),
-          userId: user.id,
-          userName: user.fullName || user.username || user.id,
-          manualSave: true // Flag to indicate this was manually saved
-        });
-        
-        // Refresh versions
-        const versionsRef = collection(db, "documents", documentId, "versions");
-        const q = query(versionsRef, orderBy("timestamp", "desc"));
-        const versionsSnapshot = await getDocs(q);
-        const versionsData = versionsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Version));
-        
-        setVersions(versionsData);
+      // Prefer using the editor's pmSchema when available for reliable conversion.
+      // Fallback to the currentContent (which may already be canonical Markdown) if conversion isn't possible.
+      let markdownContent: string;
+      try {
+        // Capture editor fields in locals to avoid a race where `editor` changes
+        // between the truthiness check and the actual use (causes pmSchema undefined).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const editorAny = editor as any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pmSchema = editorAny?.pmSchema as any | undefined;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const topLevelBlocks = editorAny?.topLevelBlocks as any | undefined;
+
+        if (editorAny && pmSchema && topLevelBlocks) {
+          // Pass the editor instance as the 3rd argument to blocksToMarkdown to ensure internal serializers
+          // can access editor helpers (matches ImportExportMenu usage).
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          markdownContent = await (blocksToMarkdown as any)(
+            topLevelBlocks,
+            pmSchema,
+            editorAny
+          );
+        } else {
+          // Use last-known currentContent (document snapshot) as fallback
+          markdownContent = currentContent ?? "";
+        }
+      } catch (convErr) {
+        console.error(
+          "Error converting blocks to markdown for snapshot:",
+          convErr
+        );
+        // Fall back to currentContent if conversion fails
+        markdownContent = currentContent ?? "";
+      }
+
+      const title =
+        (editor as any)?.document?.[0]?.content?.[0]?.text || "Untitled";
+
+      const result = await createSnapshot(documentId, title, markdownContent);
+      if (result.success) {
+        toast.success("Snapshot created successfully!");
+      } else {
+        console.error("createSnapshot returned error:", result);
+        toast.error(result.error || "Failed to create snapshot");
       }
     } catch (error) {
-      console.error("Error creating snapshot:", error);
+      console.error("handleCreateSnapshot error:", error);
+      const msg = (error as any)?.message || String(error);
+      toast.error(
+        `An unexpected error occurred while creating snapshot: ${msg}`
+      );
+    } finally {
+      startTransition(false);
     }
   };
 
-  // Restore a version
-  const restoreVersion = async () => {
-    if (!selectedVersion) return;
-    
+  // Client-side handler to restore a version
+  const handleRestoreVersion = async () => {
+    if (!selectedVersion || !editor) return;
+
     setRestoring(true);
     try {
-      // Parse the content safely; if it's not JSON, wrap as a paragraph block
-      let content: any;
-      try {
-        content = JSON.parse(selectedVersion.content || "[]");
-      } catch (e) {
-        content = [
-          {
-            type: 'paragraph',
-            content: [
-              {
-                type: 'text',
-                text: selectedVersion.content || '',
-              },
-            ],
-          },
-        ];
-      }
+      // 1. Call the server action to GET the historical markdown
+      const result = await restoreVersion(documentId, selectedVersion.id);
 
-      // Update the editor content
-      await editor.replaceBlocks(editor.topLevelBlocks, content);
-      
-      // Update the database
-      await updateDoc(doc(db, "documents", documentId), {
-        content: selectedVersion.content,
-        title: selectedVersion.title,
-        lastUpdated: Timestamp.now()
-      });
-      
-      // Create a snapshot of the restoration
-      if (user) {
-        const versionRef = doc(collection(db, "documents", documentId, "versions"));
-        await setDoc(versionRef, {
-          content: selectedVersion.content,
-          title: selectedVersion.title,
-          timestamp: Timestamp.now(),
-          userId: user.id,
-          userName: `${user.fullName || user.username || user.id} (restored version)`,
-          restoredFromId: selectedVersion.id
-        });
-        
-        // Refresh versions list
-        const versionsRef = collection(db, "documents", documentId, "versions");
-        const q = query(versionsRef, orderBy("timestamp", "desc"));
-        const versionsSnapshot = await getDocs(q);
-        const versionsData = versionsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Version));
-        
-        setVersions(versionsData);
-      }
+      if (result.success && result.markdownContent) {
+        // 2. Convert the markdown string back into BlockNote blocks
+        // Pass the editor schema (pmSchema) to ensure parser has correct schema when available
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blocks = await (markdownToBlocks as any)(
+          result.markdownContent,
+          (editor as any)?.pmSchema
+        );
 
-      toast.success("Version restored successfully!");
-      
-      if (onClose) {
-        onClose();
+        // 3. Replace the live editor's content with the restored blocks
+        // Cast to any to avoid strict typing mismatches between BlockNote schemas
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (editor as any).replaceBlocks(
+          (editor as any).topLevelBlocks,
+          blocks as any
+        );
+
+        toast.success("Version restored successfully!");
+        onClose?.(); // Close the sheet if a handler was provided
+      } else {
+        toast.error(result.error || "Failed to restore version");
       }
     } catch (error) {
       console.error("Error restoring version:", error);
@@ -309,129 +304,93 @@ export default function VersionHistory({ documentId, editor, onClose }: VersionH
     }
   };
 
-  // Format timestamp
   const formatTimestamp = (timestamp: Timestamp) => {
     const date = timestamp.toDate();
-    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()} (${formatDistanceToNow(date, { addSuffix: true })})`;
+    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()} (${formatDistanceToNow(
+      date,
+      { addSuffix: true }
+    )})`;
   };
 
-  // Generate diff between two versions
-  const generateDiff = (currentText: string, selectedText: string) => {
-    try {
-      // Parse the content if it's in JSON format
-      const parseContent = (content: string) => {
-        try {
-          const parsed = typeof content === 'string' ? JSON.parse(content) : content;
-          if (Array.isArray(parsed)) {
-            return parsed.map(block => {
-              if (block.content && Array.isArray(block.content)) {
-                return block.content.map((item: { type: string; text?: string }) => (item.type === 'text' && item.text ? item.text : '')).join('');
-              }
-              return '';
-            }).join('\n');
-          }
-          return String(content);
-        } catch {
-          return String(content);
-        }
-      };
+  // Memoized diff generation
+  const diffView = useMemo(() => {
+    if (!selectedVersion) return null;
+    const differences = diffChars(currentContent, selectedVersion.content);
 
-      const oldText = parseContent(currentText);
-      const newText = parseContent(selectedText);
-      const differences = diffChars(oldText, newText);
-      
-      return (
-        <div className="whitespace-pre-wrap font-mono text-sm space-y-1">
-          {differences.map((part, index) => {
-            let className = '';
-            if (part.added) {
-              className = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-1 py-0.5 rounded';
-            } else if (part.removed) {
-              className = 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 line-through px-1 py-0.5 rounded';
-            }
-            
-            return (
-              <span key={index} className={className}>
-                {part.value}
-              </span>
-            );
-          })}
-        </div>
-      );
-    } catch (error) {
-      console.error('Error generating diff:', error);
-      return (
-        <div className="text-red-500">
-          Error comparing versions
-        </div>
-      );
-    }
-  };
-
-  // Auto-save functionality would be implemented here with a useEffect and timer
-  // For demonstration, we'll just have a manual button to create snapshots
+    return (
+      <div className="whitespace-pre-wrap font-mono text-sm space-y-1">
+        {differences.map((part: Change, index: number) => {
+          const style = part.added
+            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+            : part.removed
+            ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 line-through"
+            : "text-muted-foreground";
+          return (
+            <span key={index} className={style}>
+              {part.value}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }, [currentContent, selectedVersion]);
 
   return (
+    // The component returns only the main container for the version history panel
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-2">
+          <Clock className="h-5 w-5" />
+          <h2 className="text-xl font-semibold">Version History</h2>
+        </div>
+        <div>
           {onClose && (
             <Button variant="ghost" size="icon" onClick={onClose}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <h2 className="text-xl font-semibold">Version History</h2>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={createSnapshot}
-            disabled={loading}
-          >
-            <Clock className="h-4 w-4 mr-2" />
-            Create Snapshot
-          </Button>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Versions sidebar */}
+        {/* Versions Sidebar */}
         <div className="w-1/3 border-r overflow-hidden flex flex-col">
           <div className="p-3 border-b bg-muted/30">
-            <h3 className="font-medium">Versions</h3>
-            <p className="text-sm text-muted-foreground">
-              Showing {versions.length} versions from the last 7 days
-            </p>
+            <Button
+              onClick={handleCreateSnapshot}
+              disabled={loading || isPending}
+              className="w-full"
+            >
+              {isPending ? "Creating..." : "Create New Snapshot"}
+            </Button>
           </div>
-          
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
               {loading ? (
-                <div className="flex items-center justify-center p-4">
-                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-                </div>
+                <p className="text-center p-4 text-muted-foreground">
+                  Loading versions...
+                </p>
               ) : versions.length === 0 ? (
-                <div className="text-center p-4 text-muted-foreground">
-                  No version history available
-                </div>
+                <p className="text-center p-4 text-muted-foreground">
+                  No versions found.
+                </p>
               ) : (
                 versions.map((version) => (
-                  <div 
+                  <div
                     key={version.id}
                     className={`p-3 rounded-md cursor-pointer transition-colors ${
-                      selectedVersion?.id === version.id 
-                        ? 'bg-primary/10 border border-primary/20' 
-                        : 'hover:bg-muted'
+                      selectedVersion?.id === version.id
+                        ? "bg-primary/10"
+                        : "hover:bg-muted"
                     }`}
                     onClick={() => setSelectedVersion(version)}
                   >
-                    <div className="font-medium truncate">{version.title || "Untitled"}</div>
-                    <div className="text-xs text-muted-foreground flex items-center justify-between">
-                      <span>{formatTimestamp(version.timestamp)}</span>
-                    </div>
-                    <div className="text-xs mt-1">{version.userName}</div>
+                    <p className="font-medium text-sm truncate">
+                      {version.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatTimestamp(version.timestamp)} by {version.userName}
+                    </p>
                   </div>
                 ))
               )}
@@ -439,42 +398,47 @@ export default function VersionHistory({ documentId, editor, onClose }: VersionH
           </ScrollArea>
         </div>
 
-        {/* Version preview */}
+        {/* Version Preview Area */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {selectedVersion ? (
             <>
-              <Tabs defaultValue="preview" className="flex-1 flex flex-col">
+              <Tabs
+                defaultValue="preview"
+                className="flex-1 flex flex-col overflow-hidden"
+              >
                 <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
                   <TabsList>
                     <TabsTrigger value="preview">Preview</TabsTrigger>
                     <TabsTrigger value="changes">Changes</TabsTrigger>
                   </TabsList>
-                  
-                  <Button 
-                    variant="default" 
+                  <Button
+                    variant="default"
                     size="sm"
-                    onClick={restoreVersion}
-                    disabled={restoring}
+                    onClick={handleRestoreVersion}
+                    disabled={isPending}
                   >
                     <RotateCcw className="h-4 w-4 mr-2" />
-                    {restoring ? "Restoring..." : "Restore this version"}
+                    {isPending ? "Restoring..." : "Restore this version"}
                   </Button>
                 </div>
-                
-                <TabsContent value="preview" className="flex-1 p-4 overflow-auto">
-                  <div className="prose dark:prose-invert max-w-none">
-                    <h1>{selectedVersion.title || "Untitled"}</h1>
-                    {selectedVersion.content && (
-                      <PreviewEditor content={selectedVersion.content} />
-                    )}
+
+                <TabsContent
+                  value="preview"
+                  className="flex-1 m-0 overflow-auto"
+                >
+                  <div className="p-4">
+                    <h1 className="text-3xl font-bold mb-4">
+                      {selectedVersion.title}
+                    </h1>
+                    <PreviewEditor markdownContent={selectedVersion.content} />
                   </div>
                 </TabsContent>
-                
-                <TabsContent value="changes" className="flex-1 p-4 overflow-auto">
-                  <div className="prose dark:prose-invert max-w-none">
-                    <h3>Changes from current version</h3>
-                    {generateDiff(currentContent, selectedVersion.content)}
-                  </div>
+
+                <TabsContent
+                  value="changes"
+                  className="flex-1 m-0 overflow-auto"
+                >
+                  <div className="p-4">{diffView}</div>
                 </TabsContent>
               </Tabs>
             </>
