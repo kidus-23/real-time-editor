@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SearchResult extends DocumentData {
   id: string;
@@ -26,6 +27,7 @@ interface SearchResult extends DocumentData {
 function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user } = useUser();
   const router = useRouter();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -76,11 +78,11 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         const start = Math.max(0, index - maxLength / 4);
         const end = Math.min(content.length, index + term.length + maxLength / 4);
         const snippet = content.substring(start, end);
-        
+
         // Count matches in this snippet
-        const matchCount = searchTerms.reduce((count, term) => 
+        const matchCount = searchTerms.reduce((count, term) =>
           count + (snippet.toLowerCase().match(new RegExp(term, 'g')) || []).length, 0);
-        
+
         if (matchCount > 0) {
           bestStart = start;
           bestLength = end - start;
@@ -104,43 +106,43 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   // Search function
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
-    
+
     setIsSearching(true);
     setResults([]);
-    
+
     try {
       // Split search query into terms for better matching
       const searchTerms = searchQuery.toLowerCase()
         .split(' ')
         .filter(term => term.length > 1);
-      
+
       // Get all user's documents
       const roomsQuery = query(
         collectionGroup(db, 'rooms'),
         where('userId', '==', user.emailAddresses[0].toString())
       );
-      
+
       const roomsSnapshot = await getDocs(roomsQuery);
       const roomDocs = roomsSnapshot.docs.map(doc => ({
         id: doc.id,
         roomId: doc.data().roomId,
       }));
-      
+
       // For each room, get the document content and check if it matches the search query
       const searchResults = [];
-      
+
       for (const roomDoc of roomDocs) {
         const docRef = doc(db, 'documents', roomDoc.roomId);
         const docSnap = await getDoc(docRef);
-        
+
         if (docSnap.exists()) {
           const docData = docSnap.data();
           const title = docData.title || 'Untitled';
           const content = docData.content || '';
-          
+
           // Calculate relevance score
           const score = calculateRelevance(title, content, searchTerms);
-          
+
           if (score > 0) {
             searchResults.push({
               id: roomDoc.id,
@@ -152,7 +154,7 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
           }
         }
       }
-      
+
       // Sort results by relevance score
       searchResults.sort((a, b) => b.score - a.score);
       setResults(searchResults);
@@ -178,7 +180,7 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Search Documents</DialogTitle>
+          <DialogTitle>{t("searchDialog.title")}</DialogTitle>
         </DialogHeader>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -186,31 +188,31 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
           </div>
           <Input
             type="text"
-            placeholder="Search by title or content..."
+            placeholder={t("searchDialog.placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             className="pl-10 py-2"
             autoFocus
           />
-          <Button 
-            onClick={handleSearch} 
+          <Button
+            onClick={handleSearch}
             className="absolute right-0 top-0 bottom-0 rounded-l-none"
             disabled={isSearching}
           >
-            {isSearching ? 'Searching...' : 'Search'}
+            {isSearching ? t("searchDialog.searching") : t("searchDialog.button")}
           </Button>
         </div>
-        
+
         <div className="mt-4 max-h-[300px] overflow-y-auto">
           {results.length === 0 && searchQuery && !isSearching ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-              No documents found matching your search.
+              {t("searchDialog.noResults")}
             </p>
           ) : (
             <div className="space-y-2">
               {results.map((result) => (
-                <div 
+                <div
                   key={result.id}
                   onClick={() => handleResultClick(result.roomId)}
                   className="p-3 rounded-lg border border-gray-200 dark:border-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors"
@@ -225,7 +227,7 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
               ))}
             </div>
           )}
-          
+
           {isSearching && (
             <div className="flex justify-center py-4">
               <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent"></div>
