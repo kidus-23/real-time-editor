@@ -67,7 +67,7 @@ function Chatbar({ className = '' }: { className?: string }) {
   const [teamChatInput, setTeamChatInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   // Default to a model known in `lib/constants.ts` to avoid sending unsupported provider formats
-  const [activeModel, setActiveModel] = useState('gpt-3.5-turbo') // Default model
+  const [activeModel, setActiveModel] = useState('gemini-2.5-flash') // Default model
   const [showSettings, setShowSettings] = useState(false)
   const [showAPIKeySettings, setShowAPIKeySettings] = useState(false)
   const [useDocumentContext, setUseDocumentContext] = useState(false)

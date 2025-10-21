@@ -27,6 +27,11 @@ export const AI_MODELS = {
       provider: 'openai',
       type: 'chat'
     },
+    'openai/gpt-oss-20b:free': {
+      name: 'GPT OSS 20B',
+      provider: 'openai',
+      type: 'chat'
+    },
     'mistralai/mistral-small-3.2-24b-instruct:free': {
       name: 'Mistral Small 24B',
       provider: 'openai',
@@ -42,8 +47,8 @@ export const AI_MODELS = {
       provider: 'openai',
       type: 'chat'
     },
-    'openai/gpt-oss-20b:free': {
-      name: 'GPT OSS 20B',
+    'meta-llama/llama-3.2-3b-instruct:free': {
+      name: 'Llama 3.2 3B Instruct',
       provider: 'openai',
       type: 'chat'
     }
