@@ -38,6 +38,69 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     }
   }, [isOpen]);
 
+  // Calculate relevance score for a document based on matches
+  const calculateRelevance = (title: string, content: string, searchTerms: string[]) => {
+    let score = 0;
+    const lowerTitle = title.toLowerCase();
+    const lowerContent = content.toLowerCase();
+
+    for (const term of searchTerms) {
+      // Title matches are weighted more heavily
+      if (lowerTitle.includes(term)) {
+        score += 10;
+        // Exact title match gets bonus points
+        if (lowerTitle === term) score += 5;
+      }
+
+      if (lowerContent.includes(term)) {
+        score += 5;
+        // Count number of occurrences in content
+        const occurrences = (lowerContent.match(new RegExp(term, 'g')) || []).length;
+        score += Math.min(occurrences, 5); // Cap bonus points for occurrences
+      }
+    }
+
+    return score;
+  };
+
+  // Extract relevant snippet around match
+  const extractSnippet = (content: string, searchTerms: string[], maxLength: number = 200) => {
+    const lowerContent = content.toLowerCase();
+    let bestStart = 0;
+    let bestLength = Math.min(maxLength, content.length);
+
+    // Find the best snippet containing the most search terms
+    for (const term of searchTerms) {
+      const index = lowerContent.indexOf(term);
+      if (index !== -1) {
+        const start = Math.max(0, index - maxLength / 4);
+        const end = Math.min(content.length, index + term.length + maxLength / 4);
+        const snippet = content.substring(start, end);
+        
+        // Count matches in this snippet
+        const matchCount = searchTerms.reduce((count, term) => 
+          count + (snippet.toLowerCase().match(new RegExp(term, 'g')) || []).length, 0);
+        
+        if (matchCount > 0) {
+          bestStart = start;
+          bestLength = end - start;
+        }
+      }
+    }
+
+    let snippet = content.substring(bestStart, bestStart + bestLength);
+    if (bestStart > 0) snippet = '...' + snippet;
+    if (bestStart + bestLength < content.length) snippet = snippet + '...';
+
+    // Highlight search terms
+    for (const term of searchTerms) {
+      const regex = new RegExp(`(${term})`, 'gi');
+      snippet = snippet.replace(regex, '**$1**');
+    }
+
+    return snippet;
+  };
+
   // Search function
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
@@ -46,6 +109,11 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     setResults([]);
     
     try {
+      // Split search query into terms for better matching
+      const searchTerms = searchQuery.toLowerCase()
+        .split(' ')
+        .filter(term => term.length > 1);
+      
       // Get all user's documents
       const roomsQuery = query(
         collectionGroup(db, 'rooms'),
@@ -70,23 +138,23 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
           const title = docData.title || 'Untitled';
           const content = docData.content || '';
           
-          // Check if title or content contains the search query (case insensitive)
-          const lowerQuery = searchQuery.toLowerCase();
-          if (
-            title.toLowerCase().includes(lowerQuery) ||
-            content.toLowerCase().includes(lowerQuery)
-          ) {
+          // Calculate relevance score
+          const score = calculateRelevance(title, content, searchTerms);
+          
+          if (score > 0) {
             searchResults.push({
               id: roomDoc.id,
               roomId: roomDoc.roomId,
               title,
-              // Include a snippet of content around the match
-              content: content.length > 100 ? content.substring(0, 100) + '...' : content,
+              content: extractSnippet(content, searchTerms),
+              score: score
             });
           }
         }
       }
       
+      // Sort results by relevance score
+      searchResults.sort((a, b) => b.score - a.score);
       setResults(searchResults);
     } catch (error) {
       console.error('Error searching documents:', error);
