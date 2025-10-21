@@ -26,6 +26,26 @@ export const AI_MODELS = {
       name: 'OpenAI o4-Mini',
       provider: 'openai',
       type: 'chat'
+    },
+    'mistralai/mistral-small-3.2-24b-instruct:free': {
+      name: 'Mistral Small 24B',
+      provider: 'openai',
+      type: 'chat'
+    },
+    'qwen/qwen3-235b-a22b:free': {
+      name: 'Qwen3 Coder',
+      provider: 'openai',
+      type: 'chat'
+    },
+    'deepseek/deepseek-r1:free': {
+      name: 'DeepSeek Chat R1',
+      provider: 'openai',
+      type: 'chat'
+    },
+    'openai/gpt-oss-20b:free': {
+      name: 'GPT OSS 20B',
+      provider: 'openai',
+      type: 'chat'
     }
   }
 } as const;

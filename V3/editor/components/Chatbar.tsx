@@ -29,29 +29,11 @@ import APIKeySettings from "@/components/APIKeySettings"
 // Import useRoom but don't use it directly
 import { useRoom } from "@liveblocks/react"
 
-// Define model categories and their models
-const MODEL_CATEGORIES = {
-  "Featured": [
-    { id: "openai/gpt-4-turbo", name: "GPT-4 Turbo", description: "Most capable GPT-4 model" },
-    { id: "anthropic/claude-2", name: "Claude 2", description: "Anthropic's most capable model" },
-    { id: "google/gemini-pro", name: "Gemini Pro", description: "Google's latest model" },
-  ],
-  "Fast & Efficient": [
-    { id: "openai/gpt-3.5-turbo", name: "GPT-3.5 Turbo", description: "Fast and efficient" },
-    { id: "x-ai/grok-4-fast:free", name: "Grok 4 Fast", description: "Quick responses" },
-    { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", description: "Balanced speed and quality" },
-  ],
-  "Open Source": [
-    { id: "meta-llama/llama-2-70b-chat", name: "Llama 2 70B", description: "Meta's largest model" },
-    { id: "mistralai/mixtral-8x7b", name: "Mixtral 8x7B", description: "Mixture of experts model" },
-    { id: "phind/phind-codellama-34b", name: "Phind 34B", description: "Specialized for code" },
-  ],
-  "Specialized": [
-    { id: "meta-llama/codellama-34b", name: "CodeLlama 34B", description: "Code generation expert" },
-    { id: "anthropic/claude-2-100k", name: "Claude 2 (100k)", description: "Long context support" },
-    { id: "perplexity/pplx-70b-chat", name: "PPLX 70B", description: "Research focused" },
-  ]
-} as const;
+// Build model categories from AI_MODELS to ensure UI only shows supported models
+const MODEL_CATEGORIES: Record<string, { id: string; name: string; description?: string }[]> = {
+  OpenAI: Object.entries(AI_MODELS.OPENAI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
+  Gemini: Object.entries(AI_MODELS.GEMINI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
+}
 
 interface Message {
   role: 'user' | 'assistant'
@@ -82,7 +64,8 @@ function Chatbar({ className = '' }: { className?: string }) {
   const [input, setInput] = useState('')
   const [teamChatInput, setTeamChatInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [activeModel, setActiveModel] = useState('x-ai/grok-4-fast:free') // Default model
+  // Default to a model known in `lib/constants.ts` to avoid sending unsupported provider formats
+  const [activeModel, setActiveModel] = useState('gpt-3.5-turbo') // Default model
   const [showSettings, setShowSettings] = useState(false)
   const [showAPIKeySettings, setShowAPIKeySettings] = useState(false)
   const [useDocumentContext, setUseDocumentContext] = useState(false)
@@ -116,13 +99,20 @@ function Chatbar({ className = '' }: { className?: string }) {
     ref.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  // Scroll to bottom whenever messages change or loading state changes
   useEffect(() => {
-    scrollToBottom(messagesEndRef)
-  }, [messages])
+    setTimeout(() => scrollToBottom(messagesEndRef), 100)
+  }, [messages, isLoading])
 
   useEffect(() => {
-    scrollToBottom(teamChatEndRef)
+    setTimeout(() => scrollToBottom(teamChatEndRef), 100)
   }, [teamMessages])
+
+  // Reset messages when document changes
+  useEffect(() => {
+    setMessages([])
+    setUseDocumentContext(false)
+  }, [pathname])
 
   // Reset to chat tab when sheet closes
   useEffect(() => {
@@ -192,12 +182,24 @@ function Chatbar({ className = '' }: { className?: string }) {
   const getDocumentContent = async () => {
     if (!isDocumentPage || !roomId) {
       setDocumentContent(null)
-      return
+      return null
     }
 
     try {
       // Get the document content from the DOM
-      const editorContent = document.querySelector('.bn-container')?.textContent || ''
+      const container = document.querySelector('.bn-container')
+      if (!container) {
+        console.warn('Editor container not found')
+        return null
+      }
+
+      // Get all text content, including headers and content
+      const editorContent = container.textContent || ''
+      if (!editorContent.trim()) {
+        console.warn('Empty document content')
+        return null
+      }
+
       setDocumentContent(editorContent)
       return editorContent
     } catch (error) {
@@ -207,12 +209,15 @@ function Chatbar({ className = '' }: { className?: string }) {
     }
   }
 
-  // Toggle document context
-  const toggleDocumentContext = async () => {
-    if (!useDocumentContext) {
-      // If enabling document context, get the document content
-      await getDocumentContent()
+  // Update document content when context is enabled
+  useEffect(() => {
+    if (useDocumentContext && isDocumentPage) {
+      getDocumentContent()
     }
+  }, [useDocumentContext, isDocumentPage])
+
+  // Toggle document context
+  const toggleDocumentContext = () => {
     setUseDocumentContext(!useDocumentContext)
   }
 
@@ -231,10 +236,13 @@ function Chatbar({ className = '' }: { className?: string }) {
     setIsLoading(true)
 
     try {
-      // If document context is enabled, get the latest content
+      // If document context is enabled, ensure we have the latest content
       let context = null
       if (useDocumentContext) {
         context = await getDocumentContent()
+        if (!context) {
+          throw new Error('Could not get document content. Make sure a document is open.')
+        }
       }
 
       // Get user's API keys from localStorage
@@ -257,13 +265,46 @@ function Chatbar({ className = '' }: { className?: string }) {
           messages: [...messages, newMessage],
           model: activeModel,
           documentContext: context,
-          userApiKey: (userApiKeys as any).openrouter
+          userApiKeys: userApiKeys
         }),
       })
+      let data: any = null
+      if (!response.ok) {
+        // Try to extract error message from body
+        let bodyText = ''
+        try {
+          bodyText = await response.text()
+          const parsed = bodyText ? JSON.parse(bodyText) : null
+          const msg = parsed?.error || parsed?.message || bodyText
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: (typeof msg === 'string' ? msg : JSON.stringify(msg)),
+            timestamp: new Date(),
+            status: 'error'
+          }])
+        } catch (e) {
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: 'Failed to get response from server',
+            timestamp: new Date(),
+            status: 'error'
+          }])
+        }
+        throw new Error('Non-OK response')
+      }
 
-      if (!response.ok) throw new Error('Failed to get response')
-
-      const data = await response.json()
+      try {
+        data = await response.json()
+      } catch (e) {
+        const text = await response.text()
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Invalid JSON response from server: ' + text,
+          timestamp: new Date(),
+          status: 'error'
+        }])
+        throw e
+      }
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: data.response,
@@ -399,7 +440,7 @@ function Chatbar({ className = '' }: { className?: string }) {
               className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-hidden"
             >
               {/* Scrollable chat area */}
-              <ScrollArea className="flex-1 px-4">
+              <ScrollArea className="flex-1 px-4 overflow-y-scroll">
                 <div className="space-y-4 py-4">
                   {messages.map((message, i) => (
                     <div
