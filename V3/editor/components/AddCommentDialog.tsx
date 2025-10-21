@@ -74,44 +74,44 @@ export default function AddCommentDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[600px] glass-intense rounded-3xl border-0">
                 <DialogHeader>
-                    <DialogTitle>{t("addCommentDialog.title")}</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold tracking-tight">{t("addCommentDialog.title")}</DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">
+                <div className="space-y-6 py-4">
+                    <div className="space-y-3">
+                        <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                             {t("addCommentDialog.labels.selectedText")}
                         </label>
                         <div
-                            className="p-3 rounded-md border-l-4"
+                            className="p-4 rounded-xl border-l-4"
                             style={{
                                 backgroundColor: `${userColor}15`,
                                 borderLeftColor: userColor
                             }}
                         >
-                            <p className="text-sm italic">"{selectedText}"</p>
+                            <p className="text-sm italic text-gray-700 dark:text-gray-300">"{selectedText}"</p>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">{t("addCommentDialog.labels.yourComment")}</label>
+                    <div className="space-y-3">
+                        <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">{t("addCommentDialog.labels.yourComment")}</label>
                         <Textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             placeholder={t("addCommentDialog.placeholder")}
-                            className="min-h-[100px] resize-none"
+                            className="min-h-[120px] resize-none rounded-xl text-base"
                             autoFocus
                         />
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                <DialogFooter className="gap-3 mt-2">
+                    <Button variant="outline" onClick={handleClose} disabled={isSubmitting} size="lg" className="hover-scale">
                         {t("addCommentDialog.buttons.cancel")}
                     </Button>
-                    <Button onClick={handleSubmit} disabled={isSubmitting}>
+                    <Button onClick={handleSubmit} disabled={isSubmitting} size="lg" className="hover-scale">
                         {isSubmitting ? t("addCommentDialog.buttons.submitting") : t("addCommentDialog.buttons.submit")}
                     </Button>
                 </DialogFooter>

@@ -31,8 +31,8 @@ function Header({ className = '' }: { className?: string }) {
     }, []);
 
     return (
-        <div className={`flex items-center justify-between p-5 transition-all duration-300 ${className}`}>
-            <div className="h-8">
+        <div className={`glass-intense sticky top-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${className}`}>
+            <div className="h-9 hover-scale transition-transform duration-200">
                 {mounted && theme === 'dark' ? (
                     <img src="/kenlogodark.png" alt="Ken Logo" className="h-full" />
                 ) : (
@@ -43,18 +43,16 @@ function Header({ className = '' }: { className?: string }) {
             {/* Breadcrumbs */}
             <Breadcrumbs />
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
                 {mounted && (
                     <Button
-                        className={`${theme === 'dark' ?
-                            "text-gray-100 bg-gray-800/90 hover:bg-gray-700/90 border-gray-700" :
-                            "text-gray-700 bg-white/90 hover:bg-gray-50/90 border-gray-200"} 
-                            border rounded-full w-8 h-8 p-0 flex items-center justify-center shadow-sm transition-all duration-200 backdrop-blur-sm`}
+                        variant="ghost"
+                        className="rounded-full w-10 h-10 p-0 flex items-center justify-center hover-scale transition-all duration-200 glass border-0"
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                         title={theme === 'dark' ? t("header.theme.light") : t("header.theme.dark")}
                         aria-label={theme === 'dark' ? t("header.theme.light") : t("header.theme.dark")}
                     >
-                        {theme === 'dark' ? <SunIcon size={14} /> : <MoonIcon size={14} />}
+                        {theme === 'dark' ? <SunIcon size={16} className="text-yellow-400" /> : <MoonIcon size={16} className="text-indigo-600" />}
                     </Button>
                 )}
 
@@ -63,10 +61,12 @@ function Header({ className = '' }: { className?: string }) {
                 </SignedOut>
 
                 <SignedIn>
-                    <Suspense fallback={<div className="w-8 h-8" />}>
+                    <Suspense fallback={<div className="w-10 h-10 rounded-full glass animate-pulse" />}>
                         <NotificationInbox />
                     </Suspense>
-                    <UserButton />
+                    <div className="hover-scale transition-transform duration-200">
+                        <UserButton />
+                    </div>
                 </SignedIn>
             </div>
         </div>
