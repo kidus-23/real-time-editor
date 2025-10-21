@@ -49,7 +49,7 @@ function DeleteDocument() {
             <div onClick={handleClick} className="w-full cursor-pointer">
                 {t("deleteDocument.button")}
             </div>
-            <DialogContent onClick={e => e.stopPropagation()} className="glass-intense rounded-3xl border-0">
+            <DialogContent onClick={e => e.stopPropagation()} className="bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-gray-800 rounded-lg">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold tracking-tight">{t("deleteDocument.title")}</DialogTitle>
                     <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">

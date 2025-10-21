@@ -42,7 +42,7 @@ function Settings() {
 
       <div className="space-y-6">
         {/* Appearance Settings */}
-        <div className="glass-intense rounded-2xl p-8 hover-lift transition-all duration-300">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.appearance.title")}</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -69,7 +69,7 @@ function Settings() {
         </div>
 
         {/* Editor Settings */}
-        <div className="glass-intense rounded-2xl p-8 hover-lift transition-all duration-300">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.editor.title")}</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -109,7 +109,7 @@ function Settings() {
         </div>
 
         {/* Notification Settings */}
-        <div className="glass-intense rounded-2xl p-8 hover-lift transition-all duration-300">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.notifications.title")}</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -133,7 +133,7 @@ function Settings() {
         </div>
 
         {/* Privacy Settings */}
-        <div className="glass-intense rounded-2xl p-8 hover-lift transition-all duration-300">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.privacy.title")}</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -157,7 +157,7 @@ function Settings() {
         </div>
 
         {/* Account Information */}
-        <div className="glass-intense rounded-2xl p-8 hover-lift transition-all duration-300">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.account.title")}</h2>
           {user && (
             <div className="space-y-5">

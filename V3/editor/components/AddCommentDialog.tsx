@@ -73,7 +73,7 @@ export default function AddCommentDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[600px] glass-intense rounded-3xl border-0">
+            <DialogContent className="sm:max-w-[600px] bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-gray-800 rounded-lg">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold tracking-tight">{t("addCommentDialog.title")}</DialogTitle>
                 </DialogHeader>

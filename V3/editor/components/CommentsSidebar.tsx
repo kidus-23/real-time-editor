@@ -168,7 +168,7 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
 
     return (
         <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent side="right" className="w-[400px] sm:w-[500px] p-0 flex flex-col h-full glass-intense">
+            <SheetContent side="right" className="w-[400px] sm:w-[500px] p-0 flex flex-col h-full bg-white dark:bg-[#0f0f0f] border-l border-gray-200 dark:border-gray-800">
                 <SheetHeader className="p-6 border-b border-gray-200/50 dark:border-gray-800/50">
                     <SheetTitle className="flex items-center gap-3 text-2xl font-bold tracking-tight">
                         <MessageSquare className="h-6 w-6" />
@@ -195,7 +195,7 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                         <ScrollArea className="h-full p-4">
                             <div className="space-y-3">
                                 {activeComments.length === 0 ? (
-                                    <div className="glass rounded-2xl p-10 text-center">
+                                    <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-10 text-center border border-gray-200 dark:border-gray-700">
                                         <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-20" />
                                         <p className="text-base text-gray-600 dark:text-gray-400 font-medium">No active comments</p>
                                     </div>
@@ -212,7 +212,7 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
                         <ScrollArea className="h-full p-4">
                             <div className="space-y-3">
                                 {resolvedComments.length === 0 ? (
-                                    <div className="glass rounded-2xl p-10 text-center">
+                                    <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-10 text-center border border-gray-200 dark:border-gray-700">
                                         <CheckCircle2 className="h-16 w-16 mx-auto mb-4 opacity-20" />
                                         <p className="text-base text-gray-600 dark:text-gray-400 font-medium">No resolved comments</p>
                                     </div>

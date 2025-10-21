@@ -178,7 +178,7 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl glass-intense rounded-3xl border-0">
+      <DialogContent className="sm:max-w-2xl bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-gray-800 rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold tracking-tight">{t("searchDialog.title")}</DialogTitle>
         </DialogHeader>
@@ -206,7 +206,7 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
         <div className="mt-6 max-h-[400px] overflow-y-auto scrollbar-custom">
           {results.length === 0 && searchQuery && !isSearching ? (
-            <div className="glass rounded-2xl p-8 text-center">
+            <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-8 text-center">
               <p className="text-base text-gray-600 dark:text-gray-400 font-medium">
                 {t("searchDialog.noResults")}
               </p>
@@ -217,7 +217,7 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                 <div
                   key={result.id}
                   onClick={() => handleResultClick(result.roomId)}
-                  className="glass rounded-2xl p-5 hover-lift hover-scale cursor-pointer transition-all duration-300"
+                  className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-5 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer transition-all duration-300"
                 >
                   <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{result.title}</h3>
                   {result.content && (

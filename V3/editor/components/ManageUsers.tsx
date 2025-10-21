@@ -54,7 +54,7 @@ function ManageUsers() {
             <div onClick={handleClick} className="w-full cursor-pointer">
                 {t("manageUsers.button")}({userInRoom?.docs.length})
             </div>
-            <DialogContent onClick={e => e.stopPropagation()} className="glass-intense rounded-3xl border-0">
+            <DialogContent onClick={e => e.stopPropagation()} className="bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-gray-800 rounded-lg">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold tracking-tight">{t("manageUsers.title")}</DialogTitle>
                     <DialogDescription className="text-base text-gray-600 dark:text-gray-400">
@@ -67,7 +67,7 @@ function ManageUsers() {
                     {userInRoom?.docs.map((doc) => (
                         <div
                             key={doc.data().userId}
-                            className="glass rounded-xl p-4 flex justify-between items-center hover-lift transition-all">
+                            className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-4 flex justify-between items-center border border-gray-200 dark:border-gray-700 transition-all">
                             <p className="font-semibold text-gray-900 dark:text-gray-100">
                                 {doc.data().userId === user?.emailAddresses[0].toString() ?
                                     `${t("manageUsers.you")} (${doc.data().userId})` : doc.data().userId}

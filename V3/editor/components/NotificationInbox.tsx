@@ -110,13 +110,13 @@ export function NotificationInbox() {
                     )}
                 </Button>
             </SheetTrigger>
-            <SheetContent className="glass-intense w-full sm:max-w-md">
+            <SheetContent className="bg-white dark:bg-[#0f0f0f] border-l border-gray-200 dark:border-gray-800 w-full sm:max-w-md">
                 <SheetHeader>
                     <SheetTitle className="text-2xl font-bold tracking-tight">{t("notifications.title")}</SheetTitle>
                 </SheetHeader>
                 <div className="mt-8 space-y-4">
                     {inboxNotifications.length === 0 ? (
-                        <div className="glass rounded-2xl p-8 text-center">
+                        <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-8 text-center">
                             <p className="text-base text-gray-600 dark:text-gray-400 font-medium">
                                 {t("notifications.noNotifications")}
                             </p>
@@ -137,8 +137,7 @@ export function NotificationInbox() {
                                 return (
                                     <div
                                         key={notification.id}
-                                        className={`glass-intense rounded-2xl p-5 hover-lift transition-all duration-300 ${isRead ? "opacity-60" : ""}
-                                            }`}
+                                        className={`bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-all duration-300 ${isRead ? "opacity-60" : ""}`}
                                     >
                                         <div className="space-y-4">
                                             <div>

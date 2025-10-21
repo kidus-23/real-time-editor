@@ -1,42 +1,31 @@
 'use client'
 
-import { SignedIn, SignInButton, SignedOut, UserButton, useUser } from "@clerk/nextjs";
+import { SignedIn, SignInButton, SignedOut, UserButton } from "@clerk/nextjs";
 import Breadcrumbs from "./Breadcrumbs";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
-import { useEffect, useMemo, useState, Suspense } from "react";
-import LanguageSwitcher from "./LanguageSwitcher";
+import { useEffect, useState, Suspense } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { NotificationInbox } from "./NotificationInbox";
+import Image from "next/image";
 
 function Header({ className = '' }: { className?: string }) {
-    const { user } = useUser();
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const { t } = useTranslation();
-
-    const userDisplayName = useMemo(() => {
-        return (
-            user?.firstName ||
-            user?.fullName ||
-            user?.username ||
-            user?.primaryEmailAddress?.emailAddress ||
-            ""
-        );
-    }, [user]);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
     return (
-        <div className={`glass-intense sticky top-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${className}`}>
+        <div className={`bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${className}`}>
             <div className="h-9 hover-scale transition-transform duration-200">
                 {mounted && theme === 'dark' ? (
-                    <img src="/kenlogodark.png" alt="Ken Logo" className="h-full" />
+                    <Image src="/kenlogodark.png" alt="Ken Logo" width={36} height={36} className="h-full w-auto" />
                 ) : (
-                    <img src="/kenlogo.png" alt="Ken Logo" className="h-full" />
+                    <Image src="/kenlogo.png" alt="Ken Logo" width={36} height={36} className="h-full w-auto" />
                 )}
             </div>
 
@@ -47,7 +36,7 @@ function Header({ className = '' }: { className?: string }) {
                 {mounted && (
                     <Button
                         variant="ghost"
-                        className="rounded-full w-10 h-10 p-0 flex items-center justify-center hover-scale transition-all duration-200 glass border-0"
+                        className="rounded-full w-10 h-10 p-0 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                         title={theme === 'dark' ? t("header.theme.light") : t("header.theme.dark")}
                         aria-label={theme === 'dark' ? t("header.theme.light") : t("header.theme.dark")}
@@ -61,7 +50,7 @@ function Header({ className = '' }: { className?: string }) {
                 </SignedOut>
 
                 <SignedIn>
-                    <Suspense fallback={<div className="w-10 h-10 rounded-full glass animate-pulse" />}>
+                    <Suspense fallback={<div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />}>
                         <NotificationInbox />
                     </Suspense>
                     <div className="hover-scale transition-transform duration-200">

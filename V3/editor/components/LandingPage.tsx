@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from "framer-motion"
-import { Zap, Cpu, Globe, Lock, Users, MessageSquare, Play, BookOpen, MessageCircle } from "lucide-react"
+import { Zap, Cpu, Globe, Lock, Play, BookOpen, MessageCircle } from "lucide-react"
 import Image from "next/image"
 import { SignInButton } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
@@ -137,7 +137,7 @@ function FeaturesSection() {
   return (
     <section className="py-28 px-6 text-center max-w-7xl mx-auto bg-white dark:bg-[#0f0f0f]">
       <motion.h2 
-        className="text-5xl font-bold mb-20 tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent"
+        className="text-5xl font-bold mb-20 tracking-tight text-gray-900 dark:text-white"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -149,19 +149,19 @@ function FeaturesSection() {
         {features.map((f, i) => (
           <motion.div 
             key={i} 
-            className="p-8 rounded-2xl cursor-pointer group bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-[8px] border border-gray-200/20 dark:border-gray-700/20 hover:border-gray-300/40 dark:hover:border-gray-600/40 transition-all"
+            className="p-8 rounded-2xl cursor-pointer group bg-white dark:bg-[#1a1a1a] border border-gray-200/50 dark:border-gray-700/50 hover:border-blue-500/40 dark:hover:border-blue-400/40 hover:shadow-md transition-all"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: i * 0.1 }}
             whileHover={{ 
-              scale: 1.03,
-              y: -4
+              scale: 1.02,
+              y: -2
             }}
           >
             <div className="mb-6 flex justify-center">
-              <div className="w-14 h-14 bg-gray-100/80 dark:bg-gray-800/80 rounded-xl flex items-center justify-center group-hover:bg-gray-900 dark:group-hover:bg-white transition-colors">
-                <div className="text-2xl text-gray-900 dark:text-gray-100 group-hover:text-white dark:group-hover:text-gray-900 transition-colors">{f.icon}</div>
+              <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/30 rounded-xl flex items-center justify-center group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-colors">
+                <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors">{f.icon}</div>
               </div>
             </div>
             <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">{f.title}</h3>
@@ -177,38 +177,38 @@ function FeaturesSection() {
 function DocumentManagementSection() {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 })
   return (
-    <section ref={ref} className="py-24 px-6 bg-gradient-to-b from-gray-50 to-white">
+    <section ref={ref} className="py-28 px-6 bg-gradient-to-b from-gray-50 to-white dark:from-[#0a0a0a] dark:to-[#0f0f0f]">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12">
         {/* Left: Text Content */}
-        <motion.div className="flex-1 text-left" initial={{ opacity: 0, x: -50 }} animate={inView ? { opacity: 1, x: 0 } : {}}>
-          <h2 className="text-4xl font-bold mb-6 leading-tight">Experience the future of collaboration</h2>
-          <p className="text-gray-600 text-lg max-w-lg mb-8">
+        <motion.div className="flex-1 text-left" initial={{ opacity: 0, x: -50 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6 }}>
+          <h2 className="text-5xl font-bold mb-6 leading-tight tracking-tight text-gray-900 dark:text-white">Experience the future of collaboration</h2>
+          <p className="text-gray-600 dark:text-gray-300 text-xl max-w-lg mb-10 leading-relaxed" style={{ lineHeight: 1.7 }}>
             Our editor adapts to your workflow with intelligent organization, real-time presence, and seamless integrations.
           </p>
           <ul className="space-y-4 mb-0">
             <li className="flex items-center">
-              <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs mr-3">✓</span>
-              <span className="text-gray-700">Version history for every change</span>
+              <span className="w-5 h-5 bg-green-500 dark:bg-green-400 rounded-full flex items-center justify-center text-white text-xs mr-3">✓</span>
+              <span className="text-gray-700 dark:text-gray-300 text-lg">Version history for every change</span>
             </li>
             <li className="flex items-center">
-              <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs mr-3">✓</span>
-              <span className="text-gray-700">Comments and threaded discussions</span>
+              <span className="w-5 h-5 bg-green-500 dark:bg-green-400 rounded-full flex items-center justify-center text-white text-xs mr-3">✓</span>
+              <span className="text-gray-700 dark:text-gray-300 text-lg">Comments and threaded discussions</span>
             </li>
             <li className="flex items-center">
-              <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs mr-3">✓</span>
-              <span className="text-gray-700">Automatically generated summaries</span>
+              <span className="w-5 h-5 bg-green-500 dark:bg-green-400 rounded-full flex items-center justify-center text-white text-xs mr-3">✓</span>
+              <span className="text-gray-700 dark:text-gray-300 text-lg">Automatically generated summaries</span>
             </li>
           </ul>
         </motion.div>
 
         {/* Right: Visual Mockup */}
-        <motion.div className="flex-1 relative" initial={{ opacity: 0, x: 50 }} animate={inView ? { opacity: 1, x: 0 } : {}}>
-          <div className="relative bg-white rounded-2xl p-8 max-w-md mx-auto bg-gradient-to-b from-white to-gray-50">
+        <motion.div className="flex-1 relative" initial={{ opacity: 0, x: 50 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
+          <div className="relative bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-[10px] border border-gray-200/20 dark:border-gray-700/20 rounded-2xl p-8 max-w-md mx-auto shadow-lg">
             {/* Mock editor area */}
-            <div className="h-64 bg-gray-100 rounded-xl mb-6 flex items-center justify-center">
+            <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl mb-6 flex items-center justify-center">
               <div className="relative">
-                <Play className="w-12 h-12 text-gray-400 absolute z-10" />
-                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg"></div>
+                <Play className="w-12 h-12 text-gray-400 dark:text-gray-500 absolute z-10" />
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-lg"></div>
               </div>
             </div>
             {/* Bottom UI elements (toggles/sliders) */}
@@ -228,13 +228,13 @@ function DocumentManagementSection() {
 function AISection() {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 })
   return (
-    <section ref={ref} className="py-24 px-6 bg-white">
+    <section ref={ref} className="py-28 px-6 bg-white dark:bg-[#0f0f0f]">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12">
         {/* Left: Video */}
-        <motion.div className="flex-1 relative" initial={{ opacity: 0, x: -50 }} animate={inView ? { opacity: 1, x: 0 } : {}}>
+        <motion.div className="flex-1 relative" initial={{ opacity: 0, x: -50 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6 }}>
           <video
             src="/smartai.mp4"
-            className="rounded-2xl w-full h-auto object-cover"
+            className="rounded-2xl w-full h-auto object-cover border border-gray-200/30 dark:border-gray-700/30 shadow-lg"
             autoPlay
             loop
             muted
@@ -245,37 +245,37 @@ function AISection() {
         </motion.div>
 
         {/* Right: Content */}
-        <motion.div className="flex-1 text-left" initial={{ opacity: 0, x: 50 }} animate={inView ? { opacity: 1, x: 0 } : {}}>
-          <h2 className="text-4xl font-bold mb-6">Smart AI Integration</h2>
-          <p className="text-gray-600 text-lg max-w-lg mb-8">
+        <motion.div className="flex-1 text-left" initial={{ opacity: 0, x: 50 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
+          <h2 className="text-5xl font-bold mb-6 tracking-tight text-gray-900 dark:text-white">Smart AI Integration</h2>
+          <p className="text-gray-600 dark:text-gray-300 text-xl max-w-lg mb-10 leading-relaxed" style={{ lineHeight: 1.7 }}>
             Leverage cutting-edge AI models to enhance your workflow instantly. KEN integrates multiple AI models including GPT-4 Turbo, Claude 2, Gemini Pro, and open-source models.
           </p>
           <div className="space-y-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <BookOpen className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-1">Document Summarization</h3>
-                <p className="text-gray-600">Get concise summaries instantly</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Document Summarization</h3>
+                <p className="text-gray-600 dark:text-gray-400">Get concise summaries instantly</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <Globe className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <Globe className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-1">Multi-language Translation</h3>
-                <p className="text-gray-600">Seamless document translation</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Multi-language Translation</h3>
+                <p className="text-gray-600 dark:text-gray-400">Seamless document translation</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <MessageCircle className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <MessageCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-1">Smart Q&A</h3>
-                <p className="text-gray-600">Answers from your content</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Smart Q&A</h3>
+                <p className="text-gray-600 dark:text-gray-400">Answers from your content</p>
               </div>
             </div>
           </div>
@@ -289,12 +289,12 @@ function AISection() {
 function DemoSection() {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 })
   return (
-    <section ref={ref} className="py-24 px-6 text-center bg-gray-50">
-      <motion.h2 className="text-4xl font-bold mb-12" initial={{ opacity: 0, y: 50 }} animate={inView ? { opacity: 1, y: 0 } : {}}>
+    <section ref={ref} className="py-28 px-6 text-center bg-white dark:bg-[#0f0f0f]">
+      <motion.h2 className="text-5xl font-bold mb-16 tracking-tight text-gray-900 dark:text-white" initial={{ opacity: 0, y: 50 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
         Live Editor Demo
       </motion.h2>
-      <motion.div className="relative max-w-5xl mx-auto rounded-xl overflow-hidden"
-        initial={{ opacity: 0, y: 50 }} animate={inView ? { opacity: 1, y: 0 } : {}}>
+      <motion.div className="relative max-w-5xl mx-auto rounded-xl overflow-hidden border border-gray-200/30 dark:border-gray-700/30 shadow-lg"
+        initial={{ opacity: 0, y: 50 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
         <Image src="/demo-editor.png" alt="Editor Demo" width={1200} height={600} className="rounded-xl" />
       </motion.div>
     </section>
@@ -304,22 +304,43 @@ function DemoSection() {
 // ------------------ Testimonials Section ------------------
 function TestimonialsSection() {
   const testimonials = [
-    { name: "Alice W.", role: "Product Manager", feedback: "KEN transformed how our team collaborates. It's lightning fast and intuitive." },
-    { name: "John D.", role: "Developer", feedback: "The AI copilot is incredible. It saves hours of work every week." },
-    { name: "Sofia L.", role: "Designer", feedback: "Finally a clean editor that just works. No clutter, just creativity." }
+    { 
+      name: "Alice W.", 
+      role: "Product Manager", 
+      feedback: "KEN transformed how our team collaborates. It's lightning fast and intuitive.",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice"
+    },
+    { 
+      name: "John D.", 
+      role: "Developer", 
+      feedback: "The AI copilot is incredible. It saves hours of work every week.",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+    },
+    { 
+      name: "Sofia L.", 
+      role: "Designer", 
+      feedback: "Finally a clean editor that just works. No clutter, just creativity.",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia"
+    }
   ]
 
   return (
-    <section className="py-24 px-6 text-center max-w-6xl mx-auto bg-white">
-      <h2 className="text-4xl font-bold mb-12">What Our Users Say</h2>
-      <div className="grid md:grid-cols-3 gap-8">
+    <section className="py-28 px-6 text-center max-w-6xl mx-auto bg-white dark:bg-[#0f0f0f]">
+      <h2 className="text-5xl font-bold mb-16 tracking-tight text-gray-900 dark:text-white">What Our Users Say</h2>
+      <div className="grid md:grid-cols-3 gap-6">
         {testimonials.map((t, i) => (
-          <motion.div key={i} className="p-6 rounded-2xl bg-gradient-to-b from-white to-gray-50 transition-colors"
+          <motion.div key={i} className="p-8 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-gray-200/50 dark:border-gray-700/50 hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-all shadow-sm hover:shadow-md"
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            whileHover={{ backgroundColor: '#FAFAFA' }}>
-            <p className="text-gray-700 mb-4">"{t.feedback}"</p>
-            <p className="font-semibold">{t.name}</p>
-            <p className="text-gray-500 text-sm">{t.role}</p>
+            transition={{ delay: i * 0.15, duration: 0.6 }}
+            whileHover={{ scale: 1.02, y: -2 }}>
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-16 h-16 rounded-full overflow-hidden mb-4 ring-2 ring-blue-500/20">
+                <Image src={t.avatar} alt={t.name} width={64} height={64} className="w-full h-full object-cover" />
+              </div>
+              <p className="font-bold text-gray-900 dark:text-white text-lg">{t.name}</p>
+              <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">{t.role}</p>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed" style={{ lineHeight: 1.7 }}>&ldquo;{t.feedback}&rdquo;</p>
           </motion.div>
         ))}
       </div>
@@ -331,27 +352,21 @@ function TestimonialsSection() {
 function CTASection() {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 })
   return (
-    <section ref={ref} className="py-24 px-6 text-center bg-gradient-to-b from-gray-50 to-white">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={inView ? { opacity: 1, scale: 1 } : {}}>
-        <h2 className="text-4xl font-bold mb-6">Ready to experience KEN?</h2>
-        <p className="text-gray-600 max-w-xl mx-auto mb-8">Start your free journey and collaborate smarter today.</p>
+    <section ref={ref} className="py-28 px-6 text-center bg-white dark:from-[#0a0a0a] dark:to-[#0f0f0f]">
+      <motion.div 
+        className="max-w-3xl mx-auto bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-3xl p-16 shadow-sm"
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={inView ? { opacity: 1, scale: 1 } : {}}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-5xl font-bold mb-6 tracking-tight text-gray-900 dark:text-white">Ready to experience KEN?</h2>
+        <p className="text-gray-600 dark:text-gray-300 text-xl max-w-xl mx-auto mb-10 leading-relaxed" style={{ lineHeight: 1.7 }}>Start your free journey and collaborate smarter today.</p>
         <SignInButton mode="modal">
-          <button className="bg-black text-white px-8 py-4 rounded-md hover:bg-gray-800 transition">
+          <button className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-10 py-5 rounded-xl hover:shadow-lg active:scale-95 transition-all font-semibold text-lg">
             Get Started
           </button>
         </SignInButton>
       </motion.div>
     </section>
-  )
-}
-
-// ------------------ FeatureCard Component ------------------
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
-  return (
-    <motion.div className="p-6 rounded-2xl bg-gradient-to-b from-white to-gray-50 transition-colors cursor-pointer" whileHover={{ backgroundColor: '#FAFAFA', scale: 1.02 }}>
-      <div className="mb-4 text-black">{icon}</div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </motion.div>
   )
 }
