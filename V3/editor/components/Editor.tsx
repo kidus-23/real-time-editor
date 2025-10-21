@@ -40,7 +40,7 @@ type EditorProps = {
   doc: Y.Doc;
   provider: LiveblocksYjsProvider;
   darkMode: boolean;
-  editor: any; // Use any to support custom blocks
+  editor: any;
   onCommentClick?: (selectedText: string) => void;
 };
 
@@ -52,18 +52,14 @@ const BlockNote = memo(function BlockNote({
   roomId,
   onCommentClick,
 }: EditorProps & { roomId: string }) {
-  // mark parameters as used to satisfy strict unused checks
   void doc;
   void provider;
   useSelf((me) => me.info);
 
-  // Enable automatic link preview detection
   useLinkPreviewDetection(editor);
 
-  // Memoize save function
   const saveContent = useCallback(async () => {
     try {
-      // Get document content from DOM similar to Chatbar component
       const editorContent =
         document.querySelector(".bn-container")?.textContent || "";
 
@@ -78,18 +74,15 @@ const BlockNote = memo(function BlockNote({
     }
   }, [roomId]);
 
-  // Use unified auto-save hook with 2s debounce
   const { triggerSave } = useAutoSave({
     saveFunction: saveContent,
-    debounceMs: 2000, // Save 2 seconds after typing stops
-    minIntervalMs: 30000, // Minimum 30 seconds between saves
+    debounceMs: 2000,
+    minIntervalMs: 30000,
   });
 
-  // Trigger save when editor changes
   useEffect(() => {
     if (!editor) return;
 
-    // Subscribe to editor changes
     const unsubscribe = editor.onChange(() => {
       triggerSave();
     });
@@ -99,7 +92,6 @@ const BlockNote = memo(function BlockNote({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Shortcut for AI Composer: Ctrl + Shift + C
       if (e.ctrlKey && e.shiftKey && e.key === "C") {
         e.preventDefault();
         const composerDialog = document.querySelector(
@@ -109,7 +101,6 @@ const BlockNote = memo(function BlockNote({
           composerDialog.click();
         }
       }
-      // Shortcut for Question Generator: Ctrl + Shift + Q
       if (e.ctrlKey && e.shiftKey && e.key === "Q") {
         e.preventDefault();
         const questionDialog = document.querySelector(
@@ -120,7 +111,6 @@ const BlockNote = memo(function BlockNote({
         }
       }
 
-      // Handle BlockNote suggestion menu scrolling
       const menuOpen = document.querySelector(
         ".bn-suggestion-menu, [data-suggestion-menu], .bn-menu"
       );
@@ -235,12 +225,14 @@ type EditorComponentProps = {
   darkMode?: boolean;
   onEditorReady?: (editor: BlockNoteEditor | null) => void;
   onCommentClick?: (selectedText: string) => void;
+  onUndoManagerReady?: (undoManager: Y.UndoManager | null) => void;
 };
 
 function Editor({
   darkMode = false,
   onEditorReady,
   onCommentClick,
+  onUndoManagerReady,
 }: EditorComponentProps) {
   const room = useRoom();
   const [doc, setDoc] = useState<Y.Doc | null>(null);
@@ -254,14 +246,19 @@ function Editor({
 
     const yDoc = new Y.Doc();
     const yProvider = new LiveblocksYjsProvider(room, yDoc);
+    const yFragment = yDoc.getXmlFragment("root");
 
     const initializeEditor = async () => {
       try {
-        // Create custom block schema with link preview and improved video/image blocks
+        // Create UndoManager for the fragment
+        const undoManager = new Y.UndoManager(yFragment);
+
+        // Send undoManager to parent component
+        onUndoManagerReady?.(undoManager);
+
         const schema = BlockNoteSchema.create({
           blockSpecs: {
             ...defaultBlockSpecs,
-            // Cast custom blocks to any to avoid strict schema generic mismatches
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             linkPreview: LinkPreview as any,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -274,7 +271,7 @@ function Editor({
         const blockNoteEditor = BlockNoteEditor.create({
           schema,
           collaboration: {
-            fragment: yDoc.getXmlFragment("root"),
+            fragment: yFragment,
             user: {
               name: room.getSelf()?.info?.name || "Anonymous",
               color:
@@ -282,8 +279,8 @@ function Editor({
                 stringToColor(room.getSelf()?.info?.email || "1"),
             },
             provider: yProvider,
+            undoManager: undoManager,
           },
-          // Enable default keyboard shortcuts including undo/redo
           _tiptapOptions: {
             editorProps: {
               attributes: {
@@ -293,7 +290,6 @@ function Editor({
           },
         });
         setEditor(blockNoteEditor as BlockNoteEditor<any>);
-        // Cast onEditorReady to any to avoid strict generic mismatches between BlockNote schema types
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (onEditorReady as any)?.(blockNoteEditor as any);
         setDoc(yDoc);
@@ -307,10 +303,11 @@ function Editor({
 
     return () => {
       onEditorReady?.(null);
+      onUndoManagerReady?.(null); // Critical: notify parent that UndoManager is no longer available
       yProvider?.destroy();
       yDoc?.destroy();
     };
-  }, [onEditorReady, room]);
+  }, [onEditorReady, onUndoManagerReady, room]);
 
   if (!room) {
     return (

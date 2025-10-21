@@ -42,6 +42,8 @@ import {
   UserPlus,
   Users,
   Trash2,
+  Undo,
+  Redo,
 } from "lucide-react";
 import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
@@ -50,7 +52,6 @@ import CommentsSidebar from "./CommentsSidebar";
 import AddCommentDialog from "./AddCommentDialog";
 import { query, where, onSnapshot } from "firebase/firestore";
 import { Comment } from "@/types/comment";
-import stringToColor from "@/lib/stringToColor";
 import { useUser } from "@clerk/nextjs";
 import {
   DropdownMenu,
@@ -63,6 +64,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { BlockNoteEditor } from "@blocknote/core";
 import VersionHistory from "./VersionHistory";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import * as Y from "yjs";
 
 type FirestoreDocument = {
   title?: string;
@@ -78,7 +80,6 @@ function Document({
   id: string;
   initialData?: FirestoreDocument | null;
 }) {
-  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [liveData, loading, error] = useDocumentData(doc(db, "documents", id));
   const [input, setInput] = useState("");
   const [isUpdating, startTransition] = useTransition();
@@ -102,10 +103,15 @@ function Document({
   const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  // Use initialData for immediate rendering, fall back to liveData
+  // ============================================
+  // UNDO/REDO STATE - USING YJS UNDOMANAGER ONLY
+  // ============================================
+  const [undoManager, setUndoManager] = useState<Y.UndoManager | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
   const data = liveData ?? initialData ?? null;
 
-  // Handler for comment button click in formatting toolbar
   const handleCommentClick = useCallback((text: string) => {
     setSelectedText(text);
     setIsAddCommentDialogOpen(true);
@@ -117,23 +123,88 @@ function Document({
     }
   }, [data?.title]);
 
-  // Track active comments count with optimized query
+  // ============================================
+  // CORRECT IMPLEMENTATION: Listen to Yjs UndoManager events
+  // ============================================
+  // This is the ONLY way to track undo/redo state in collaborative mode
+  // DO NOT try to access _tiptapEditor - it will cause errors
+  useEffect(() => {
+    if (!undoManager) return;
+
+    const updateUndoRedoState = () => {
+      setCanUndo(undoManager.canUndo());
+      setCanRedo(undoManager.canRedo());
+    };
+
+    // Set initial state
+    updateUndoRedoState();
+
+    // Listen for stack changes
+    undoManager.on("stack-item-added", updateUndoRedoState);
+    undoManager.on("stack-item-popped", updateUndoRedoState);
+
+    return () => {
+      undoManager.off("stack-item-added", updateUndoRedoState);
+      undoManager.off("stack-item-popped", updateUndoRedoState);
+    };
+  }, [undoManager]);
+
+  // ============================================
+  // REMOVED: Incorrect useEffect that caused the error
+  // ============================================
+  // THIS CODE WAS DELETED (DO NOT ADD IT BACK):
+  //
+  // useEffect(() => {
+  //   if (!blockEditor) return;
+  //
+  //   const tipTapEditor = (blockEditor as any)._tiptapEditor;
+  //   if (!tipTapEditor) return;
+  //
+  //   const updateState = () => {
+  //     setCanUndo(tipTapEditor.can().undo());  // ❌ ERROR: This doesn't exist in collaborative mode
+  //     setCanRedo(tipTapEditor.can().redo());  // ❌ ERROR: This doesn't exist in collaborative mode
+  //   };
+  //
+  //   updateState();
+  //   tipTapEditor.on('transaction', updateState);
+  //
+  //   return () => {
+  //     tipTapEditor.off('transaction', updateState);
+  //   };
+  // }, [blockEditor]);
+
+  // ============================================
+  // REMOVED: Incorrect handler functions
+  // ============================================
+  // THESE FUNCTIONS WERE DELETED (DO NOT ADD THEM BACK):
+  //
+  // const handleUndo = () => {
+  //   if (!blockEditor) return;
+  //   const tipTapEditor = (blockEditor as any)._tiptapEditor;
+  //   if (tipTapEditor && tipTapEditor.can().undo()) {  // ❌ ERROR: Doesn't exist
+  //     tipTapEditor.commands.undo();
+  //   }
+  // };
+  //
+  // const handleRedo = () => {
+  //   if (!blockEditor) return;
+  //   const tipTapEditor = (blockEditor as any)._tiptapEditor;
+  //   if (tipTapEditor && tipTapEditor.can().redo()) {  // ❌ ERROR: Doesn't exist
+  //     tipTapEditor.commands.redo();
+  //   }
+  // };
+
   useEffect(() => {
     if (!id) return;
 
     const commentsRef = collection(db, "documents", id, "comments");
-    const q = query(
-      commentsRef,
-      where("resolved", "==", false)
-      // Add limit to prevent loading too many comments at once
-    );
+    const q = query(commentsRef, where("resolved", "==", false));
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
         setActiveCommentsCount(snapshot.size);
 
-        // Also store all comments for highlighting (memoized)
         const comments: Comment[] = [];
         snapshot.forEach((doc) => {
           comments.push({
@@ -145,7 +216,6 @@ function Document({
       },
       (error) => {
         console.error("Error fetching comments:", error);
-        // Fallback to 0 if error occurs
         setActiveCommentsCount(0);
       }
     );
@@ -153,7 +223,6 @@ function Document({
     return () => unsubscribe();
   }, [id]);
 
-  // Update last opened timestamp when document is loaded
   useEffect(() => {
     if (id) {
       startTransition(async () => {
@@ -162,28 +231,23 @@ function Document({
     }
   }, [id]);
 
-  // Auto-save snapshots every 5 minutes when content changes
   useEffect(() => {
     if (!data || !user) return;
 
     const currentContent = typeof data.content === "string" ? data.content : "";
     const currentTitle = typeof data.title === "string" ? data.title : "";
 
-    // Store initial content
     setLastSavedContent(currentContent);
     setLastSavedTitle(currentTitle);
 
-    // Set up auto-save timer
-    const autoSaveInterval = 5 * 60 * 1000; // 5 minutes
+    const autoSaveInterval = 5 * 60 * 1000;
 
     const createSnapshot = async () => {
-      // Only create snapshot if content has changed
       if (
         currentContent !== lastSavedContent ||
         currentTitle !== lastSavedTitle
       ) {
         try {
-          // Create a new version in the versions subcollection
           const versionRef = doc(collection(db, "documents", id, "versions"));
           await setDoc(versionRef, {
             content: lastSavedContent,
@@ -193,7 +257,6 @@ function Document({
             userName: user.fullName || user.username || user.id,
           });
 
-          // Update saved content reference
           setLastSavedContent(currentContent);
           setLastSavedTitle(currentTitle);
 
@@ -204,15 +267,12 @@ function Document({
       }
     };
 
-    // Clear any existing timer
     if (autoSaveTimerRef.current) {
       clearInterval(autoSaveTimerRef.current);
     }
 
-    // Set new timer
     autoSaveTimerRef.current = setInterval(createSnapshot, autoSaveInterval);
 
-    // Cleanup on unmount
     return () => {
       if (autoSaveTimerRef.current) {
         clearInterval(autoSaveTimerRef.current);
@@ -220,7 +280,6 @@ function Document({
     };
   }, [id, data?.content, data?.title, user, lastSavedContent, lastSavedTitle]);
 
-  // Clean up old versions (older than 7 days) on component mount
   useEffect(() => {
     const cleanupOldVersions = async () => {
       if (!id) return;
@@ -249,10 +308,8 @@ function Document({
     cleanupOldVersions();
   }, [id]);
 
-  // Highlight text in the editor when a comment is selected
   useEffect(() => {
     if (!highlightedCommentId) {
-      // Remove all highlights
       document.querySelectorAll(".comment-highlight-active").forEach((el) => {
         el.classList.remove("comment-highlight-active");
       });
@@ -262,7 +319,6 @@ function Document({
     const comment = allComments.find((c) => c.id === highlightedCommentId);
     if (!comment) return;
 
-    // Find and highlight the text in the editor
     const editorElement = document.querySelector(".bn-container");
     if (!editorElement) return;
 
@@ -278,7 +334,6 @@ function Document({
       textNodes.push(node);
     }
 
-    // Search for the commented text
     const searchText = comment.highlightedText;
 
     for (const textNode of textNodes) {
@@ -286,17 +341,14 @@ function Document({
       const index = text.indexOf(searchText);
 
       if (index !== -1 && textNode.parentElement) {
-        // Scroll to the element
         textNode.parentElement.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
 
-        // Add flash highlight class
         const parentEl = textNode.parentElement;
         parentEl.classList.add("comment-highlight-active");
 
-        // Remove highlight after animation completes (3 seconds)
         setTimeout(() => {
           parentEl.classList.remove("comment-highlight-active");
           parentEl.style.backgroundColor = "";
@@ -310,7 +362,6 @@ function Document({
     }
   }, [highlightedCommentId, allComments]);
 
-  // NOW safe to do conditional returns after all hooks are called
   if (loading && !data) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
@@ -361,7 +412,6 @@ function Document({
     e.preventDefault();
     if (newTag.trim()) {
       const newTags = [...(data.tags || []), newTag.trim()];
-      // Optimistic UI update
       startTransition(async () => {
         await updateDoc(doc(db, "documents", id), { tags: newTags });
       });
@@ -373,7 +423,6 @@ function Document({
     const newTags = (data.tags || []).filter(
       (_: string, i: number) => i !== index
     );
-    // Optimistic UI update
     startTransition(async () => {
       await updateDoc(doc(db, "documents", id), { tags: newTags });
     });
@@ -397,10 +446,8 @@ function Document({
       if (!result.success) {
         throw new Error(result.error || "Failed to generate tags");
       }
-      // Show success message and update UI
       console.log("Tags generated successfully:", result.tags);
 
-      // Update document with new tags directly
       const newTags = result.tags;
       if (Array.isArray(newTags)) {
         startTransition(async () => {
@@ -411,7 +458,6 @@ function Document({
       }
     } catch (error) {
       console.error("Failed to generate tags:", error);
-      // Reset generating state
       setIsGeneratingTags(false);
       return;
     }
@@ -421,11 +467,9 @@ function Document({
 
   return (
     <div className="min-h-screen w-full bg-white dark:bg-[#020618] transition-colors duration-200">
-      {/* Header with document controls */}
       <header className="sticky top-0 z-10 bg-white/90 dark:bg-[#020618]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 py-3">
         <div className="w-full">
           <div className="flex items-center justify-between gap-4">
-            {/* Document title form */}
             <form
               className="flex-1 flex items-center gap-2 group"
               onSubmit={updateTitle}
@@ -449,8 +493,36 @@ function Document({
               </Button>
             </form>
 
-            {/* Document controls */}
             <div className="flex items-center gap-3">
+              {/* ============================================
+                  UNDO/REDO BUTTONS - CORRECT IMPLEMENTATION
+                  ============================================
+                  These buttons now call undoManager directly
+                  No need for intermediate handler functions
+              */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => undoManager?.undo()}
+                  disabled={!canUndo}
+                  title="Undo (Ctrl+Z)"
+                  className="h-8 w-8"
+                >
+                  <Undo className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => undoManager?.redo()}
+                  disabled={!canRedo}
+                  title="Redo (Ctrl+Y)"
+                  className="h-8 w-8"
+                >
+                  <Redo className="h-4 w-4" />
+                </Button>
+              </div>
+
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-md">
                 {isOwner ? (
                   <div className="flex items-center gap-1.5">
@@ -476,7 +548,6 @@ function Document({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  {/* User Management */}
                   <DropdownMenuItem>
                     <Users2 className="h-4 w-4 mr-2" />
                     <ManageUsers />
@@ -492,13 +563,11 @@ function Document({
                     <Avatars />
                   </DropdownMenuItem>
 
-                  {/* Delete Document (Destructive Action) */}
                   <DropdownMenuItem variant="destructive">
                     <Trash2 className="h-4 w-4 mr-2" />
                     <DeleteDocument />
                   </DropdownMenuItem>
 
-                  {/* Comments */}
                   <DropdownMenuItem
                     onSelect={() => setIsCommentsSidebarOpen(true)}
                   >
@@ -515,13 +584,11 @@ function Document({
                     </div>
                   </DropdownMenuItem>
 
-                  {/* Version History */}
                   <DropdownMenuItem onSelect={() => setIsHistoryOpen(true)}>
                     <Clock className="h-4 w-4 mr-2" />
                     {t("document.menu.versionHistory")}
                   </DropdownMenuItem>
 
-                  {/* Import/Export Submenu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <DropdownMenuItem>
@@ -539,7 +606,6 @@ function Document({
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {/* Document Tags Submenu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <DropdownMenuItem>
@@ -645,21 +711,18 @@ function Document({
               </DropdownMenu>
             </div>
           </div>
-
-          {/* Collaboration info */}
         </div>
       </header>
 
-      {/* Main editor area with proper padding */}
       <main className="w-full px-5 py-6 relative">
         <Editor
           darkMode={theme === "dark"}
           onEditorReady={setBlockEditor}
           onCommentClick={handleCommentClick}
+          onUndoManagerReady={setUndoManager}
         />
       </main>
 
-      {/* Comment Components */}
       <CommentsSidebar
         isOpen={isCommentsSidebarOpen}
         onClose={() => setIsCommentsSidebarOpen(false)}
@@ -680,10 +743,8 @@ function Document({
         selectedText={selectedText}
       />
 
-      {/* Version History Sheet */}
       <Sheet open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
         <SheetContent side="right" className="w-full sm:max-w-4xl p-0">
-          {/* This Header and Title will fix the error */}
           <SheetHeader>
             <SheetTitle>Version History</SheetTitle>
           </SheetHeader>
