@@ -368,9 +368,9 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     };
 
     return (
-        <div className="min-h-screen w-full bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#0f0f0f] dark:via-[#1a1a2e] dark:to-[#0f0f0f] transition-colors duration-300">
+        <div className="min-h-screen w-full bg-[#fafafa] dark:bg-[#0f0f0f] transition-colors duration-300">
             {/* Header with document controls */}
-            <header className={`sticky top-0 z-10 glass-intense border-b border-gray-200/50 dark:border-gray-800/50 px-6 py-4 transition-all duration-300 ${zenMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <header className="sticky top-0 z-10 bg-white/60 dark:bg-[#1a1a1a]/60 backdrop-filter backdrop-blur-[10px] border-b border-gray-200/30 dark:border-gray-800/30 px-6 py-3 transition-all duration-300">
                 <div className="w-full">
                     <div className="flex items-center justify-between gap-4">
                         {/* Document title form */}
@@ -378,15 +378,16 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                             <Input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                className="font-semibold text-2xl border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-0 bg-transparent px-4 py-3 h-auto w-full max-w-2xl tracking-tight transition-all rounded-xl"
+                                className="font-bold text-3xl border-0 hover:bg-gray-100/40 dark:hover:bg-gray-800/40 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-0 bg-transparent px-3 py-2 h-auto w-full max-w-3xl tracking-tight transition-all rounded-lg"
                                 placeholder={t("document.placeholders.title")}
+                                style={{ fontFamily: "'Recursive', 'Inter', system-ui", fontWeight: 700 }}
                             />
                             <Button
                                 disabled={isUpdating}
                                 type="submit"
                                 variant="ghost"
                                 size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-all hover-scale rounded-xl"
+                                className="opacity-70 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 rounded-lg text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium"
                             >
                                 {isUpdating ? t("document.actions.saving") : t("document.actions.save")}
                             </Button>
@@ -394,7 +395,7 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
 
                         {/* Document controls */}
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center text-sm text-gray-700 dark:text-gray-300 glass px-3 py-2 rounded-xl border-0">
+                            <div className="flex items-center text-sm text-gray-700 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-800/80 px-3 py-1.5 rounded-full border border-gray-200/20 dark:border-gray-700/20">
                                 {isOwner ? (
                                     <div className="flex items-center gap-2">
                                         <Crown size={15} className="text-amber-500 dark:text-amber-400" />
@@ -408,9 +409,27 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                 )}
                             </div>
 
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            onClick={() => setZenMode(!zenMode)}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="hover:scale-105 active:scale-95 transition-transform rounded-full"
+                                        >
+                                            {zenMode ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-0">
+                                        <p className="font-semibold text-sm">{zenMode ? t("zenMode.exit") : t("zenMode.enter")}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="hover-scale rounded-xl">
+                                    <Button variant="ghost" size="icon" className="hover:scale-105 active:scale-95 transition-transform rounded-full">
                                         <MoreHorizontal className="h-5 w-5" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -581,30 +600,9 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                 </div>
             </header>
 
-            {/* Floating Zen Mode Toggle Button - Top Right */}
-            <div className={`fixed ${zenMode ? 'top-6' : 'top-40'} right-6 z-50 transition-all duration-300`}>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                onClick={() => setZenMode(!zenMode)}
-                                variant="ghost"
-                                size="icon"
-                                className="glass-intense hover-scale hover-lift rounded-2xl"
-                            >
-                                {zenMode ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="glass-intense border-0">
-                            <p className="font-medium">{zenMode ? t("zenMode.exit") : t("zenMode.enter")}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </div>
-
             {/* Main editor area with proper padding */}
-            <main className="w-full px-6 md:px-12 py-8 relative max-w-5xl mx-auto">
-                <div className="glass-intense rounded-3xl p-8 md:p-12 min-h-[70vh] animate-fade-in">
+            <main className={`w-full px-4 md:px-8 lg:px-12 py-6 relative ${zenMode ? 'max-w-[95vw]' : 'max-w-[1400px]'} mx-auto transition-all duration-300`}>
+                <div className="bg-white/30 dark:bg-[#0a0a0a]/50 backdrop-blur-[4px] rounded-2xl p-6 md:p-10 lg:p-16 min-h-[80vh] animate-fade-in border border-gray-200/10 dark:border-gray-800/20 shadow-sm">
                     <Editor darkMode={theme === 'dark'} onEditorReady={setBlockEditor} onCommentClick={handleCommentClick} />
                 </div>
             </main>
