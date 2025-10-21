@@ -87,10 +87,10 @@ function Sidebar({ className = '' }: { className?: string }) {
 
     const menuOptions = (
         <>
-            <div className="flex items-center mb-4 gap-2">
+            <div className="flex items-center mb-6 gap-2">
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                    className="p-2.5 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 rounded-xl transition-all duration-200 hover-scale glass border-0"
                 >
                     {isExpanded ? (
                         <ChevronLeftIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
@@ -99,7 +99,7 @@ function Sidebar({ className = '' }: { className?: string }) {
                     )}
                 </button>
                 {isExpanded && user && (
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 tracking-tight">
                         {(user.firstName || user.fullName || user.username || user.primaryEmailAddress?.emailAddress)}'s Space
                     </div>
                 )}
@@ -109,66 +109,66 @@ function Sidebar({ className = '' }: { className?: string }) {
                 {/* Home Button */}
                 <Link
                     href="/"
-                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                    className={`flex items-center w-full gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 ease-out hover-scale
                         ${isHomeActive
-                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                            ? "bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold shadow-sm"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"}
                         ${!isExpanded ? "justify-center" : ""}
                     `}
                     title={!isExpanded ? t("sidebar.home") : ""}
                 >
                     <HomeIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.home")}</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.home")}</p>}
                 </Link>
 
                 {/* Search Button */}
                 <button
                     onClick={() => setIsSearchOpen(true)}
-                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
-                        text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900
+                    className={`flex items-center w-full gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 ease-out hover-scale
+                        text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80
                         ${!isExpanded ? "justify-center" : ""}`}
                     title={!isExpanded ? t("sidebar.search") : ""}
                 >
                     <SearchIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.search")}</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.search")}</p>}
                 </button>
 
                 {/* Graph Button */}
                 <Link
                     href="/graph"
-                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                    className={`flex items-center w-full gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 ease-out hover-scale
                         ${isGraphActive
-                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                            ? "bg-purple-500/10 dark:bg-purple-400/10 text-purple-600 dark:text-purple-400 font-semibold shadow-sm"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"}
                         ${!isExpanded ? "justify-center" : ""}
                     `}
                     title={!isExpanded ? t("sidebar.graph") : ""}
                 >
                     <GitGraphIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.graph")}</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.graph")}</p>}
                 </Link>
 
-                {/* Settings - Replace the button with Link */}
+                {/* Settings */}
                 <Link
                     href="/settings"
-                    className={`flex items-center w-full gap-3 px-3 py-2 rounded-lg transition-colors duration-150 ease-in-out
+                    className={`flex items-center w-full gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 ease-out hover-scale
                         ${isSettingsActive
-                            ? "bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-white font-medium"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-900"}
+                            ? "bg-gray-500/10 dark:bg-gray-400/10 text-gray-700 dark:text-gray-300 font-semibold shadow-sm"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"}
                         ${!isExpanded ? "justify-center" : ""}
                     `}
                     title={!isExpanded ? t("sidebar.settings") : ""}
                 >
                     <SettingsIcon className="w-4 h-4 flex-shrink-0" />
-                    {isExpanded && <p className="text-sm leading-tight font-medium">{t("sidebar.settings")}</p>}
+                    {isExpanded && <p className="text-sm leading-tight font-semibold">{t("sidebar.settings")}</p>}
                 </Link>
 
                 {/* New Document Button */}
-                <div className="mt-2 mb-1">
+                <div className="mt-4 mb-2">
                     {!isExpanded ? (
                         <button
                             onClick={() => setIsExpanded(true)}
-                            className="w-full flex items-center justify-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900 transition-colors text-gray-700 dark:text-gray-300"
+                            className="w-full flex items-center justify-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-blue-500/10 dark:hover:bg-blue-400/10 transition-all duration-200 text-blue-600 dark:text-blue-400 hover-scale"
                             title={t("sidebar.newDocument")}
                         >
                             <PlusIcon className="w-4 h-4 flex-shrink-0" />
@@ -182,18 +182,18 @@ function Sidebar({ className = '' }: { className?: string }) {
             </div>
 
             {isExpanded && (
-                <div className="flex flex-col gap-3 py-4 w-full max-w-[250px] divide-y divide-gray-100 dark:divide-neutral-800">
+                <div className="flex flex-col gap-4 py-5 w-full max-w-[250px]">
                     {/*My Document List...*/}
                     {groupedData.owner.length === 0 ? (
-                        <h2 className="text-sm text-gray-400 dark:text-neutral-500 font-medium italic px-1">
+                        <h2 className="text-sm text-gray-500 dark:text-gray-400 font-medium italic px-2">
                             {t("sidebar.noDocuments")}
                         </h2>
                     ) : (
                         <>
-                            <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold px-1">
+                            <h2 className="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400 font-bold px-2 mb-1">
                                 {t("sidebar.myDocuments")}
                             </h2>
-                            <div className="flex flex-col gap-1 pt-2">
+                            <div className="flex flex-col gap-1.5">
                                 {groupedData.owner.map((doc) => (
                                     <SidebarOption
                                         key={doc.id}
@@ -209,10 +209,11 @@ function Sidebar({ className = '' }: { className?: string }) {
                     {/*Shared with Me*/}
                     {groupedData.editor.length > 0 && (
                         <>
-                            <h2 className="text-xs uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold pt-3 px-1">
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-800 to-transparent my-2"></div>
+                            <h2 className="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400 font-bold px-2 mb-1">
                                 {t("sidebar.sharedWithMe")}
                             </h2>
-                            <div className="flex flex-col gap-1 pt-2">
+                            <div className="flex flex-col gap-1.5">
                                 {groupedData.editor.map((doc) => (
                                     <SidebarOption
                                         key={doc.id}
@@ -233,17 +234,17 @@ function Sidebar({ className = '' }: { className?: string }) {
     );
 
     return (
-        <div className={`p-3 md:p-5 bg-white min-h-screen dark:bg-[#090e19] border-r border-gray-100 dark:border-neutral-800 h-full transition-all duration-200 ${isExpanded ? 'w-[280px]' : 'w-[68px]'} ${className}`}>
+        <div className={`p-4 md:p-6 glass min-h-screen border-r border-gray-200/50 dark:border-gray-800/50 h-full transition-all duration-300 ease-out ${isExpanded ? 'w-[280px]' : 'w-[76px]'} ${className}`}>
             <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger asChild>
-                        <button className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors" suppressHydrationWarning={true}>
+                        <button className="p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-all duration-200 hover-scale" suppressHydrationWarning={true}>
                             <MenuIcon className="text-gray-700 dark:text-gray-200" size={24} />
                         </button>
                     </SheetTrigger>
-                    <SheetContent side='left'>
+                    <SheetContent side='left' className="glass-intense">
                         <SheetHeader>
-                            <SheetTitle className="text-lg font-semibold">{t("sidebar.menu")}</SheetTitle>
+                            <SheetTitle className="text-xl font-bold tracking-tight">{t("sidebar.menu")}</SheetTitle>
                             <div>
                                 {menuOptions}
                             </div>
