@@ -24,6 +24,7 @@ import { db } from "@/firebase"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useTranslation } from "@/hooks/useTranslation"
+import APIKeySettings from "@/components/APIKeySettings"
 
 // Import useRoom but don't use it directly
 import { useRoom } from "@liveblocks/react"
@@ -74,7 +75,7 @@ interface TeamChatMessage {
   timestamp: any
 }
 
-function Chatbar() {
+function Chatbar({ className = '' }: { className?: string }) {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [teamMessages, setTeamMessages] = useState<TeamChatMessage[]>([])
@@ -83,6 +84,7 @@ function Chatbar() {
   const [isLoading, setIsLoading] = useState(false)
   const [activeModel, setActiveModel] = useState('x-ai/grok-4-fast:free') // Default model
   const [showSettings, setShowSettings] = useState(false)
+  const [showAPIKeySettings, setShowAPIKeySettings] = useState(false)
   const [useDocumentContext, setUseDocumentContext] = useState(false)
   const [documentContent, setDocumentContent] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -235,13 +237,27 @@ function Chatbar() {
         context = await getDocumentContent()
       }
 
+      // Get user's API keys from localStorage
+      let userApiKeys = {}
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('user-api-keys')
+        if (stored) {
+          try {
+            userApiKeys = JSON.parse(stored)
+          } catch (e) {
+            console.error('Failed to parse API keys:', e)
+          }
+        }
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, newMessage],
           model: activeModel,
-          documentContext: context
+          documentContext: context,
+          userApiKey: (userApiKeys as any).openrouter
         }),
       })
 
@@ -302,7 +318,7 @@ function Chatbar() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${className}`}>
         <Button
           onClick={() => setIsOpen(true)}
           className="relative h-12 w-12 rounded-full bg-primary shadow-lg hover:shadow-primary/25 transition-all duration-300"
@@ -337,7 +353,8 @@ function Chatbar() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => setShowSettings(!showSettings)}
+                    onClick={() => setShowAPIKeySettings(true)}
+                    title="API Key Settings"
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -575,6 +592,12 @@ function Chatbar() {
           </Tabs>
         </SheetContent>
       </Sheet>
+
+      {/* API Key Settings Dialog */}
+      <APIKeySettings
+        open={showAPIKeySettings}
+        onOpenChange={setShowAPIKeySettings}
+      />
     </>
   )
 }

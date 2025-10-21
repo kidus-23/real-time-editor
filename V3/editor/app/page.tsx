@@ -3,9 +3,6 @@
 import HomePage from "@/components/HomePage";
 import LandingPage from "@/components/LandingPage";
 import { useUser } from "@clerk/nextjs";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
-import Chatbar from "@/components/Chatbar";
 
 export default function Home() {
   const { isLoaded, isSignedIn } = useUser();
@@ -21,16 +18,5 @@ export default function Home() {
     return <LandingPage />;
   }
 
-  return (
-    <>
-      <Header />
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto scrollbar-hide">
-          <HomePage />
-        </div>
-      </div>
-      <Chatbar />
-    </>
-  );
+  return <HomePage />;
 }

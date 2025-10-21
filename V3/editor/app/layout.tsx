@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Toaster } from "sonner";
 import LiveBlocksProvider from "@/components/LiveBlocksProvider";
-import Chatbar from "@/components/Chatbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import LocaleProvider from "@/components/LocaleProvider";
+import LayoutWrapper from "@/components/LayoutWrapper";
+import { ZenModeProvider } from "@/contexts/ZenModeContext";
 import { cookies } from "next/headers";
 import { defaultLocale, getDictionary, isLocale, type Locale } from "@/lib/i18n";
 
@@ -38,8 +37,12 @@ export default async function RootLayout({
               storageKey="editor-theme"
             >
               <LocaleProvider locale={locale} dictionary={dictionary}>
-                {children}
-                <Toaster position="top-center" />
+                <ZenModeProvider>
+                  <LayoutWrapper>
+                    {children}
+                  </LayoutWrapper>
+                  <Toaster position="top-center" />
+                </ZenModeProvider>
               </LocaleProvider>
             </ThemeProvider>
           </body>

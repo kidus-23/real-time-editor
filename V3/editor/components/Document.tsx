@@ -12,7 +12,7 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, ChevronRight, Clock, FileText, Users2, UserPlus, Users, Trash2 } from "lucide-react";
+import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, ChevronRight, Clock, FileText, Users2, UserPlus, Users, Trash2, Tag, Maximize2, Minimize2 } from "lucide-react";
 import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
 import { useTheme } from "next-themes";
@@ -31,6 +31,13 @@ import {
 import ImportExportMenu from "./ImportExportMenu";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BlockNoteEditor } from "@blocknote/core";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "./ui/tooltip";
+import { useZenMode } from "@/contexts/ZenModeContext";
 
 type FirestoreDocument = {
     title?: string;
@@ -60,6 +67,7 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     const { user } = useUser();
     const { t } = useTranslation();
     const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
+    const { zenMode, setZenMode } = useZenMode();
 
     // Use initialData for immediate rendering, fall back to liveData
     const data = liveData ?? initialData ?? null;
@@ -332,11 +340,11 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
         try {
             const contentToAnalyze = data.content;
             const result = await generateTags(id, contentToAnalyze);
-            
+
             if (!result.success) {
                 throw new Error(result.error || 'Failed to generate tags');
             }
-            
+
             // Show success message and update UI
             console.log('Tags generated successfully:', result.tags);
 
@@ -362,7 +370,7 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     return (
         <div className="min-h-screen w-full bg-white dark:bg-[#020618] transition-colors duration-200">
             {/* Header with document controls */}
-            <header className="sticky top-0 z-10 bg-white/90 dark:bg-[#020618]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+            <header className={`sticky top-0 z-10 bg-white/90 dark:bg-[#020618]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 py-3 transition-all duration-300 ${zenMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <div className="w-full">
                     <div className="flex items-center justify-between gap-4">
                         {/* Document title form */}
@@ -409,24 +417,32 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                 <DropdownMenuContent align="end" className="w-56">
                                     {/* User Management */}
                                     <DropdownMenuItem>
-                                        <Users2 className="h-4 w-4 mr-2" />
-                                        <ManageUsers />
+                                        <div className="flex items-center gap-2 w-full">
+                                            <Users2 className="h-4 w-4" />
+                                            <ManageUsers />
+                                        </div>
                                     </DropdownMenuItem>
 
                                     <DropdownMenuItem>
-                                        <UserPlus className="h-4 w-4 mr-2" />
-                                        <InviteUser />
+                                        <div className="flex items-center gap-2 w-full">
+                                            <UserPlus className="h-4 w-4" />
+                                            <InviteUser />
+                                        </div>
                                     </DropdownMenuItem>
 
                                     <DropdownMenuItem>
-                                        <Users className="h-4 w-4 mr-2" />
-                                        <Avatars />
+                                        <div className="flex items-center gap-2 w-full">
+                                            <Users className="h-4 w-4" />
+                                            <Avatars />
+                                        </div>
                                     </DropdownMenuItem>
 
                                     {/* Delete Document (Destructive Action) */}
                                     <DropdownMenuItem variant="destructive">
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        <DeleteDocument />
+                                        <div className="flex items-center gap-2 w-full">
+                                            <Trash2 className="h-4 w-4" />
+                                            <DeleteDocument />
+                                        </div>
                                     </DropdownMenuItem>
 
                                     {/* Comments */}
@@ -446,34 +462,29 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
 
                                     {/* Version History */}
                                     <DropdownMenuItem onSelect={() => window.location.href = `/doc/${id}/history`}>
-                                        <Clock className="h-4 w-4 mr-2" />
-                                        {t("document.menu.versionHistory")}
+                                        <div className="flex items-center gap-2 w-full">
+                                            <Clock className="h-4 w-4" />
+                                            {t("document.menu.versionHistory")}
+                                        </div>
                                     </DropdownMenuItem>
 
-                                    {/* Import/Export Submenu */}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <DropdownMenuItem>
-                                                <div className="flex items-center justify-between w-full">
-                                                    <div className="flex items-center gap-2">
-                                                        <FileText className="h-4 w-4" />
-                                                        <span>Import/Export</span>
-                                                    </div>
-                                                    <ChevronRight className="h-4 w-4" />
-                                                </div>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent side="right" className="w-56">
-                                            <ImportExportMenu editor={blockEditor} />
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    {/* Import/Export - Direct to Dialog */}
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <FileText className="h-4 w-4" />
+                                            <ImportExportMenu editor={blockEditor} asMenuItem />
+                                        </div>
+                                    </DropdownMenuItem>
 
                                     {/* Document Tags Submenu */}
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <DropdownMenuItem>
                                                 <div className="flex items-center justify-between w-full">
-                                                    <span>Document Tags</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <Tag className="h-4 w-4" />
+                                                        <span>{t("documentTags.title")}</span>
+                                                    </div>
                                                     <ChevronRight className="h-4 w-4" />
                                                 </div>
                                             </DropdownMenuItem>
@@ -500,25 +511,25 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                                 ))
                                             ) : (
                                                 <DropdownMenuItem disabled>
-                                                    <span className="text-muted-foreground">No tags yet</span>
+                                                    <span className="text-muted-foreground">{t("documentTags.noTags")}</span>
                                                 </DropdownMenuItem>
                                             )}
                                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="focus:bg-transparent hover:bg-transparent">
-                                                <form 
+                                                <form
                                                     onSubmit={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
                                                         if (newTag.trim()) {
                                                             handleAddTag(e);
                                                         }
-                                                    }} 
+                                                    }}
                                                     className="flex items-center gap-2 w-full"
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
                                                     <Input
                                                         value={newTag}
                                                         onChange={(e) => setNewTag(e.target.value)}
-                                                        placeholder="Add new tag"
+                                                        placeholder={t("documentTags.addPlaceholder")}
                                                         className="h-7"
                                                         onClick={(e) => e.stopPropagation()}
                                                         onKeyDown={(e) => {
@@ -527,10 +538,10 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                                             }
                                                         }}
                                                     />
-                                                    <Button 
-                                                        type="submit" 
-                                                        size="icon" 
-                                                        variant="ghost" 
+                                                    <Button
+                                                        type="submit"
+                                                        size="icon"
+                                                        variant="ghost"
                                                         className="h-7 w-7"
                                                         disabled={!newTag.trim()}
                                                         onClick={(e) => e.stopPropagation()}
@@ -539,7 +550,7 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                                     </Button>
                                                 </form>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem 
+                                            <DropdownMenuItem
                                                 onSelect={(e) => {
                                                     e.preventDefault();
                                                     handleGenerateTags();
@@ -549,11 +560,11 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                                 <div className="flex items-center gap-2">
                                                     <Wand2 size={14} className={isGeneratingTags ? 'animate-pulse' : ''} />
                                                     <span>
-                                                        {isGeneratingTags 
-                                                            ? 'Generating tags...' 
-                                                            : !data?.content 
-                                                                ? 'Add content first'
-                                                                : 'Generate Tags with AI'
+                                                        {isGeneratingTags
+                                                            ? t("documentTags.generating")
+                                                            : !data?.content
+                                                                ? t("documentTags.addContentFirst")
+                                                                : t("documentTags.generateButton")
                                                         }
                                                     </span>
                                                 </div>
@@ -561,8 +572,6 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                         </DropdownMenuContent>
                                     </DropdownMenu>
 
-                                    
-                                    
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -571,6 +580,27 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                     {/* Collaboration info */}
                 </div>
             </header>
+
+            {/* Floating Zen Mode Toggle Button - Top Right */}
+            <div className={`fixed ${zenMode ? 'top-6' : 'top-40'} right-6 z-50 transition-all duration-300`}>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                onClick={() => setZenMode(!zenMode)}
+                                variant="ghost"
+                                size="icon"
+                                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm hover:shadow transition-all duration-200"
+                            >
+                                {zenMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{zenMode ? t("zenMode.exit") : t("zenMode.enter")}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
 
             {/* Main editor area with proper padding */}
             <main className="w-full px-5 py-6 relative">

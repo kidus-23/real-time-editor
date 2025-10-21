@@ -13,6 +13,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { Button } from "./ui/button";
 import NewDocumentButton from "./NewDocumentButton";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface RecentDocument extends DocumentData {
   id: string;
@@ -28,10 +29,10 @@ interface SearchResult extends DocumentData {
   title?: string;
   content?: string;
 }
-
 function DocumentCard({ id }: { id: string }) {
   const [data, loading] = useDocument(doc(db, "documents", id));
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Prefetch document on hover for instant navigation
   const handleMouseEnter = () => {
@@ -57,15 +58,15 @@ function DocumentCard({ id }: { id: string }) {
         <FileText className="w-6 h-6 text-blue-500 dark:text-blue-400" />
         <div className="flex items-center space-x-1">
           <Clock className="w-3 h-3 text-gray-400 dark:text-gray-500" />
-          <span className="text-xs text-gray-400 dark:text-gray-500">Recent</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">{t("homePage.badges.recent")}</span>
         </div>
       </div>
       <div>
         <h3 className="font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-lg">
-          {data.data()?.title || "Untitled"}
+          {data.data()?.title || t("document.placeholders.title")}
         </h3>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          Last edited recently
+          {t("homePage.empty.lastEdited")}
         </p>
       </div>
     </Link>
@@ -75,6 +76,7 @@ function DocumentCard({ id }: { id: string }) {
 function HomePage() {
   const { user } = useUser();
   const router = useRouter();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [recentDocs, setRecentDocs] = useState<RecentDocument[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -174,10 +176,10 @@ function HomePage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
-            {user ? `Hello, ${user.firstName || 'there'}` : 'Hello there'}
+            {user ? t("homePage.greeting", { name: user.firstName || '' }) || t("homePage.greetingDefault") : t("homePage.greetingDefault")}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-lg">
-            Welcome to your creative workspace
+            {t("homePage.subtitle")}
           </p>
         </div>
 
@@ -185,10 +187,10 @@ function HomePage() {
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 p-10 mb-12 shadow-xl">
           <div className="relative z-10">
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Capture your thoughts
+              {t("homePage.hero.title")}
             </h2>
             <p className="text-blue-100 dark:text-blue-200 max-w-lg text-lg mb-6">
-              Create, edit, and collaborate on documents in real-time with others.
+              {t("homePage.hero.description")}
             </p>
             <div className="bg-white rounded-md inline-block">
               <NewDocumentButton />
@@ -211,7 +213,7 @@ function HomePage() {
           </div>
           <Input
             type="text"
-            placeholder="Search your documents..."
+            placeholder={t("homePage.search.placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -222,7 +224,7 @@ function HomePage() {
             className="absolute right-2 top-2 bottom-2 h-10"
             disabled={isSearching}
           >
-            {isSearching ? 'Searching...' : 'Search'}
+            {isSearching ? t("homePage.search.searching") : t("homePage.search.button")}
           </Button>
         </div>
 
@@ -231,7 +233,7 @@ function HomePage() {
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                Search Results
+                {t("homePage.sections.searchResults")}
               </h2>
             </div>
 
@@ -246,7 +248,7 @@ function HomePage() {
                     <FileText className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                     <div className="flex items-center space-x-1">
                       <Search className="w-3 h-3 text-gray-400 dark:text-gray-500" />
-                      <span className="text-xs text-gray-400 dark:text-gray-500">Result</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{t("homePage.badges.result")}</span>
                     </div>
                   </div>
                   <div>
@@ -269,10 +271,10 @@ function HomePage() {
         <div className="mb-10">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              Recently opened
+              {t("homePage.sections.recentlyOpened")}
             </h2>
             <Button variant="ghost" className="text-blue-600 dark:text-blue-400 font-medium">
-              View all
+              {t("homePage.sections.viewAll")}
             </Button>
           </div>
 
@@ -291,7 +293,7 @@ function HomePage() {
           ) : (
             <div className="bg-white dark:bg-neutral-800/30 rounded-xl p-8 text-center border border-gray-100 dark:border-neutral-800">
               <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">No recent documents found</p>
+              <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">{t("homePage.empty.noRecent")}</p>
               <div className="inline-block">
                 <NewDocumentButton />
               </div>

@@ -10,7 +10,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "@/hooks/useTranslation";
 import { NotificationInbox } from "./NotificationInbox";
 
-function Header() {
+function Header({ className = '' }: { className?: string }) {
     const { user } = useUser();
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
@@ -31,7 +31,7 @@ function Header() {
     }, []);
 
     return (
-        <div className="flex items-center justify-between p-5">
+        <div className={`flex items-center justify-between p-5 transition-all duration-300 ${className}`}>
             <div className="h-8">
                 {mounted && theme === 'dark' ? (
                     <img src="/kenlogodark.png" alt="Ken Logo" className="h-full" />

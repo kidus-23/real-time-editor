@@ -28,7 +28,7 @@ interface RoomDocument extends DocumentData {
     userId: string;
 }
 
-function Sidebar() {
+function Sidebar({ className = '' }: { className?: string }) {
     const { user } = useUser();
     const pathname = usePathname();
     const isHomeActive = pathname === "/";
@@ -233,7 +233,7 @@ function Sidebar() {
     );
 
     return (
-        <div className={`p-3 md:p-5 bg-white min-h-screen dark:bg-[#090e19] border-r border-gray-100 dark:border-neutral-800 h-full transition-all duration-200 ${isExpanded ? 'w-[280px]' : 'w-[68px]'}`}>
+        <div className={`p-3 md:p-5 bg-white min-h-screen dark:bg-[#090e19] border-r border-gray-100 dark:border-neutral-800 h-full transition-all duration-200 ${isExpanded ? 'w-[280px]' : 'w-[68px]'} ${className}`}>
             <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger asChild>
