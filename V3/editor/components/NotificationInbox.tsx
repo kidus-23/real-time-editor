@@ -33,13 +33,14 @@ export function NotificationInbox() {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [processingId, setProcessingId] = useState<string | null>(null);
+    const [processedIds, setProcessedIds] = useState<Set<string>>(new Set());
 
     // Handle loading and error states
     if (error || !inboxNotifications) {
         return null; // Don't show notification bell if there's an error or no data
     }
 
-    const unreadCount = inboxNotifications.filter((n) => !n.readAt).length;
+    const unreadCount = inboxNotifications.filter((n) => !n.readAt && !processedIds.has(n.id)).length;
 
     const handleAccept = async (notificationId: string, roomId: string) => {
         if (!user?.primaryEmailAddress?.emailAddress) return;
@@ -55,6 +56,7 @@ export function NotificationInbox() {
 
                 if (result.success) {
                     toast.success(t("notifications.roomInvite.accepted"));
+                    setProcessedIds(prev => new Set(prev).add(notificationId));
                     // Navigate to the document
                     router.push(`/doc/${roomId}`);
                 } else {
@@ -81,6 +83,7 @@ export function NotificationInbox() {
 
                 if (result.success) {
                     toast.success(t("notifications.roomInvite.declined"));
+                    setProcessedIds(prev => new Set(prev).add(notificationId));
                 } else {
                     toast.error(result.error || t("notifications.roomInvite.error"));
                 }
@@ -118,6 +121,7 @@ export function NotificationInbox() {
                         </p>
                     ) : (
                         inboxNotifications.map((notification) => {
+                            if (processedIds.has(notification.id)) return null;
                             // Check if this is a room invite notification
                             if (notification.kind === "$roomInvite") {
                                 const data = notification.activities[0]
