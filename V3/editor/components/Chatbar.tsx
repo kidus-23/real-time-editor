@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
-import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users, FileText } from "lucide-react"
+import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users, FileText, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -59,6 +59,7 @@ interface TeamChatMessage {
 }
 
 function Chatbar({ className = '' }: { className?: string }) {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [teamMessages, setTeamMessages] = useState<TeamChatMessage[]>([])
@@ -438,7 +439,7 @@ function Chatbar({ className = '' }: { className?: string }) {
             {/* Chat Tab */}
             <TabsContent
               value="chat"
-              className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-hidden"
+              className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-x-auto"
             >
               {/* Scrollable chat area */}
               <ScrollArea className="flex-1 px-4 overflow-y-scroll">
@@ -451,21 +452,66 @@ function Chatbar({ className = '' }: { className?: string }) {
                         message.role === 'user' ? 'items-end' : 'items-start'
                       )}
                     >
-                      <div
-                        className={cn(
-                          "rounded-lg px-3 py-2 max-w-[80%] prose dark:prose-invert prose-sm",
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        )}
-                      >
-                        {message.role === 'user' ? (
-                          message.content
-                        ) : (
-                          <ReactMarkdown>
-                            {message.content}
-                          </ReactMarkdown>
-                        )}
+                      <div className="relative group">
+                        <div
+                          className={cn(
+                            "rounded-lg px-3 py-2 w-fit max-w-[90%] break-words",
+                            message.role === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          )}
+                        >
+                          {message.role === 'user' ? (
+                            message.content
+                          ) : (
+                            <>
+                              <div className="relative pb-8">
+                                <ReactMarkdown
+                                components={{
+                                  code: ({ node, inline, children, ...props }) => {
+                                    const code = String(children).replace(/\n$/, '')
+                                    // Check if the code contains HTML/XML tags or multiple lines
+                                    const isCodeBlock = !inline && (code.includes('<') || code.includes('\n'))
+                                    
+                                    if (isCodeBlock) {
+                                      return (
+                                        <div className="relative">
+                                          <pre className="!mt-0 overflow-x-auto max-w-full">
+                                            <code {...props} className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words">{code}</code>
+                                          </pre>
+                                        </div>
+                                      )
+                                    }
+                                    // For inline code or simple text, render as inline
+                                    return <code {...props} className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">{children}</code>
+                                  }
+                                }}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
+                                <div className="absolute right-2 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 bg-background/90 backdrop-blur"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(message.content)
+                                      setCopiedCode('full-' + i)
+                                      setTimeout(() => setCopiedCode(null), 2000)
+                                    }}
+                                    title="Copy full response"
+                                  >
+                                    {copiedCode === 'full-' + i ? (
+                                      <Check className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                      <Copy className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                       {message.model && (
                         <span className="text-xs text-muted-foreground px-2">
