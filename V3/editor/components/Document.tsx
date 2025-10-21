@@ -12,7 +12,7 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare } from "lucide-react";
+import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, ChevronRight, Clock, FileText, Users2, UserPlus, Users, Trash2 } from "lucide-react";
 import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
 import { useTheme } from "next-themes";
@@ -318,19 +318,45 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     };
 
     const handleGenerateTags = async () => {
-        if (!data?.content) return;
+        if (!data?.content) {
+            console.error('No content available to generate tags');
+            return;
+        }
+
+        if (!id) {
+            console.error('Document ID is required');
+            return;
+        }
 
         setIsGeneratingTags(true);
         try {
-            const result = await generateTags(id, data.content);
+            const contentToAnalyze = data.content;
+            const result = await generateTags(id, contentToAnalyze);
+            
             if (!result.success) {
-                throw new Error(result.error);
+                throw new Error(result.error || 'Failed to generate tags');
+            }
+            
+            // Show success message and update UI
+            console.log('Tags generated successfully:', result.tags);
+
+            // Update document with new tags directly
+            const newTags = result.tags;
+            if (Array.isArray(newTags)) {
+                startTransition(async () => {
+                    await updateDoc(doc(db, "documents", id), {
+                        tags: newTags
+                    });
+                });
             }
         } catch (error) {
             console.error('Failed to generate tags:', error);
-        } finally {
+            // Reset generating state
             setIsGeneratingTags(false);
+            return;
         }
+
+        setIsGeneratingTags(false);
     };
 
     return (
@@ -344,69 +370,22 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                             <Input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                className="font-medium text-xl border-transparent focus-visible:ring-0 focus-visible:border-transparent bg-transparent px-1 py-1 h-auto w-full max-w-md"
+                                className="font-medium text-2xl border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:border-primary/20 bg-transparent px-3 py-2 h-auto w-full max-w-md tracking-tight transition-all"
                                 placeholder={t("document.placeholders.title")}
                             />
                             <Button
                                 disabled={isUpdating}
                                 type="submit"
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                                 {isUpdating ? t("document.actions.saving") : t("document.actions.save")}
                             </Button>
                         </form>
 
-                        {/* Tags display and management */}
-                        <div className="flex items-center gap-2 overflow-x-auto max-w-md">
-                            {data.tags?.map((tag: string, index: number) => (
-                                <div key={index} className='flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-sm'>
-                                    <span>{tag}</span>
-                                    <button
-                                        onClick={() => handleRemoveTag(index)}
-                                        className='text-gray-500 hover:text-red-500 transition-colors'
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {/* Add new tag input */}
-                            <form
-                                onSubmit={handleAddTag}
-                                className='flex items-center gap-1'
-                            >
-                                <Input
-                                    value={newTag}
-                                    onChange={(e) => setNewTag(e.target.value)}
-                                    placeholder={t("document.placeholders.addTag")}
-                                    className="h-7 w-24 text-sm"
-                                />
-                                <Button
-                                    type="submit"
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-7 w-7"
-                                >
-                                    <Plus size={14} />
-                                </Button>
-                            </form>
-                            <Button
-                                onClick={handleGenerateTags}
-                                disabled={isGeneratingTags}
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7 text-blue-500 hover:text-blue-600 transition-colors"
-                                title={t("document.actions.generateTagsTitle")}
-                            >
-                                <Wand2 size={14} className={isGeneratingTags ? 'animate-pulse' : ''} />
-                            </Button>
-                        </div>
-
                         {/* Document controls */}
                         <div className="flex items-center gap-3">
-                            <ImportExportMenu editor={blockEditor} />
-
                             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-md">
                                 {isOwner ? (
                                     <div className="flex items-center gap-1.5">
@@ -427,7 +406,30 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                         <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent align="end" className="w-56">
+                                    {/* User Management */}
+                                    <DropdownMenuItem>
+                                        <Users2 className="h-4 w-4 mr-2" />
+                                        <ManageUsers />
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem>
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        <InviteUser />
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem>
+                                        <Users className="h-4 w-4 mr-2" />
+                                        <Avatars />
+                                    </DropdownMenuItem>
+
+                                    {/* Delete Document (Destructive Action) */}
+                                    <DropdownMenuItem variant="destructive">
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        <DeleteDocument />
+                                    </DropdownMenuItem>
+
+                                    {/* Comments */}
                                     <DropdownMenuItem onSelect={() => setIsCommentsSidebarOpen(true)}>
                                         <div className="flex items-center justify-between w-full">
                                             <div className="flex items-center gap-2">
@@ -441,21 +443,126 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                             )}
                                         </div>
                                     </DropdownMenuItem>
+
+                                    {/* Version History */}
                                     <DropdownMenuItem onSelect={() => window.location.href = `/doc/${id}/history`}>
+                                        <Clock className="h-4 w-4 mr-2" />
                                         {t("document.menu.versionHistory")}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <ManageUsers />
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <InviteUser />
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem variant="destructive">
-                                        <DeleteDocument />
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Avatars />
-                                    </DropdownMenuItem>
+
+                                    {/* Import/Export Submenu */}
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <DropdownMenuItem>
+                                                <div className="flex items-center justify-between w-full">
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText className="h-4 w-4" />
+                                                        <span>Import/Export</span>
+                                                    </div>
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </div>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent side="right" className="w-56">
+                                            <ImportExportMenu editor={blockEditor} />
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+
+                                    {/* Document Tags Submenu */}
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <DropdownMenuItem>
+                                                <div className="flex items-center justify-between w-full">
+                                                    <span>Document Tags</span>
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </div>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent side="right" className="w-56">
+                                            {data.tags && data.tags.length > 0 ? (
+                                                data.tags.map((tag: string, index: number) => (
+                                                    <DropdownMenuItem key={index} onSelect={(e) => e.preventDefault()}>
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <span>{tag}</span>
+                                                            <Button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleRemoveTag(index);
+                                                                }}
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 hover:text-red-500"
+                                                            >
+                                                                <X size={14} />
+                                                            </Button>
+                                                        </div>
+                                                    </DropdownMenuItem>
+                                                ))
+                                            ) : (
+                                                <DropdownMenuItem disabled>
+                                                    <span className="text-muted-foreground">No tags yet</span>
+                                                </DropdownMenuItem>
+                                            )}
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="focus:bg-transparent hover:bg-transparent">
+                                                <form 
+                                                    onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        if (newTag.trim()) {
+                                                            handleAddTag(e);
+                                                        }
+                                                    }} 
+                                                    className="flex items-center gap-2 w-full"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <Input
+                                                        value={newTag}
+                                                        onChange={(e) => setNewTag(e.target.value)}
+                                                        placeholder="Add new tag"
+                                                        className="h-7"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Escape') {
+                                                                e.stopPropagation();
+                                                            }
+                                                        }}
+                                                    />
+                                                    <Button 
+                                                        type="submit" 
+                                                        size="icon" 
+                                                        variant="ghost" 
+                                                        className="h-7 w-7"
+                                                        disabled={!newTag.trim()}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <Plus size={14} />
+                                                    </Button>
+                                                </form>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                                onSelect={(e) => {
+                                                    e.preventDefault();
+                                                    handleGenerateTags();
+                                                }}
+                                                disabled={isGeneratingTags || !data?.content}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Wand2 size={14} className={isGeneratingTags ? 'animate-pulse' : ''} />
+                                                    <span>
+                                                        {isGeneratingTags 
+                                                            ? 'Generating tags...' 
+                                                            : !data?.content 
+                                                                ? 'Add content first'
+                                                                : 'Generate Tags with AI'
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+
+                                    
+                                    
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
