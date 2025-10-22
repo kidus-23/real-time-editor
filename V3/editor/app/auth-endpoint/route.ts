@@ -17,7 +17,15 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const { room } = await req.json();
+    // Parse request body safely
+    let room: string | undefined;
+    try {
+        const body = await req.json();
+        room = body.room;
+    } catch {
+        // If no body or invalid JSON, room will be undefined
+        room = undefined;
+    }
 
     // Generate a consistent color for this user based on their email
     const userColor = stringToColor(sessionClaims.email);

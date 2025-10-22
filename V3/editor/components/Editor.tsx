@@ -1,15 +1,18 @@
-'use client'
+"use client";
 
 import { useRoom, useSelf } from "@liveblocks/react/suspense";
-import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css";
 import "@blocknote/core/fonts/inter.css";
-import { useCreateBlockNote } from "@blocknote/react";
 import stringToColor from "@/lib/stringToColor";
-import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
+import {
+  BlockNoteEditor,
+  BlockNoteSchema,
+  defaultBlockSpecs,
+} from "@blocknote/core";
 import TranslateDocument from "./TranslateDocument";
 import Summarize from "./Summarize";
 import Composer from "./Composer";
@@ -37,45 +40,49 @@ type EditorProps = {
   doc: Y.Doc;
   provider: LiveblocksYjsProvider;
   darkMode: boolean;
-  editor: any; // Use any to support custom blocks
+  editor: BlockNoteEditor;
   onCommentClick?: (selectedText: string) => void;
 };
 
-const BlockNote = memo(function BlockNote({ doc, provider, darkMode, editor, roomId, onCommentClick }: EditorProps & { roomId: string }) {
-  const userInfo = useSelf((me) => me.info);
+const BlockNote = memo(function BlockNote({
+  doc,
+  provider,
+  darkMode,
+  editor,
+  roomId,
+  onCommentClick,
+}: EditorProps & { roomId: string }) {
+  void doc;
+  void provider;
+  useSelf((me) => me.info);
 
-  // Enable automatic link preview detection
   useLinkPreviewDetection(editor);
 
-  // Memoize save function
   const saveContent = useCallback(async () => {
     try {
-      // Get document content from DOM similar to Chatbar component
-      const editorContent = document.querySelector('.bn-container')?.textContent || '';
+      const editorContent =
+        document.querySelector(".bn-container")?.textContent || "";
 
       if (editorContent.trim()) {
         const result = await saveDocumentContent(roomId, editorContent);
         if (result.success) {
-          console.log('Document content saved successfully');
+          console.log("Document content saved successfully");
         }
       }
     } catch (error) {
-      console.error('Error saving document content:', error);
+      console.error("Error saving document content:", error);
     }
   }, [roomId]);
 
-  // Use unified auto-save hook with 2s debounce
   const { triggerSave } = useAutoSave({
     saveFunction: saveContent,
-    debounceMs: 2000,    // Save 2 seconds after typing stops
-    minIntervalMs: 30000 // Minimum 30 seconds between saves
+    debounceMs: 2000,
+    minIntervalMs: 30000,
   });
 
-  // Trigger save when editor changes
   useEffect(() => {
     if (!editor) return;
 
-    // Subscribe to editor changes
     const unsubscribe = editor.onChange(() => {
       triggerSave();
     });
@@ -85,48 +92,104 @@ const BlockNote = memo(function BlockNote({ doc, provider, darkMode, editor, roo
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Shortcut for AI Composer: Ctrl + Shift + C
-      if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+      if (e.ctrlKey && e.shiftKey && e.key === "C") {
         e.preventDefault();
-        const composerDialog = document.querySelector('button:has(svg[data-lucide="pencil"])') as HTMLButtonElement;
+        const composerDialog = document.querySelector(
+          'button:has(svg[data-lucide="pencil"])'
+        ) as HTMLButtonElement;
         if (composerDialog) {
           composerDialog.click();
         }
       }
-      // Shortcut for Question Generator: Ctrl + Shift + Q
-      if (e.ctrlKey && e.shiftKey && e.key === 'Q') {
+      if (e.ctrlKey && e.shiftKey && e.key === "Q") {
         e.preventDefault();
-        const questionDialog = document.querySelector('button:has(svg[data-lucide="help-circle"])') as HTMLButtonElement;
+        const questionDialog = document.querySelector(
+          'button:has(svg[data-lucide="help-circle"])'
+        ) as HTMLButtonElement;
         if (questionDialog) {
           questionDialog.click();
         }
       }
 
-      // Handle BlockNote suggestion menu scrolling
-      const menuOpen = document.querySelector('.bn-suggestion-menu, [data-suggestion-menu], .bn-menu');
-      if (menuOpen && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      // Markdown shortcut: '---' + Enter creates horizontal divider
+      if (e.key === 'Enter' && editor) {
+        const currentBlock = editor.getTextCursorPosition().block;
+        const blockContent = Array.isArray(currentBlock?.content) 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ? currentBlock.content.map((c: any) => c.text || '').join('') 
+          : '';
+        
+        if (blockContent.trim() === '---') {
+          e.preventDefault();
+          // Replace current block with a divider (using a paragraph with special styling)
+          editor.updateBlock(currentBlock, {
+            type: 'paragraph',
+            content: [{ type: 'text', text: '─'.repeat(50), styles: { textColor: 'gray' } }],
+          });
+          // Insert a new paragraph below for continued typing
+          editor.insertBlocks(
+            [{ type: 'paragraph' }],
+            editor.getTextCursorPosition().block,
+            'after'
+          );
+        }
+      }
+
+      // Markdown shortcut: '---' + Enter creates horizontal divider
+      if (e.key === 'Enter' && editor) {
+        const currentBlock = editor.getTextCursorPosition().block;
+        const blockContent = Array.isArray(currentBlock?.content) 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ? currentBlock.content.map((c: any) => c.text || '').join('') 
+          : '';
+        
+        if (blockContent.trim() === '---') {
+          e.preventDefault();
+          // Replace current block with a divider (using a paragraph with special styling)
+          editor.updateBlock(currentBlock, {
+            type: 'paragraph',
+            content: [{ type: 'text', text: '─'.repeat(50), styles: { textColor: 'gray' } }],
+          });
+          // Insert a new paragraph below for continued typing
+          editor.insertBlocks(
+            [{ type: 'paragraph' }],
+            editor.getTextCursorPosition().block,
+            'after'
+          );
+        }
+      }
+
+      const menuOpen = document.querySelector(
+        ".bn-suggestion-menu, [data-suggestion-menu], .bn-menu"
+      );
+      if (menuOpen && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
         const targetInMenu = menuOpen.contains(e.target as Node);
-        const menuHasFocus = menuOpen.querySelector('[data-selected="true"], [aria-selected="true"], .selected');
+        const menuHasFocus = menuOpen.querySelector(
+          '[data-selected="true"], [aria-selected="true"], .selected'
+        );
         if (targetInMenu || menuHasFocus) {
           const handleScroll = (scrollEvent: Event) => {
             scrollEvent.preventDefault();
           };
-          document.addEventListener('scroll', handleScroll, { passive: false, once: true });
+          document.addEventListener("scroll", handleScroll, {
+            passive: false,
+            once: true,
+          });
           setTimeout(() => {
-            document.removeEventListener('scroll', handleScroll);
+            document.removeEventListener("scroll", handleScroll);
           }, 100);
         }
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [editor]);
 
   return (
-    <div className={`relative mx-auto ${darkMode ? 'dark' : ''}`}>
+    <div className={`relative mx-auto ${darkMode ? "dark" : ""}`}>
       <BlockNoteView
-        className="min-h-screen"
+        className="min-h-[60vh] notion-editor"
         editor={editor}
         theme={darkMode ? "dark" : "light"}
         formattingToolbar={false}
@@ -135,14 +198,35 @@ const BlockNote = memo(function BlockNote({ doc, provider, darkMode, editor, roo
           formattingToolbar={() => (
             <FormattingToolbar>
               <BlockTypeSelect key="blockTypeSelect" />
-              <BasicTextStyleButton basicTextStyle="bold" key="boldStyleButton" />
-              <BasicTextStyleButton basicTextStyle="italic" key="italicStyleButton" />
-              <BasicTextStyleButton basicTextStyle="underline" key="underlineStyleButton" />
-              <BasicTextStyleButton basicTextStyle="strike" key="strikeStyleButton" />
-              <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />
+              <BasicTextStyleButton
+                basicTextStyle="bold"
+                key="boldStyleButton"
+              />
+              <BasicTextStyleButton
+                basicTextStyle="italic"
+                key="italicStyleButton"
+              />
+              <BasicTextStyleButton
+                basicTextStyle="underline"
+                key="underlineStyleButton"
+              />
+              <BasicTextStyleButton
+                basicTextStyle="strike"
+                key="strikeStyleButton"
+              />
+              <BasicTextStyleButton
+                basicTextStyle="code"
+                key="codeStyleButton"
+              />
               <TextAlignButton textAlignment="left" key="textAlignLeftButton" />
-              <TextAlignButton textAlignment="center" key="textAlignCenterButton" />
-              <TextAlignButton textAlignment="right" key="textAlignRightButton" />
+              <TextAlignButton
+                textAlignment="center"
+                key="textAlignCenterButton"
+              />
+              <TextAlignButton
+                textAlignment="right"
+                key="textAlignRightButton"
+              />
               <ColorStyleButton key="colorStyleButton" />
               <NestBlockButton key="nestBlockButton" />
               <UnnestBlockButton key="unnestBlockButton" />
@@ -189,13 +273,20 @@ type EditorComponentProps = {
   darkMode?: boolean;
   onEditorReady?: (editor: BlockNoteEditor | null) => void;
   onCommentClick?: (selectedText: string) => void;
+  onUndoManagerReady?: (undoManager: Y.UndoManager | null) => void;
 };
 
-function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorComponentProps) {
+function Editor({
+  darkMode = false,
+  onEditorReady,
+  onCommentClick,
+  onUndoManagerReady,
+}: EditorComponentProps) {
   const room = useRoom();
   const [doc, setDoc] = useState<Y.Doc | null>(null);
   const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
-  const [editor, setEditor] = useState<any>(null); // Use any for custom blocks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editor, setEditor] = useState<BlockNoteEditor<any> | null>(null);
 
   useEffect(() => {
     if (!room) {
@@ -204,43 +295,71 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
 
     const yDoc = new Y.Doc();
     const yProvider = new LiveblocksYjsProvider(room, yDoc);
+    const yFragment = yDoc.getXmlFragment("root");
 
     const initializeEditor = async () => {
       try {
-        // Create custom block schema with link preview and improved video/image blocks
+        // Create UndoManager for the fragment
+        const undoManager = new Y.UndoManager(yFragment);
+
+        // Capture and track the PluginKey origin that BlockNote uses
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let capturedOrigin: any = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        yDoc.on("update", (update: Uint8Array, origin: any) => {
+          // Capture the first PluginKey origin we see and add it to tracked origins
+          if (
+            origin &&
+            typeof origin === "object" &&
+            origin.key === "y-sync$" &&
+            !capturedOrigin
+          ) {
+            capturedOrigin = origin;
+            undoManager.trackedOrigins.add(origin);
+          }
+        });
+
         const schema = BlockNoteSchema.create({
           blockSpecs: {
             ...defaultBlockSpecs,
-            // @ts-expect-error - Custom block types
-            linkPreview: LinkPreview,
-            // @ts-expect-error - Enhanced video block
-            videoEmbed: VideoEmbed,
-            // @ts-expect-error - Enhanced image block
-            imageEmbed: ImageEmbed,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            linkPreview: LinkPreview as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            videoEmbed: VideoEmbed as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            imageEmbed: ImageEmbed as any,
           },
         });
 
         const blockNoteEditor = BlockNoteEditor.create({
           schema,
           collaboration: {
-            fragment: yDoc.getXmlFragment("root"),
+            fragment: yFragment,
             user: {
               name: room.getSelf()?.info?.name || "Anonymous",
-              color: room.getSelf()?.info?.color || stringToColor(room.getSelf()?.info?.email || "1"),
+              color:
+                room.getSelf()?.info?.color ||
+                stringToColor(room.getSelf()?.info?.email || "1"),
             },
             provider: yProvider,
           },
-          // Enable default keyboard shortcuts including undo/redo
           _tiptapOptions: {
             editorProps: {
               attributes: {
-                spellcheck: 'false',
+                spellcheck: "false",
               },
             },
           },
         });
-        setEditor(blockNoteEditor);
-        onEditorReady?.(blockNoteEditor);
+
+        // Send UndoManager to parent component
+        onUndoManagerReady?.(undoManager);
+        console.log("Sent UndoManager to parent component");
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setEditor(blockNoteEditor as BlockNoteEditor<any>);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (onEditorReady as any)?.(blockNoteEditor as any);
         setDoc(yDoc);
         setProvider(yProvider);
       } catch (error) {
@@ -252,15 +371,18 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
 
     return () => {
       onEditorReady?.(null);
+      onUndoManagerReady?.(null); // Critical: notify parent that UndoManager is no longer available
       yProvider?.destroy();
       yDoc?.destroy();
     };
-  }, [onEditorReady, room]);
+  }, [onEditorReady, onUndoManagerReady, room]);
 
   if (!room) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground text-sm">Initializing workspace...</div>
+        <div className="text-muted-foreground text-sm">
+          Initializing workspace...
+        </div>
       </div>
     );
   }
@@ -279,14 +401,46 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
 
   return (
     <div className="relative">
-      <div className="flex gap-2 mb-2">
-        <TranslateDocument doc={doc} editor={editor} />
-        <Summarize editor={editor} />
-        <Composer editor={editor} />
-        <QuestionGenerator editor={editor} />
+            {/* Dedicated hover area above the editor */}
+      <div className="group relative h-16 -mb-8 cursor-pointer">
+        {/* Invisible hover trigger - full height */}
+        <div className="absolute inset-0" />
+
+        {/* Small arrow indicator */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg
+            className="w-4 h-4 text-gray-400 dark:text-gray-500 opacity-60 group-hover:opacity-100 group-hover:scale-110 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all duration-300 ease-out animate-pulse group-hover:animate-bounce"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+
+        {/* Action buttons - appear when hovering on this area */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto">
+          <div className="bg-white/95 dark:bg-neutral-900/60 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/40 rounded-xl shadow-xl px-4 py-3 dark:shadow-gray-900/30">
+            <div className="flex flex-wrap gap-2">
+              <TranslateDocument doc={doc} editor={editor} />
+              <Summarize editor={editor} />
+              <Composer editor={editor} />
+              <QuestionGenerator editor={editor} />
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="pt-2">
-        <BlockNote doc={doc} provider={provider} editor={editor} darkMode={darkMode} roomId={room.id} onCommentClick={onCommentClick} />
+
+      {/* Editor with top margin to create space */}
+      <div className="mt-12">
+        <BlockNote
+          doc={doc}
+          provider={provider}
+          editor={editor}
+          darkMode={darkMode}
+          roomId={room.id}
+          onCommentClick={onCommentClick}
+        />
       </div>
     </div>
   );

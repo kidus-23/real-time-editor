@@ -1,10 +1,23 @@
-'use client'
+"use client";
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import { Button } from "./ui/button";
 import { FormEvent, useState, useTransition } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BotIcon, HelpCircleIcon } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { HelpCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 import { BlockNoteEditor } from "@blocknote/core";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
@@ -53,20 +66,26 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
       const blocks = editor.topLevelBlocks;
       console.log("Editor blocks:", blocks);
 
-      let documentData = blocks
-        .map(block => {
-          if (block.type === "paragraph" || block.type === "heading" || block.type === "bulletListItem" || block.type === "numberedListItem") {
-            if (Array.isArray(block.content)) {
-              return block.content
-                .map(item => (item.type === "text" ? item.text : ""))
-                .join("");
+      let documentData =
+        blocks
+          .map((block) => {
+            if (
+              block.type === "paragraph" ||
+              block.type === "heading" ||
+              block.type === "bulletListItem" ||
+              block.type === "numberedListItem"
+            ) {
+              if (Array.isArray(block.content)) {
+                return block.content
+                  .map((item) => (item.type === "text" ? item.text : ""))
+                  .join("");
+              }
+              return "";
             }
             return "";
-          }
-          return "";
-        })
-        .filter(text => text)
-        .join("\n") || "No content available";
+          })
+          .filter((text) => text)
+          .join("\n") || "No content available";
 
       documentData = documentData.slice(0, 1000);
       console.log("Request body:", { documentData, questionType });
@@ -109,15 +128,16 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
               setError(error);
               toast.error(`${t("editor.questionGenerator.error")}: ${error}`);
             }
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         } catch (err) {
-          console.error(`Attempt ${attempt} error:`, err.message);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          console.error(`Attempt ${attempt} error:`, errorMessage);
           if (attempt === maxRetries) {
-            setError(err.message);
-            toast.error(`${t("editor.questionGenerator.error")}: ${err.message}`);
+            setError(errorMessage);
+            toast.error(`${t("editor.questionGenerator.error")}: ${errorMessage}`);
           }
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     });
@@ -134,18 +154,23 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
       setError(null);
       const currentQuestion = questions[currentQuestionIndex];
       const documentData = editor.topLevelBlocks
-        .map(block => {
-          if (block.type === "paragraph" || block.type === "heading" || block.type === "bulletListItem" || block.type === "numberedListItem") {
+        .map((block) => {
+          if (
+            block.type === "paragraph" ||
+            block.type === "heading" ||
+            block.type === "bulletListItem" ||
+            block.type === "numberedListItem"
+          ) {
             if (Array.isArray(block.content)) {
               return block.content
-                .map(item => (item.type === "text" ? item.text : ""))
+                .map((item) => (item.type === "text" ? item.text : ""))
                 .join("");
             }
             return "";
           }
           return "";
         })
-        .filter(text => text)
+        .filter((text) => text)
         .join("\n")
         .slice(0, 1000);
 
@@ -193,7 +218,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="hover:text-white dark:hover:text-white">
         <DialogTrigger>
           <HelpCircleIcon />
           {t("editor.questionGenerator.button")}
@@ -217,22 +242,35 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
           <form className="flex gap-2" onSubmit={handleStartQuiz}>
             <Select value={questionType} onValueChange={setQuestionType}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("editor.questionGenerator.selectType")} />
+                <SelectValue
+                  placeholder={t("editor.questionGenerator.selectType")}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="trueFalse">{t("editor.questionGenerator.types.trueFalse")}</SelectItem>
-                <SelectItem value="multipleChoice">{t("editor.questionGenerator.types.multipleChoice")}</SelectItem>
-                <SelectItem value="shortAnswer">{t("editor.questionGenerator.types.shortAnswer")}</SelectItem>
+                <SelectItem value="trueFalse">
+                  {t("editor.questionGenerator.types.trueFalse")}
+                </SelectItem>
+                <SelectItem value="multipleChoice">
+                  {t("editor.questionGenerator.types.multipleChoice")}
+                </SelectItem>
+                <SelectItem value="shortAnswer">
+                  {t("editor.questionGenerator.types.shortAnswer")}
+                </SelectItem>
               </SelectContent>
             </Select>
             <Button type="submit" disabled={!questionType || isPending}>
-              {isPending ? t("editor.questionGenerator.starting") : t("editor.questionGenerator.startQuiz")}
+              {isPending
+                ? t("editor.questionGenerator.starting")
+                : t("editor.questionGenerator.startQuiz")}
             </Button>
           </form>
         ) : (
           <div className="flex flex-col gap-4">
             <h3 className="font-bold">
-              {t("editor.questionGenerator.question", { number: currentQuestionIndex + 1, total: questions.length })}
+              {t("editor.questionGenerator.question", {
+                number: currentQuestionIndex + 1,
+                total: questions.length,
+              })}
             </h3>
             <p>{questions[currentQuestionIndex].question}</p>
 
@@ -264,12 +302,14 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                   onValueChange={setUserAnswer}
                   disabled={isPending || evaluation !== null}
                 >
-                  {questions[currentQuestionIndex].options?.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <RadioGroupItem value={option} id={`option-${index}`} />
-                      <Label htmlFor={`option-${index}`}>{option}</Label>
-                    </div>
-                  ))}
+                  {questions[currentQuestionIndex].options?.map(
+                    (option, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option} id={`option-${index}`} />
+                        <Label htmlFor={`option-${index}`}>{option}</Label>
+                      </div>
+                    )
+                  )}
                 </RadioGroup>
               )}
 
@@ -284,7 +324,9 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
 
               {!evaluation && (
                 <Button type="submit" disabled={!userAnswer || isPending}>
-                  {isPending ? t("editor.questionGenerator.starting") : t("editor.questionGenerator.submitAnswer")}
+                  {isPending
+                    ? t("editor.questionGenerator.starting")
+                    : t("editor.questionGenerator.submitAnswer")}
                 </Button>
               )}
             </form>
@@ -295,8 +337,10 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                   {evaluation.isCorrect
                     ? t("editor.questionGenerator.correctAnswer")
                     : questionType === "shortAnswer"
-                      ? t("editor.questionGenerator.score", { score: evaluation.score })
-                      : t("editor.questionGenerator.tryAgain")}
+                    ? t("editor.questionGenerator.score", {
+                        score: evaluation.score,
+                      })
+                    : t("editor.questionGenerator.tryAgain")}
                 </p>
                 <p>{evaluation.explanation}</p>
                 <Button
@@ -304,7 +348,9 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                   onClick={handleNextQuestion}
                   disabled={isPending}
                 >
-                  {currentQuestionIndex < questions.length - 1 ? t("editor.questionGenerator.nextQuestion") : t("editor.questionGenerator.startQuiz")}
+                  {currentQuestionIndex < questions.length - 1
+                    ? t("editor.questionGenerator.nextQuestion")
+                    : t("editor.questionGenerator.startQuiz")}
                 </Button>
               </div>
             )}
