@@ -39,10 +39,10 @@ function interpolate(template: string, params?: TranslationParams) {
 
 function extractTranslation(dictionary: LocaleDictionary, key: string): string | null {
     const segments = key.split('.');
-    let current: string | LocaleDictionary | undefined = dictionary;
+    let current: string | string[] | LocaleDictionary | undefined = dictionary;
 
     for (const segment of segments) {
-        if (typeof current === 'object' && current !== null && segment in current) {
+        if (typeof current === 'object' && current !== null && !Array.isArray(current) && segment in current) {
             current = current[segment];
             continue;
         }

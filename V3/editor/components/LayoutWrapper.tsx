@@ -21,14 +21,14 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
     return (
         <>
-            <Header className={zenMode ? 'hidden' : ''} />
+            {!zenMode && <Header />}
             <div className="flex min-h-screen">
-                <Sidebar className="" forceCollapsed={zenMode} />
+                {!zenMode && <Sidebar />}
                 <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto scrollbar-hide">
                     {children}
                 </div>
             </div>
-            <Chatbar className={zenMode ? 'hidden' : ''} />
+            {!zenMode && <Chatbar />}
         </>
     )
 }
