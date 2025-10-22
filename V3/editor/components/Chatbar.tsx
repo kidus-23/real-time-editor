@@ -2,8 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import { MessagesSquare, X, Bot, Send, Loader2, Settings, Users, FileText, Copy, Check } from "lucide-react"
+import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users, FileText, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -28,13 +27,14 @@ import { useTranslation } from "@/hooks/useTranslation"
 import APIKeySettings from "@/components/APIKeySettings"
 import ReactMarkdown from 'react-markdown'
 
+// Import useRoom but don't use it directly
+import { useRoom } from "@liveblocks/react"
+
 // Build model categories from AI_MODELS to ensure UI only shows supported models
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const MODEL_CATEGORIES: Record<string, { id: string; name: string; description?: string }[]> = {
   OpenAI: Object.entries(AI_MODELS.OPENAI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
   Gemini: Object.entries(AI_MODELS.GEMINI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
-};
-/* eslint-enable @typescript-eslint/no-explicit-any */
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -68,6 +68,7 @@ function Chatbar({ className = '' }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(false)
   // Default to a model known in `lib/constants.ts` to avoid sending unsupported provider formats
   const [activeModel, setActiveModel] = useState('gemini-2.5-flash') // Default model
+  const [showSettings, setShowSettings] = useState(false)
   const [showAPIKeySettings, setShowAPIKeySettings] = useState(false)
   const [useDocumentContext, setUseDocumentContext] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -107,6 +108,12 @@ function Chatbar({ className = '' }: { className?: string }) {
   useEffect(() => {
     setTimeout(() => scrollToBottom(teamChatEndRef), 100)
   }, [teamMessages])
+
+  // Reset messages when document changes
+  useEffect(() => {
+    setMessages([])
+    setUseDocumentContext(false)
+  }, [pathname])
 
   // Reset to chat tab when sheet closes
   useEffect(() => {
@@ -177,6 +184,7 @@ function Chatbar({ className = '' }: { className?: string }) {
   // Function to get document content
   const getDocumentContent = async () => {
     if (!isDocumentPage || !roomId) {
+      setDocumentContent(null)
       return null
     }
 
@@ -195,6 +203,7 @@ function Chatbar({ className = '' }: { className?: string }) {
         return null
       }
 
+      setDocumentContent(editorContent)
       return editorContent
     } catch (error) {
       console.error('Error getting document content:', error)
@@ -202,14 +211,17 @@ function Chatbar({ className = '' }: { className?: string }) {
     }
   };
 
-  // Toggle document context
-  const toggleDocumentContext = async () => {
-    if (!useDocumentContext) {
-      // If enabling document context, get the document content
-      await getDocumentContent();
+  // Update document content when context is enabled
+  useEffect(() => {
+    if (useDocumentContext && isDocumentPage) {
+      getDocumentContent()
     }
-    setUseDocumentContext(!useDocumentContext);
-  };
+  }, [useDocumentContext, isDocumentPage])
+
+  // Toggle document context
+  const toggleDocumentContext = () => {
+    setUseDocumentContext(!useDocumentContext)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,10 +238,13 @@ function Chatbar({ className = '' }: { className?: string }) {
     setIsLoading(true);
 
     try {
-      // If document context is enabled, get the latest content
-      let context = null;
+      // If document context is enabled, ensure we have the latest content
+      let context = null
       if (useDocumentContext) {
-        context = await getDocumentContent();
+        context = await getDocumentContent()
+        if (!context) {
+          throw new Error('Could not get document content. Make sure a document is open.')
+        }
       }
 
       // Get user's API keys from localStorage
@@ -254,32 +269,52 @@ function Chatbar({ className = '' }: { className?: string }) {
           documentContext: context,
           userApiKeys: userApiKeys
         }),
-      });
-
+      })
+      let data: any = null
       if (!response.ok) {
         // Try to extract error message from body
-        let errorMsg = 'Failed to get response'
+        let bodyText = ''
         try {
-          const errorData = await response.json()
-          errorMsg = errorData.error || errorData.message || errorMsg
-        } catch {
-          // Ignore parse error
+          bodyText = await response.text()
+          const parsed = bodyText ? JSON.parse(bodyText) : null
+          const msg = parsed?.error || parsed?.message || bodyText
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: (typeof msg === 'string' ? msg : JSON.stringify(msg)),
+            timestamp: new Date(),
+            status: 'error'
+          }])
+        } catch (e) {
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: 'Failed to get response from server',
+            timestamp: new Date(),
+            status: 'error'
+          }])
         }
-        throw new Error(errorMsg)
+        throw new Error('Non-OK response')
       }
 
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.response,
+      try {
+        data = await response.json()
+      } catch (e) {
+        const text = await response.text()
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Invalid JSON response from server: ' + text,
           timestamp: new Date(),
-          status: "success",
-          model: data.model,
-          usage: data.usage,
-        },
-      ]);
+          status: 'error'
+        }])
+        throw e
+      }
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date(),
+        status: 'success',
+        model: data.model,
+        usage: data.usage
+      }])
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : t("chatbar.error")
       setMessages(prev => [...prev, {
@@ -419,10 +454,10 @@ function Chatbar({ className = '' }: { className?: string }) {
                       <div className="relative group">
                         <div
                           className={cn(
-                            "rounded-xl px-4 py-3 max-w-[80%] transition-all duration-200",
+                            "rounded-lg px-3 py-2 w-fit",
                             message.role === 'user'
-                              ? 'bg-primary text-primary-foreground shadow-md hover-lift'
-                              : 'bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
                           )}
                         >
                           {message.role === 'user' ? (
@@ -431,28 +466,28 @@ function Chatbar({ className = '' }: { className?: string }) {
                             <>
                               <div className="relative pb-8 max-w-[90%] break-words">
                                 <ReactMarkdown
-                                  components={{
-                                    code: ({ children, ...props }) => {
-                                      const code = String(children).replace(/\n$/, '')
-                                      // Check if the code contains HTML/XML tags or multiple lines
-                                      const isCodeBlock = code.includes('<') || code.includes('\n')
-                                      
-                                      if (isCodeBlock) {
-                                        return (
-                                          <div className="relative">
-                                            <pre className="!mt-0 overflow-x-auto max-w-full">
-                                              <code {...props} className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words">{code}</code>
-                                            </pre>
-                                          </div>
-                                        )
-                                      }
-                                      // For inline code or simple text, render as inline
-                                      return <code {...props} className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">{children}</code>
+                                components={{
+                                  code: ({ node, inline, children, ...props }) => {
+                                    const code = String(children).replace(/\n$/, '')
+                                    // Check if the code contains HTML/XML tags or multiple lines
+                                    const isCodeBlock = !inline && (code.includes('<') || code.includes('\n'))
+                                    
+                                    if (isCodeBlock) {
+                                      return (
+                                        <div className="relative">
+                                          <pre className="!mt-0 overflow-x-auto max-w-full">
+                                            <code {...props} className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words">{code}</code>
+                                          </pre>
+                                        </div>
+                                      )
                                     }
-                                  }}
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
+                                    // For inline code or simple text, render as inline
+                                    return <code {...props} className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">{children}</code>
+                                  }
+                                }}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
                                 <div className="absolute right-2 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                   <Button
                                     size="icon"
