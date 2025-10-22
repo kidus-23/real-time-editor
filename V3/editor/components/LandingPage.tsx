@@ -18,7 +18,7 @@ export default function LandingPage() {
         <ul className="flex gap-6 items-center">
           <li><a href="#features" className="hover:text-gray-600 cursor-pointer">Features</a></li>
           <li><a href="#testimonials" className="hover:text-gray-600 cursor-pointer">Testimonials</a></li>
-          <li><Link href="/doc" className="hover:text-gray-600 cursor-pointer">Docs</Link></li>
+          <li><Link href="/Documentation.pdf" target="_blank" className="hover:text-gray-600 cursor-pointer">Docs</Link></li>
           <li>
             <SignInButton mode="modal">
               <button className="hover:text-gray-600">Login</button>
@@ -95,7 +95,7 @@ export default function LandingPage() {
       <footer className="py-20 bg-white dark:bg-[#0f0f0f] text-[#6b7280] dark:text-[#9ca3af] text-center">
         <div className="flex justify-center gap-8 mb-8 text-sm">
           <a href="#" className="hover:text-[#1a1a1a] dark:hover:text-[#f5f5f5] transition-colors font-medium">About</a>
-          <a href="#" className="hover:text-[#1a1a1a] dark:hover:text-[#f5f5f5] transition-colors font-medium">Docs</a>
+          <Link href="/Documentation.pdf" target="_blank" className="hover:text-[#1a1a1a] dark:hover:text-[#f5f5f5] transition-colors font-medium">Docs</Link>
           <a href="#" className="hover:text-[#1a1a1a] dark:hover:text-[#f5f5f5] transition-colors font-medium">Privacy</a>
           <a href="#" className="hover:text-[#1a1a1a] dark:hover:text-[#f5f5f5] transition-colors font-medium">Contact</a>
         </div>
