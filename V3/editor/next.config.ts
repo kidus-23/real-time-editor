@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/7.x/avataaars/svg',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.clerk.dev',
+      },
     ],
   },
 };
