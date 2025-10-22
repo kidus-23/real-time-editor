@@ -203,7 +203,6 @@ function Chatbar({ className = '' }: { className?: string }) {
         return null
       }
 
-      setDocumentContent(editorContent)
       return editorContent
     } catch (error) {
       console.error('Error getting document content:', error)
