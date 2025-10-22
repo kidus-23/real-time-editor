@@ -16,6 +16,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { convertMermaidCodeBlocks } from '@/lib/mermaidMarkdownParser';
 
 const MIME_TYPES = {
     markdown: 'text/markdown',
@@ -296,6 +297,8 @@ function ImportExportMenu({ editor, asMenuItem = false }: ImportExportMenuProps)
                     }
                 } else if (extension === 'md' || file.type.includes('markdown') || file.type.includes('md')) {
                     blocks = await markdownToBlocks(text, editor.pmSchema);
+                    // Convert mermaid code blocks to mermaid diagram blocks
+                    blocks = convertMermaidCodeBlocks(blocks);
                 } else if (extension === 'html' || file.type.includes('html')) {
                     blocks = await HTMLToBlocks(text, editor.pmSchema);
                 } else {
