@@ -94,12 +94,16 @@ const en = {
         exportMarkdown: "Export as Markdown",
         exportHTML: "Export as HTML",
         exportJSON: "Export as JSON",
+        exportPDF: "Export as PDF",
+        exportDOCX: "Export as DOCX",
         import: "Import document",
         mergeSuccess: "Content imported and merged successfully",
         importError: "We couldn't import that file",
         exportError: "We couldn't export this document",
         unsupportedFile: "Unsupported file type",
         emptyEditor: "The imported file was empty",
+        generatingPDF: "Generating PDF...",
+        generatingDOCX: "Generating DOCX...",
     },
     sidebar: {
         menu: "Menu",
@@ -247,6 +251,149 @@ const en = {
     avatars: {
         usersOnline: "Users Online",
         you: "You",
+    },
+    zenMode: {
+        enter: "Zen Mode",
+        exit: "Exit Zen Mode",
+    },
+    homePage: {
+        greeting: "Hello, {{name}}",
+        greetingDefault: "Hello there",
+        subtitle: "Welcome to your creative workspace",
+        hero: {
+            title: "Capture your thoughts",
+            description: "Create, edit, and collaborate on documents in real-time with others.",
+        },
+        search: {
+            placeholder: "Search your documents...",
+            button: "Search",
+            searching: "Searching...",
+        },
+        sections: {
+            searchResults: "Search Results",
+            recentlyOpened: "Recently opened",
+            viewAll: "View all",
+        },
+        badges: {
+            recent: "Recent",
+            result: "Result",
+        },
+        empty: {
+            noRecent: "No recent documents found",
+            lastEdited: "Last edited recently",
+        },
+    },
+    searchDialog: {
+        title: "Search Documents",
+        placeholder: "Search by title or content...",
+        button: "Search",
+        searching: "Searching...",
+        noResults: "No documents found matching your search.",
+    },
+    documentTags: {
+        title: "Document Tags",
+        noTags: "No tags yet",
+        addPlaceholder: "Add new tag",
+        generateButton: "Generate Tags with AI",
+        generating: "Generating tags...",
+        addContentFirst: "Add content first",
+    },
+    apiKeys: {
+        title: "API Key Settings",
+        description: "Configure your own API keys to use AI features. Your keys are stored locally and never sent to our servers.",
+        openrouter: "OpenRouter",
+        gemini: "Google Gemini",
+        cloudflare: "Cloudflare AI",
+        labels: {
+            openrouterKey: "OpenRouter API Key",
+            geminiKey: "Google Gemini API Key",
+            cloudflareKey: "Cloudflare AI API Key",
+        },
+        placeholders: {
+            openrouter: "sk-or-v1-...",
+            gemini: "AIzaSy...",
+            cloudflare: "Your Cloudflare API token...",
+        },
+        getKey: "Get API Key",
+        usedFor: {
+            openrouter: "Used for: AI Chat with multiple model options (GPT-4, Claude, Gemini, Llama, etc.)",
+            gemini: "Used for: AI Compose, Tag Generation, and other document AI features",
+            cloudflare: "Used for: Fast AI inference with Cloudflare Workers AI",
+        },
+        features: {
+            title: "Features using {{provider}}:",
+            openrouter: [
+                "AI Chat Assistant with 15+ models",
+                "Team Chat AI features",
+                "Document context-aware responses",
+            ],
+            gemini: [
+                "AI Compose - Generate content from prompts",
+                "Automatic tag generation",
+                "Document analysis and insights",
+            ],
+            cloudflare: [
+                "Document translation",
+                "Text summarization",
+                "Question generation",
+            ],
+        },
+        buttons: {
+            save: "Save Keys",
+            saving: "Saving...",
+            cancel: "Cancel",
+            clearAll: "Clear All Keys",
+        },
+        toast: {
+            saved: "API keys saved successfully",
+            saveFailed: "Failed to save API keys",
+            cleared: "{{provider}} API key cleared",
+            allCleared: "All API keys cleared",
+        },
+    },
+    settings: {
+        title: "Settings",
+        appearance: {
+            title: "Appearance",
+            theme: "Theme",
+            language: "Language",
+            themePlaceholder: "Select theme",
+            themeOptions: {
+                light: "Light",
+                dark: "Dark",
+                system: "System",
+            },
+        },
+        editor: {
+            title: "Editor",
+            autoSave: "Auto Save",
+            fontSize: "Font Size",
+            fontFamily: "Font Family",
+            fontPlaceholder: "Select font",
+            fontOptions: {
+                default: "Default",
+                serif: "Serif",
+                mono: "Monospace",
+            },
+        },
+        notifications: {
+            title: "Notifications",
+            email: "Email Notifications",
+            collaboration: "Collaboration Alerts",
+        },
+        privacy: {
+            title: "Privacy",
+            shareHistory: "Share Edit History",
+            onlineStatus: "Show Online Status",
+        },
+        account: {
+            title: "Account",
+            email: "Email",
+            name: "Name",
+            notProvided: "Not provided",
+        },
+        saveButton: "Save Settings",
+        saveSuccess: "Settings saved successfully",
     },
 };
 

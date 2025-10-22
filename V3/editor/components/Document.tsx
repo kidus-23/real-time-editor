@@ -41,7 +41,7 @@ import {
   Users2,
   UserPlus,
   Users,
-  Trash2,
+  Trash2, Maximize2, Minimize2, Expand, List,
   Undo,
   Redo,
 } from "lucide-react";
@@ -50,6 +50,7 @@ import { updateLastOpened } from "@/actions/actions";
 import { useTheme } from "next-themes";
 import CommentsSidebar from "./CommentsSidebar";
 import AddCommentDialog from "./AddCommentDialog";
+import InlineTableOfContents from "./InlineTableOfContents";
 import { query, where, onSnapshot } from "firebase/firestore";
 import { Comment } from "@/types/comment";
 import { useUser } from "@clerk/nextjs";
@@ -62,6 +63,13 @@ import {
 import ImportExportMenu from "./ImportExportMenu";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BlockNoteEditor } from "@blocknote/core";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "./ui/tooltip";
+import { useZenMode } from "@/contexts/ZenModeContext";
 import VersionHistory from "./VersionHistory";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import * as Y from "yjs";
@@ -101,6 +109,20 @@ function Document({
   const { user } = useUser();
   const { t } = useTranslation();
   const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
+    const { zenMode, setZenMode } = useZenMode();
+    const [fullWidth, setFullWidth] = useState(false);
+    const [isTocOpen, setIsTocOpen] = useState(true);
+    const titleFormRef = useRef<HTMLFormElement>(null);
+
+    // Memoize fullWidth toggle to prevent lag
+    const toggleFullWidth = useCallback(() => {
+        setFullWidth(prev => !prev);
+    }, []);
+
+    // Memoize TOC toggle to prevent lag
+    const toggleToc = useCallback(() => {
+        setIsTocOpen(prev => !prev);
+    }, []);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // ============================================
@@ -309,7 +331,7 @@ function Document({
         clearInterval(autoSaveTimerRef.current);
       }
     };
-  }, [id, data?.content, data?.title, user, lastSavedContent, lastSavedTitle]);
+  }, [id, data?.content, data?.title, user, lastSavedContent, lastSavedTitle, data]);
 
   useEffect(() => {
     const cleanupOldVersions = async () => {
@@ -496,33 +518,35 @@ function Document({
     setIsGeneratingTags(false);
   };
 
-  return (
-    <div className="min-h-screen w-full bg-white dark:bg-[#020618] transition-colors duration-200">
-      <header className="sticky top-0 z-10 bg-white/90 dark:bg-[#020618]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-        <div className="w-full">
-          <div className="flex items-center justify-between gap-4">
-            <form
-              className="flex-1 flex items-center gap-2 group"
-              onSubmit={updateTitle}
-            >
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="font-medium text-2xl border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:border-primary/20 bg-transparent px-3 py-2 h-auto w-full max-w-md tracking-tight transition-all"
-                placeholder={t("document.placeholders.title")}
-              />
-              <Button
-                disabled={isUpdating}
-                type="submit"
-                variant="ghost"
-                size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                {isUpdating
-                  ? t("document.actions.saving")
-                  : t("document.actions.save")}
-              </Button>
-            </form>
+    return (
+        <div className="min-h-screen w-full bg-white dark:bg-[#0f0f0f] transition-colors duration-300">
+            {/* Header with document controls */}
+            <header className="sticky top-0 z-10 bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-all duration-300">
+                <div className="w-full">
+                    <div className="flex items-center justify-between gap-4">
+                        {/* Document title form */}
+                        <form 
+                            ref={titleFormRef}
+                            className="flex-1 flex items-center gap-3 group relative" 
+                            onSubmit={updateTitle}
+                        >
+                            <Input
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                className="font-bold text-3xl border-0 hover:bg-gray-100/40 dark:hover:bg-gray-800/40 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-0 bg-transparent px-3 py-2 h-auto w-full max-w-3xl tracking-tight transition-all rounded-lg"
+                                placeholder={t("document.placeholders.title")}
+                                style={{ fontFamily: "'Recursive', 'Inter', system-ui", fontWeight: 700 }}
+                            />
+                            <Button
+                                disabled={isUpdating}
+                                type="submit"
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-70 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 rounded-lg text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium"
+                            >
+                                {isUpdating ? t("document.actions.saving") : t("document.actions.save")}
+                            </Button>
+                        </form>
 
             <div className="flex items-center gap-3">
               {/* ============================================
@@ -554,50 +578,77 @@ function Document({
                 </Button>
               </div>
 
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-md">
+              <div className="flex items-center text-sm text-gray-700 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-800/80 px-3 py-1.5 rounded-full border border-gray-200/20 dark:border-gray-700/20">
                 {isOwner ? (
-                  <div className="flex items-center gap-1.5">
-                    <Crown size={14} className="text-amber-500" />
-                    <span className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <Crown size={15} className="text-amber-500 dark:text-amber-400" />
+                    <span className="font-semibold">
                       {t("document.roles.owner")}
                     </span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5">
-                    <User size={14} className="text-blue-500" />
-                    <span className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <User size={15} className="text-blue-600 dark:text-blue-400" />
+                    <span className="font-semibold">
                       {t("document.roles.editor")}
                     </span>
                   </div>
                 )}
               </div>
 
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            onClick={() => setZenMode(!zenMode)}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="hover:scale-105 active:scale-95 transition-transform rounded-full"
+                                        >
+                                            {zenMode ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-0">
+                                        <p className="font-semibold text-sm">{zenMode ? t("zenMode.exit") : t("zenMode.enter")}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="hover:scale-105 active:scale-95 transition-transform rounded-full">
+                    <MoreHorizontal className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem>
-                    <Users2 className="h-4 w-4 mr-2" />
-                    <ManageUsers />
+                                        <div className="flex items-center gap-2 w-full">
+                        <Users2 className="h-4 w-4" />
+                        <ManageUsers />
+                                        </div>
                   </DropdownMenuItem>
 
                   <DropdownMenuItem>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    <InviteUser />
+                                        <div className="flex items-center gap-2 w-full">
+                        <UserPlus className="h-4 w-4" />
+                        <InviteUser />
+                                        </div>
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem>
-                    <Users className="h-4 w-4 mr-2" />
-                    <Avatars />
-                  </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <Users className="h-4 w-4" />
+                                            <Avatars />
+                                        </div>
+                                    </DropdownMenuItem>
 
-                  <DropdownMenuItem variant="destructive">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    <DeleteDocument />
-                  </DropdownMenuItem>
+                                    {/* Delete Document (Destructive Action) */}
+                                    <DropdownMenuItem variant="destructive">
+                                        <div className="flex items-center gap-2 w-full">
+                                            <Trash2 className="h-4 w-4" />
+                                            <DeleteDocument />
+                                        </div>
+                                    </DropdownMenuItem>
 
                   <DropdownMenuItem
                     onSelect={() => setIsCommentsSidebarOpen(true)}
@@ -616,26 +667,44 @@ function Document({
                   </DropdownMenuItem>
 
                   <DropdownMenuItem onSelect={() => setIsHistoryOpen(true)}>
-                    <Clock className="h-4 w-4 mr-2" />
-                    {t("document.menu.versionHistory")}
+                                        <div className="flex items-center gap-2 w-full">
+                        <Clock className="h-4 w-4" />
+                        {t("document.menu.versionHistory")}
+                                        </div>
+                                    </DropdownMenuItem>
+
+                                    {/* Import/Export - Direct to Dialog */}
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <FileText className="h-4 w-4" />
+                                            <ImportExportMenu editor={blockEditor} asMenuItem />
+                                        </div>
+                                    </DropdownMenuItem>
+                                    {/* Full Width Toggle */}
+                                    <DropdownMenuItem onSelect={toggleFullWidth}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-2">
+                                                <Expand className="h-4 w-4" />
+                                                <span>Full Width</span>
+                                            </div>
+                                            <div className={`w-9 h-5 rounded-full transition-colors ${fullWidth ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'} relative`}>
+                                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${fullWidth ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </div>
+                                        </div>
                   </DropdownMenuItem>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <DropdownMenuItem>
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
-                            <span>Import/Export</span>
-                          </div>
-                          <ChevronRight className="h-4 w-4" />
-                        </div>
-                      </DropdownMenuItem>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" className="w-56">
-                      <ImportExportMenu editor={blockEditor} />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                                    {/* Table of Contents Toggle */}
+                                    <DropdownMenuItem onSelect={toggleToc}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-2">
+                                                <List className="h-4 w-4" />
+                                                <span>Table of Contents</span>
+                                            </div>
+                                            <div className={`w-9 h-5 rounded-full transition-colors ${isTocOpen ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'} relative`}>
+                                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isTocOpen ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </div>
+                                        </div>
+                                    </DropdownMenuItem>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -745,14 +814,21 @@ function Document({
         </div>
       </header>
 
-      <main className="w-full px-5 py-6 relative">
-        <Editor
+      <main className={`w-full px-4 md:px-8 lg:px-12 py-6 relative ${
+                fullWidth ? 'max-w-full' : 'max-w-[1400px]'
+            } mx-auto transition-[max-width] duration-150 ease-out`}>
+                <div className="min-h-[80vh]">
+            <Editor
           darkMode={theme === "dark"}
           onEditorReady={setBlockEditor}
           onCommentClick={handleCommentClick}
           onUndoManagerReady={setUndoManager}
         />
+                </div>
       </main>
+
+            {/* Table of Contents - Sticky top-right */}
+            {isTocOpen && <InlineTableOfContents key="toc" containerSelector=".bn-container" />}
 
       <CommentsSidebar
         isOpen={isCommentsSidebarOpen}

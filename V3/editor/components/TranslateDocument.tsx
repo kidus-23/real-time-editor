@@ -40,11 +40,10 @@ type TranslateDocumentProps = {
   editor: BlockNoteEditor;
 };
 
-function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
+function TranslateDocument({ editor }: TranslateDocumentProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [language, setLanguage] = useState<string>("");
   const [summary, setSummary] = useState<string>("");
-  const [question, setQuestion] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const { t } = useTranslation();
 
@@ -112,7 +111,7 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="hover:text-gray-900 dark:hover:text-white">
         <DialogTrigger>
           <LanguagesIcon />
           {t("editor.translate.button")}
@@ -125,7 +124,6 @@ function TranslateDocument({ doc, editor }: TranslateDocumentProps) {
             {t("editor.translate.description")}
           </DialogDescription>
           <hr className="mt-5" />
-          {question && <p className="mt-5 text-gray-500">Q: {question}</p>}
         </DialogHeader>
 
         {summary && (

@@ -7,12 +7,13 @@ import { collectionGroup, DocumentData, query, where, orderBy, limit, Timestamp,
 import { db } from "@/firebase";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, FileText, Clock, PlusCircle } from "lucide-react";
+import { Search, FileText, Clock } from "lucide-react";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { doc, getDoc } from "firebase/firestore";
 import { Button } from "./ui/button";
 import NewDocumentButton from "./NewDocumentButton";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface RecentDocument extends DocumentData {
   id: string;
@@ -28,10 +29,10 @@ interface SearchResult extends DocumentData {
   title?: string;
   content?: string;
 }
-
 function DocumentCard({ id }: { id: string }) {
   const [data, loading] = useDocument(doc(db, "documents", id));
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Prefetch document on hover for instant navigation
   const handleMouseEnter = () => {
@@ -39,8 +40,8 @@ function DocumentCard({ id }: { id: string }) {
   };
 
   if (loading) return (
-    <div className="min-w-[240px] h-[160px] bg-gray-50 dark:bg-neutral-800/30 rounded-lg p-4 flex items-center justify-center">
-      <div className="animate-pulse h-4 w-24 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+    <div className="min-w-[240px] h-[160px] bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-5 flex items-center justify-center border border-gray-200 dark:border-gray-700">
+      <div className="animate-pulse h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
     </div>
   );
 
@@ -51,21 +52,23 @@ function DocumentCard({ id }: { id: string }) {
       href={`/doc/${id}`}
       onMouseEnter={handleMouseEnter}
       prefetch={true}
-      className="min-w-[240px] h-[160px] bg-white dark:bg-neutral-800/50 rounded-lg p-5 border border-gray-100 dark:border-neutral-800 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/40 transition-all duration-200 flex flex-col justify-between group"
+      className="min-w-[240px] h-[160px] bg-white dark:bg-[#1a1a1a] rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-all duration-300 flex flex-col justify-between group cursor-pointer border border-gray-200 dark:border-gray-700"
     >
       <div className="flex items-start justify-between">
-        <FileText className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-        <div className="flex items-center space-x-1">
-          <Clock className="w-3 h-3 text-gray-400 dark:text-gray-500" />
-          <span className="text-xs text-gray-400 dark:text-gray-500">Recent</span>
+        <div className="p-2 rounded-xl bg-blue-500/10 dark:bg-blue-400/10 group-hover:bg-blue-500/20 dark:group-hover:bg-blue-400/20 transition-colors">
+          <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div className="flex items-center space-x-1.5 px-2 py-1 rounded-full bg-gray-100/50 dark:bg-gray-800/50">
+          <Clock className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t("homePage.badges.recent")}</span>
         </div>
       </div>
       <div>
-        <h3 className="font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-lg">
-          {data.data()?.title || "Untitled"}
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-lg mb-1">
+          {data.data()?.title || t("document.placeholders.title")}
         </h3>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          Last edited recently
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+          {t("homePage.empty.lastEdited")}
         </p>
       </div>
     </Link>
@@ -75,13 +78,14 @@ function DocumentCard({ id }: { id: string }) {
 function HomePage() {
   const { user } = useUser();
   const router = useRouter();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [recentDocs, setRecentDocs] = useState<RecentDocument[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   // Fetch user's documents
-  const [data, loading, error] = useCollection(
+  const [data, loading] = useCollection(
     user &&
     query(
       collectionGroup(db, 'rooms'),
@@ -169,69 +173,74 @@ function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-[#090e19] dark:to-[#070b14] p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#0f0f0f] dark:via-[#1a1a2e] dark:to-[#0f0f0f] p-6 md:p-12 transition-colors duration-300">
       {/* Personalized greeting */}
       <div className="max-w-6xl mx-auto">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
-            {user ? `Hello, ${user.firstName || 'there'}` : 'Hello there'}
+        <div className="mb-14 animate-fade-in">
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent mb-4 tracking-tight leading-tight">
+            {user ? t("homePage.greeting", { name: user.firstName || '' }) || t("homePage.greetingDefault") : t("homePage.greetingDefault")}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-lg">
-            Welcome to your creative workspace
+          <p className="text-gray-600 dark:text-gray-400 text-xl font-light">
+            {t("homePage.subtitle")}
           </p>
         </div>
 
-        {/* Hero banner */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 p-10 mb-12 shadow-xl">
+        {/* Hero banner - Glassmorphism with subtle gradient */}
+        <div className="relative overflow-hidden rounded-lg bg-white dark:bg-[#1a1a1a] p-12 mb-14 group animate-scale-in border border-gray-200 dark:border-gray-700">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-600/20 dark:via-indigo-600/20 dark:to-purple-600/20"></div>
           <div className="relative z-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Capture your thoughts
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-5 tracking-tight">
+              {t("homePage.hero.title")}
             </h2>
-            <p className="text-blue-100 dark:text-blue-200 max-w-lg text-lg mb-6">
-              Create, edit, and collaborate on documents in real-time with others.
+            <p className="text-gray-700 dark:text-gray-300 max-w-2xl text-lg mb-8 leading-relaxed font-light">
+              {t("homePage.hero.description")}
             </p>
-            <div className="bg-white rounded-md inline-block">
+            <div className="inline-block">
               <NewDocumentButton />
             </div>
           </div>
-          <div className="absolute right-0 bottom-0 opacity-10">
-            <svg width="300" height="300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19.5 3H4.5C3.67157 3 3 3.67157 3 4.5V19.5C3 20.3284 3.67157 21 4.5 21H19.5C20.3284 21 21 20.3284 21 19.5V4.5C21 3.67157 20.3284 3 19.5 3Z" stroke="currentColor" strokeWidth="2" />
-              <path d="M7 7H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <path d="M7 12H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <path d="M7 17H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <div className="absolute right-8 bottom-8 opacity-5 dark:opacity-10 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity duration-500">
+            <svg width="200" height="200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.5 3H4.5C3.67157 3 3 3.67157 3 4.5V19.5C3 20.3284 3.67157 21 4.5 21H19.5C20.3284 21 21 20.3284 21 19.5V4.5C21 3.67157 20.3284 3 19.5 3Z" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M7 7H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M7 12H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M7 17H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
         </div>
 
-        {/* Search bar */}
-        <div className="relative mb-12">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+        {/* Search bar - Floating glass design */}
+        <div className="relative mb-14">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-2 max-w-3xl mx-auto border border-gray-200 dark:border-gray-700">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+              </div>
+              <Input
+                type="text"
+                placeholder={t("homePage.search.placeholder")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-14 pr-32 py-4 h-14 bg-transparent border-0 w-full focus-visible:ring-0 text-lg placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              />
+              <Button
+                onClick={handleSearch}
+                className="absolute right-2 top-2 bottom-2 h-10 rounded-xl hover-scale"
+                disabled={isSearching}
+              >
+                {isSearching ? t("homePage.search.searching") : t("homePage.search.button")}
+              </Button>
+            </div>
           </div>
-          <Input
-            type="text"
-            placeholder="Search your documents..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="pl-12 py-3 h-14 bg-white dark:bg-neutral-800/50 border-gray-200 dark:border-neutral-700 w-full max-w-3xl shadow-sm rounded-xl text-lg"
-          />
-          <Button
-            onClick={handleSearch}
-            className="absolute right-2 top-2 bottom-2 h-10"
-            disabled={isSearching}
-          >
-            {isSearching ? 'Searching...' : 'Search'}
-          </Button>
         </div>
 
         {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                Search Results
+          <div className="mb-14 animate-fade-in">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                {t("homePage.sections.searchResults")}
               </h2>
             </div>
 
@@ -240,21 +249,23 @@ function HomePage() {
                 <div
                   key={result.id}
                   onClick={() => router.push(`/doc/${result.roomId}`)}
-                  className="min-w-[240px] h-[160px] bg-white dark:bg-neutral-800/50 rounded-lg p-5 border border-gray-100 dark:border-neutral-800 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/40 transition-all duration-200 flex flex-col justify-between group cursor-pointer"
+                  className="min-w-[240px] h-[160px] bg-white dark:bg-[#1a1a1a] rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-all duration-300 flex flex-col justify-between group cursor-pointer border border-gray-200 dark:border-gray-700"
                 >
                   <div className="flex items-start justify-between">
-                    <FileText className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-                    <div className="flex items-center space-x-1">
-                      <Search className="w-3 h-3 text-gray-400 dark:text-gray-500" />
-                      <span className="text-xs text-gray-400 dark:text-gray-500">Result</span>
+                    <div className="p-2 rounded-xl bg-green-500/10 dark:bg-green-400/10 group-hover:bg-green-500/20 dark:group-hover:bg-green-400/20 transition-colors">
+                      <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex items-center space-x-1.5 px-2 py-1 rounded-full bg-green-100/50 dark:bg-green-900/30">
+                      <Search className="w-3 h-3 text-green-600 dark:text-green-400" />
+                      <span className="text-xs text-green-600 dark:text-green-400 font-medium">{t("homePage.badges.result")}</span>
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-lg">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors text-lg mb-1">
                       {result.title}
                     </h3>
                     {result.content && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 font-medium">
                         {result.content}
                       </p>
                     )}
@@ -267,19 +278,19 @@ function HomePage() {
 
         {/* Recently opened notes carousel */}
         <div className="mb-10">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              Recently opened
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+              {t("homePage.sections.recentlyOpened")}
             </h2>
-            <Button variant="ghost" className="text-blue-600 dark:text-blue-400 font-medium">
-              View all
+            <Button variant="ghost" className="text-blue-600 dark:text-blue-400 font-semibold hover-scale rounded-xl">
+              {t("homePage.sections.viewAll")}
             </Button>
           </div>
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-[160px] bg-gray-100 dark:bg-neutral-800/30 rounded-lg animate-pulse"></div>
+                <div key={i} className="h-[160px] bg-gray-50 dark:bg-[#1a1a1a] rounded-lg animate-pulse border border-gray-200 dark:border-gray-700"></div>
               ))}
             </div>
           ) : recentDocs.length > 0 ? (
@@ -289,9 +300,11 @@ function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="bg-white dark:bg-neutral-800/30 rounded-xl p-8 text-center border border-gray-100 dark:border-neutral-800">
-              <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">No recent documents found</p>
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-12 text-center animate-fade-in border border-gray-200 dark:border-gray-700">
+              <div className="p-4 rounded-2xl bg-gray-100/50 dark:bg-gray-800/50 w-fit mx-auto mb-6">
+                <FileText className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 text-xl mb-6 font-light">{t("homePage.empty.noRecent")}</p>
               <div className="inline-block">
                 <NewDocumentButton />
               </div>

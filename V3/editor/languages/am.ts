@@ -94,12 +94,16 @@ const am = {
         exportMarkdown: "ወደ Markdown አውጣ",
         exportHTML: "ወደ HTML አውጣ",
         exportJSON: "ወደ JSON አውጣ",
+        exportPDF: "ወደ PDF አውጣ",
+        exportDOCX: "ወደ DOCX አውጣ",
         import: "ሰነድ አስመጣ",
         mergeSuccess: "ይዘቱ ተስተካክሏል እና ተዋህዶም ተሳካ",
         importError: "ፋይሉን ማስመጣት አልተቻለም",
         exportError: "ሰነዱን ማውጣት አልተቻለም",
         unsupportedFile: "የማይደገፍ የፋይል አይነት",
         emptyEditor: "የተመጣው ፋይል ባዶ ነበር",
+        generatingPDF: "PDF በመፍጠር ላይ...",
+        generatingDOCX: "DOCX በመፍጠር ላይ...",
     },
     sidebar: {
         menu: "ምናሌ",
@@ -247,6 +251,149 @@ const am = {
     avatars: {
         usersOnline: "አስያች ተጠቃሚዎች",
         you: "እርስዎ",
+    },
+    zenMode: {
+        enter: "የዜን ሁነታ",
+        exit: "ከዜን ሁነታ ውጣ",
+    },
+    homePage: {
+        greeting: "ሰላም፣ {{name}}",
+        greetingDefault: "ሰላም",
+        subtitle: "ወደ የፈጠራ ቦታዎ እንኳን በደህና መጡ",
+        hero: {
+            title: "ሀሳቦችዎን ይያዙ",
+            description: "ሰነዶችን በእውነተኛ ጊዜ ከሌሎች ጋር ይፍጠሩ፣ ያርትዑ እና ይተባበሩ።",
+        },
+        search: {
+            placeholder: "ሰነዶችዎን ይፈልጉ...",
+            button: "ፈልግ",
+            searching: "በመፈለግ ላይ...",
+        },
+        sections: {
+            searchResults: "የፍለጋ ውጤቶች",
+            recentlyOpened: "በቅርብ ጊዜ የተከፈቱ",
+            viewAll: "ሁሉንም ይመልከቱ",
+        },
+        badges: {
+            recent: "የቅርብ ጊዜ",
+            result: "ውጤት",
+        },
+        empty: {
+            noRecent: "በቅርብ ጊዜ የተከፈቱ ሰነዶች አልተገኙም",
+            lastEdited: "በቅርብ ጊዜ የተስተካከለ",
+        },
+    },
+    searchDialog: {
+        title: "ሰነዶችን ይፈልጉ",
+        placeholder: "በርዕስ ወይም ይዘት ይፈልጉ...",
+        button: "ፈልግ",
+        searching: "በመፈለግ ላይ...",
+        noResults: "ከፍለጋዎ ጋር የሚዛመድ ሰነድ አልተገኘም።",
+    },
+    documentTags: {
+        title: "የሰነድ መለያዎች",
+        noTags: "እስካሁን መለያዎች የሉም",
+        addPlaceholder: "አዲስ መለያ ያክሉ",
+        generateButton: "መለያዎችን በAI ያመንጩ",
+        generating: "መለያዎች በማመንጨት ላይ...",
+        addContentFirst: "መጀመሪያ ይዘት ያክሉ",
+    },
+    apiKeys: {
+        title: "API ቁልፍ ቅንብሮች",
+        description: "የራስዎን API ቁልፎች በማዋቀር የ AI ባህርያትን ይጠቀሙ። ቁልፎችዎ በአካባቢያዊ ሁኔታ የተከማቹ ናቸው እና ወደ አገልግሎቶችን አይላኩም።",
+        openrouter: "OpenRouter",
+        gemini: "Google Gemini",
+        cloudflare: "Cloudflare AI",
+        labels: {
+            openrouterKey: "OpenRouter API ቁልፍ",
+            geminiKey: "Google Gemini API ቁልፍ",
+            cloudflareKey: "Cloudflare AI API ቁልፍ",
+        },
+        placeholders: {
+            openrouter: "sk-or-v1-...",
+            gemini: "AIzaSy...",
+            cloudflare: "የእርስዎ Cloudflare API ቶከን...",
+        },
+        getKey: "API ቁልፍ ያግኙ",
+        usedFor: {
+            openrouter: "የሚጠቀመው፡ ከበርካታ የሞዴል አማራጮች ጋር AI ውይይት (GPT-4, Claude, Gemini, Llama, ወዘተ.)",
+            gemini: "የሚጠቀመው፡ AI ጽሁፍ ፣ ታግ ማመንጨት እና ሌሎች የሰነድ AI ባህርያት",
+            cloudflare: "የሚጠቀመው፡ ከ Cloudflare Workers AI ጋር ፈጣን AI ማስላት",
+        },
+        features: {
+            title: "{{provider}} በመጠቀም ባህርያት፡",
+            openrouter: [
+                "ከ15+ ሞዴሎች ጋር AI ውይይት ረዳት",
+                "የቡድን ውይይት AI ባህርያት",
+                "የሰነድ አውድ-ግንዛቤ ምላሾች",
+            ],
+            gemini: [
+                "AI ጽሁፍ - ከመመሪያዎች ይዘት ያመንጩ",
+                "አውቶማቲክ ታግ ማመንጨት",
+                "የሰነድ ትንተና እና ግንዛቤዎች",
+            ],
+            cloudflare: [
+                "የሰነድ ትርጉም",
+                "የጽሁፍ ማጠቃለያ",
+                "የጥያቄ ማመንጨት",
+            ],
+        },
+        buttons: {
+            save: "ቁልፎችን አስቀምጥ",
+            saving: "በማስቀመጥ ላይ...",
+            cancel: "ሰርዝ",
+            clearAll: "ሁሉንም ቁልፎች አጽዳ",
+        },
+        toast: {
+            saved: "API ቁልፎች በተሳካ ሁኔታ ተቀመጡዋል",
+            saveFailed: "API ቁልፎችን ማስቀመጥ አልተሳካም",
+            cleared: "{{provider}} API ቁልፍ ተጽድቷል",
+            allCleared: "ሁሉም API ቁልፎች ተጽድተዋል",
+        },
+    },
+    settings: {
+        title: "ቅንብሮች",
+        appearance: {
+            title: "ገጽታ",
+            theme: "ጭብጥ",
+            language: "ቋንቋ",
+            themePlaceholder: "ጭብጥ ይምረጡ",
+            themeOptions: {
+                light: "ብርሃን",
+                dark: "ጨለማ",
+                system: "ስርዓት",
+            },
+        },
+        editor: {
+            title: "አርታዒ",
+            autoSave: "አውቶማቲክ አስቀምጥ",
+            fontSize: "የቁምፊ መጠን",
+            fontFamily: "የቁምፊ ቤተሰብ",
+            fontPlaceholder: "ቁምፊ ይምረጡ",
+            fontOptions: {
+                default: "ነባሪ",
+                serif: "ሰሪፍ",
+                mono: "ሞኖስፔስ",
+            },
+        },
+        notifications: {
+            title: "ማሳወቂያዎች",
+            email: "የኢሜል ማሳወቂያዎች",
+            collaboration: "የትብብር ማስጠንቀቂያዎች",
+        },
+        privacy: {
+            title: "ግላዊነት",
+            shareHistory: "የአርትዖት ታሪክ አጋራ",
+            onlineStatus: "የመስመር ላይ ሁኔታ አሳይ",
+        },
+        account: {
+            title: "መለያ",
+            email: "ኢሜል",
+            name: "ስም",
+            notProvided: "አልቀረበም",
+        },
+        saveButton: "ቅንብሮችን አስቀምጥ",
+        saveSuccess: "ቅንብሮች በተሳካ ሁኔታ ተቀመጡዋል",
     },
 };
 

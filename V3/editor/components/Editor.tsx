@@ -40,7 +40,7 @@ type EditorProps = {
   doc: Y.Doc;
   provider: LiveblocksYjsProvider;
   darkMode: boolean;
-  editor: any;
+  editor: BlockNoteEditor;
   onCommentClick?: (selectedText: string) => void;
 };
 
@@ -111,6 +111,54 @@ const BlockNote = memo(function BlockNote({
         }
       }
 
+      // Markdown shortcut: '---' + Enter creates horizontal divider
+      if (e.key === 'Enter' && editor) {
+        const currentBlock = editor.getTextCursorPosition().block;
+        const blockContent = Array.isArray(currentBlock?.content) 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ? currentBlock.content.map((c: any) => c.text || '').join('') 
+          : '';
+        
+        if (blockContent.trim() === '---') {
+          e.preventDefault();
+          // Replace current block with a divider (using a paragraph with special styling)
+          editor.updateBlock(currentBlock, {
+            type: 'paragraph',
+            content: [{ type: 'text', text: '─'.repeat(50), styles: { textColor: 'gray' } }],
+          });
+          // Insert a new paragraph below for continued typing
+          editor.insertBlocks(
+            [{ type: 'paragraph' }],
+            editor.getTextCursorPosition().block,
+            'after'
+          );
+        }
+      }
+
+      // Markdown shortcut: '---' + Enter creates horizontal divider
+      if (e.key === 'Enter' && editor) {
+        const currentBlock = editor.getTextCursorPosition().block;
+        const blockContent = Array.isArray(currentBlock?.content) 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ? currentBlock.content.map((c: any) => c.text || '').join('') 
+          : '';
+        
+        if (blockContent.trim() === '---') {
+          e.preventDefault();
+          // Replace current block with a divider (using a paragraph with special styling)
+          editor.updateBlock(currentBlock, {
+            type: 'paragraph',
+            content: [{ type: 'text', text: '─'.repeat(50), styles: { textColor: 'gray' } }],
+          });
+          // Insert a new paragraph below for continued typing
+          editor.insertBlocks(
+            [{ type: 'paragraph' }],
+            editor.getTextCursorPosition().block,
+            'after'
+          );
+        }
+      }
+
       const menuOpen = document.querySelector(
         ".bn-suggestion-menu, [data-suggestion-menu], .bn-menu"
       );
@@ -141,7 +189,7 @@ const BlockNote = memo(function BlockNote({
   return (
     <div className={`relative mx-auto ${darkMode ? "dark" : ""}`}>
       <BlockNoteView
-        className="min-h-screen"
+        className="min-h-[60vh] notion-editor"
         editor={editor}
         theme={darkMode ? "dark" : "light"}
         formattingToolbar={false}
@@ -237,6 +285,7 @@ function Editor({
   const room = useRoom();
   const [doc, setDoc] = useState<Y.Doc | null>(null);
   const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editor, setEditor] = useState<BlockNoteEditor<any> | null>(null);
 
   useEffect(() => {
@@ -254,7 +303,9 @@ function Editor({
         const undoManager = new Y.UndoManager(yFragment);
 
         // Capture and track the PluginKey origin that BlockNote uses
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let capturedOrigin: any = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         yDoc.on("update", (update: Uint8Array, origin: any) => {
           // Capture the first PluginKey origin we see and add it to tracked origins
           if (
@@ -305,6 +356,7 @@ function Editor({
         onUndoManagerReady?.(undoManager);
         console.log("Sent UndoManager to parent component");
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setEditor(blockNoteEditor as BlockNoteEditor<any>);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (onEditorReady as any)?.(blockNoteEditor as any);
@@ -349,7 +401,7 @@ function Editor({
 
   return (
     <div className="relative">
-      <div className="flex gap-2 mb-2">
+      <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-gray-200/30 dark:border-gray-700/30">
         <TranslateDocument doc={doc} editor={editor} />
         <Summarize editor={editor} />
         <Composer editor={editor} />

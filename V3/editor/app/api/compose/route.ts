@@ -1,13 +1,23 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
-
 export async function POST(req: NextRequest) {
     try {
-        const { prompt } = await req.json();
-        
-        const model = genAI.getGenerativeModel({ 
+        const { prompt, userApiKey } = await req.json();
+
+        // Use user's API key if provided, otherwise fall back to environment variable
+        const apiKey = userApiKey || process.env.GOOGLE_AI_API_KEY;
+
+        if (!apiKey) {
+            return NextResponse.json(
+                { error: 'No API key provided. Please configure your Google Gemini API key in settings.' },
+                { status: 401 }
+            );
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
             generationConfig: {
                 temperature: 0.3, // Lower temperature for more focused responses
@@ -21,9 +31,9 @@ export async function POST(req: NextRequest) {
         const response = await result.response;
         const text = response.text();
 
-        return NextResponse.json({ 
+        return NextResponse.json({
             success: true,
-            response: text 
+            response: text
         });
     } catch (error) {
         console.error('Compose Error:', error);
