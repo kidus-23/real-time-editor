@@ -109,10 +109,10 @@ function Document({
   const { user } = useUser();
   const { t } = useTranslation();
   const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
-  const { zenMode, setZenMode } = useZenMode();
-  const [fullWidth, setFullWidth] = useState(false);
-  const [isTocOpen, setIsTocOpen] = useState(false);
-  const titleFormRef = useRef<HTMLFormElement>(null);
+    const { zenMode, setZenMode } = useZenMode();
+    const [fullWidth, setFullWidth] = useState(false);
+    const [isTocOpen, setIsTocOpen] = useState(false);
+    const titleFormRef = useRef<HTMLFormElement>(null);
 
   // Memoize fullWidth toggle to prevent lag
   const toggleFullWidth = useCallback(() => {
