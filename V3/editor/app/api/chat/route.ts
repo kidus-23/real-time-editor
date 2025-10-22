@@ -59,10 +59,9 @@ export async function POST(req: NextRequest) {
                     model,
                     usage: { total_tokens: 0 } // Gemini doesn't provide token counts yet
                 });
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : 'Failed to get response from Gemini API';
+            } catch (error: any) {
                 console.error('Gemini API Error:', error);
-                throw new Error(errorMessage);
+                throw new Error(error?.message || 'Failed to get response from Gemini API');
             }
         }
 
@@ -99,12 +98,11 @@ export async function POST(req: NextRequest) {
         if (!response.ok) {
             // Try to parse the response body safely and extract a useful message
             let bodyText: string | null = null
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             let parsed: any = null
             try {
                 bodyText = await response.text()
                 parsed = bodyText ? JSON.parse(bodyText) : null
-            } catch {
+            } catch (e) {
                 // Not JSON
                 parsed = null
             }
@@ -117,11 +115,10 @@ export async function POST(req: NextRequest) {
         }
 
         // Parse success body (may still be non-JSON; handle gracefully)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let data: any
         try {
             data = await response.json()
-        } catch {
+        } catch (e) {
             const text = await response.text()
             console.error('Failed to parse JSON from upstream API:', text)
             throw new Error('Invalid response from upstream API')
