@@ -111,7 +111,7 @@ function Document({
   const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
     const { zenMode, setZenMode } = useZenMode();
     const [fullWidth, setFullWidth] = useState(false);
-    const [isTocOpen, setIsTocOpen] = useState(true);
+    const [isTocOpen, setIsTocOpen] = useState(false);
     const titleFormRef = useRef<HTMLFormElement>(null);
 
     // Memoize fullWidth toggle to prevent lag
@@ -816,8 +816,8 @@ function Document({
 
       <main className={`w-full px-4 md:px-8 lg:px-12 py-6 relative ${
                 fullWidth ? 'max-w-full' : 'max-w-[1400px]'
-            } mx-auto transition-[max-width] duration-150 ease-out`}>
-                <div className="min-h-[80vh]">
+            } mx-auto transition-[max-width] duration-150 ease-out overflow-x-hidden`}>
+                <div className="min-h-[80vh] overflow-y-auto isolate">
             <Editor
           darkMode={theme === "dark"}
           onEditorReady={setBlockEditor}
