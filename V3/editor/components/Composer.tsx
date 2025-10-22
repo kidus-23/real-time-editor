@@ -208,7 +208,7 @@ function Composer({ editor }: ComposerProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline" className="hover:text-white dark:hover:text-white">
+      <Button asChild variant="outline" className="hover:bg-black hover:text-white dark:hover:text-white">
         <DialogTrigger>
           <PencilIcon />
           {t("editor.compose.button")}

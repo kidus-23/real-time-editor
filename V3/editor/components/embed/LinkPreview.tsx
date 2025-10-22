@@ -20,6 +20,7 @@ interface LinkPreviewProps {
 }
 
 const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
+  if (!block) return null;
   const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
