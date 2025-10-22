@@ -134,7 +134,9 @@ function TranslateDocument({ editor }: TranslateDocumentProps) {
                 GPT {isPending ? t("editor.translate.translating") : "Says"}:
               </p>
             </div>
-            <p>{isPending ? t("editor.translate.translating") : <Markdown>{summary}</Markdown>}</p>
+            <div className="prose dark:prose-invert max-w-none">
+              {isPending ? t("editor.translate.translating") : <Markdown>{summary}</Markdown>}
+            </div>
           </div>
         )}
 
