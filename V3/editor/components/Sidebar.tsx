@@ -240,27 +240,29 @@ function Sidebar({ className = '', forceCollapsed = false }: { className?: strin
     );
 
     return (
-        <div className={`p-4 md:p-6 bg-white dark:bg-[#0f0f0f] min-h-screen border-r border-gray-200 dark:border-gray-800 h-full transition-all duration-300 ease-out ${effectiveExpanded ? 'w-[280px]' : 'w-[76px]'} ${className}`}>
-            <div className="md:hidden">
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <button className="p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-all duration-200 hover-scale" suppressHydrationWarning={true}>
-                            <MenuIcon className="text-gray-700 dark:text-gray-200" size={24} />
-                        </button>
-                    </SheetTrigger>
-                    <SheetContent side='left' className="bg-white dark:bg-[#0f0f0f] border-r border-gray-200 dark:border-gray-800">
-                        <SheetHeader>
-                            <SheetTitle className="text-xl font-bold tracking-tight">{t("sidebar.menu")}</SheetTitle>
-                            <div>
-                                {menuOptions}
-                            </div>
-                        </SheetHeader>
-                    </SheetContent>
-                </Sheet>
-            </div>
+        <div className={`bg-white dark:bg-[#0f0f0f] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-out ${effectiveExpanded ? 'w-[280px]' : 'w-[76px]'} ${className}`}>
+            <div className="sticky top-0 h-screen overflow-y-auto p-4 md:p-6">
+                <div className="md:hidden">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <button className="p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-all duration-200 hover-scale" suppressHydrationWarning={true}>
+                                <MenuIcon className="text-gray-700 dark:text-gray-200" size={24} />
+                            </button>
+                        </SheetTrigger>
+                        <SheetContent side='left' className="bg-white dark:bg-[#0f0f0f] border-r border-gray-200 dark:border-gray-800">
+                            <SheetHeader>
+                                <SheetTitle className="text-xl font-bold tracking-tight">{t("sidebar.menu")}</SheetTitle>
+                                <div>
+                                    {menuOptions}
+                                </div>
+                            </SheetHeader>
+                        </SheetContent>
+                    </Sheet>
+                </div>
 
-            <div className="hidden md:block">
-                {menuOptions}
+                <div className="hidden md:block">
+                    {menuOptions}
+                </div>
             </div>
         </div>
     );

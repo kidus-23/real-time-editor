@@ -3,10 +3,10 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { FormEvent, useState, useTransition } from "react";
-import { BotIcon, PencilIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "./ui/input";
-import { BlockNoteEditor, Block } from "@blocknote/core";
+import { BlockNoteEditor } from "@blocknote/core";
 import { marked } from "marked";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -21,9 +21,10 @@ function Composer({ editor }: ComposerProps) {
   const { t } = useTranslation();
 
   // Parse Markdown to BlockNote blocks
-  const markdownToBlockNote = (markdown: string): Block[] => {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const markdownToBlockNote = (markdown: string): any[] => {
     const tokens = marked.lexer(markdown);
-    const blocks: Block[] = [];
+    const blocks: any[] = [];
 
     tokens.forEach((token: any) => {
       if (token.type === "heading") {
@@ -36,7 +37,7 @@ function Composer({ editor }: ComposerProps) {
       } else if (token.type === "paragraph") {
         const content = [];
         // Parse inline tokens for bold, italic, etc.
-        const inlineTokens = marked.lexer(token.text)[0]?.tokens || [];
+        const inlineTokens = (marked.lexer(token.text)[0] as any)?.tokens || [];
         let currentText = "";
         let currentStyles: any = {};
 
@@ -65,7 +66,7 @@ function Composer({ editor }: ComposerProps) {
       } else if (token.type === "list") {
         token.items.forEach((item: any) => {
           const content = [];
-          const inlineTokens = marked.lexer(item.text)[0]?.tokens || [];
+          const inlineTokens = (marked.lexer(item.text)[0] as any)?.tokens || [];
           let currentText = "";
           let currentStyles: any = {};
 
@@ -97,6 +98,7 @@ function Composer({ editor }: ComposerProps) {
 
     return blocks;
   };
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   const handleGenerate = async (e: FormEvent) => {
     e.preventDefault();
@@ -142,7 +144,7 @@ function Composer({ editor }: ComposerProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="hover:text-gray-900 dark:hover:text-white">
         <DialogTrigger>
           <PencilIcon />
           {t("editor.compose.button")}

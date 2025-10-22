@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from "./ui/button";
 import { FormEvent, useState, useTransition } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BotIcon, HelpCircleIcon } from "lucide-react";
+import { HelpCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 import { BlockNoteEditor } from "@blocknote/core";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
@@ -112,10 +112,11 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         } catch (err) {
-          console.error(`Attempt ${attempt} error:`, err.message);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          console.error(`Attempt ${attempt} error:`, errorMessage);
           if (attempt === maxRetries) {
-            setError(err.message);
-            toast.error(`${t("editor.questionGenerator.error")}: ${err.message}`);
+            setError(errorMessage);
+            toast.error(`${t("editor.questionGenerator.error")}: ${errorMessage}`);
           }
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
@@ -193,7 +194,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="hover:text-gray-900 dark:hover:text-white">
         <DialogTrigger>
           <HelpCircleIcon />
           {t("editor.questionGenerator.button")}

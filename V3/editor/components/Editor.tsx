@@ -1,13 +1,12 @@
 'use client'
 
-import { useRoom, useSelf } from "@liveblocks/react/suspense";
-import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useRoom } from "@liveblocks/react/suspense";
+import { useState, useEffect, useCallback, memo } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css";
 import "@blocknote/core/fonts/inter.css";
-import { useCreateBlockNote } from "@blocknote/react";
 import stringToColor from "@/lib/stringToColor";
 import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
 import TranslateDocument from "./TranslateDocument";
@@ -37,12 +36,11 @@ type EditorProps = {
   doc: Y.Doc;
   provider: LiveblocksYjsProvider;
   darkMode: boolean;
-  editor: any; // Use any to support custom blocks
+  editor: BlockNoteEditor;
   onCommentClick?: (selectedText: string) => void;
 };
 
-const BlockNote = memo(function BlockNote({ doc, provider, darkMode, editor, roomId, onCommentClick }: EditorProps & { roomId: string }) {
-  const userInfo = useSelf((me) => me.info);
+const BlockNote = memo(function BlockNote({ darkMode, editor, roomId, onCommentClick }: Omit<EditorProps, 'doc' | 'provider'> & { roomId: string }) {
 
   // Enable automatic link preview detection
   useLinkPreviewDetection(editor);
@@ -99,6 +97,30 @@ const BlockNote = memo(function BlockNote({ doc, provider, darkMode, editor, roo
         const questionDialog = document.querySelector('button:has(svg[data-lucide="help-circle"])') as HTMLButtonElement;
         if (questionDialog) {
           questionDialog.click();
+        }
+      }
+
+      // Markdown shortcut: '---' + Enter creates horizontal divider
+      if (e.key === 'Enter' && editor) {
+        const currentBlock = editor.getTextCursorPosition().block;
+        const blockContent = Array.isArray(currentBlock?.content) 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ? currentBlock.content.map((c: any) => c.text || '').join('') 
+          : '';
+        
+        if (blockContent.trim() === '---') {
+          e.preventDefault();
+          // Replace current block with a divider (using a paragraph with special styling)
+          editor.updateBlock(currentBlock, {
+            type: 'paragraph',
+            content: [{ type: 'text', text: '─'.repeat(50), styles: { textColor: 'gray' } }],
+          });
+          // Insert a new paragraph below for continued typing
+          editor.insertBlocks(
+            [{ type: 'paragraph' }],
+            editor.getTextCursorPosition().block,
+            'after'
+          );
         }
       }
 
@@ -195,7 +217,8 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
   const room = useRoom();
   const [doc, setDoc] = useState<Y.Doc | null>(null);
   const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
-  const [editor, setEditor] = useState<any>(null); // Use any for custom blocks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editor, setEditor] = useState<BlockNoteEditor<any> | null>(null);
 
   useEffect(() => {
     if (!room) {
@@ -211,12 +234,12 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
         const schema = BlockNoteSchema.create({
           blockSpecs: {
             ...defaultBlockSpecs,
-            // @ts-expect-error - Custom block types
-            linkPreview: LinkPreview,
-            // @ts-expect-error - Enhanced video block
-            videoEmbed: VideoEmbed,
-            // @ts-expect-error - Enhanced image block
-            imageEmbed: ImageEmbed,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            linkPreview: LinkPreview as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            videoEmbed: VideoEmbed as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            imageEmbed: ImageEmbed as any,
           },
         });
 
@@ -240,7 +263,8 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
           },
         });
         setEditor(blockNoteEditor);
-        onEditorReady?.(blockNoteEditor);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onEditorReady?.(blockNoteEditor as any);
         setDoc(yDoc);
         setProvider(yProvider);
       } catch (error) {
@@ -286,7 +310,7 @@ function Editor({ darkMode = false, onEditorReady, onCommentClick }: EditorCompo
         <QuestionGenerator editor={editor} />
       </div>
       <div className="pt-4">
-        <BlockNote doc={doc} provider={provider} editor={editor} darkMode={darkMode} roomId={room.id} onCommentClick={onCommentClick} />
+        <BlockNote editor={editor} darkMode={darkMode} roomId={room.id} onCommentClick={onCommentClick} />
       </div>
     </div>
   );

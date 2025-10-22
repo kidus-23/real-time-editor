@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
-import { MessagesSquare, X, Bot, Send, Loader2, Settings, Users, FileText } from "lucide-react"
+import { MessagesSquare, X, Bot, Send, Loader2, Settings, Users, FileText, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { AI_MODELS } from "@/lib/constants"
 import { usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { Badge } from "@/components/ui/badge"
@@ -25,30 +26,15 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useTranslation } from "@/hooks/useTranslation"
 import APIKeySettings from "@/components/APIKeySettings"
+import ReactMarkdown from 'react-markdown'
 
-// Define model categories and their models
-const MODEL_CATEGORIES = {
-  "Featured": [
-    { id: "openai/gpt-4-turbo", name: "GPT-4 Turbo", description: "Most capable GPT-4 model" },
-    { id: "anthropic/claude-2", name: "Claude 2", description: "Anthropic's most capable model" },
-    { id: "google/gemini-pro", name: "Gemini Pro", description: "Google's latest model" },
-  ],
-  "Fast & Efficient": [
-    { id: "openai/gpt-3.5-turbo", name: "GPT-3.5 Turbo", description: "Fast and efficient" },
-    { id: "x-ai/grok-4-fast:free", name: "Grok 4 Fast", description: "Quick responses" },
-    { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", description: "Balanced speed and quality" },
-  ],
-  "Open Source": [
-    { id: "meta-llama/llama-2-70b-chat", name: "Llama 2 70B", description: "Meta's largest model" },
-    { id: "mistralai/mixtral-8x7b", name: "Mixtral 8x7B", description: "Mixture of experts model" },
-    { id: "phind/phind-codellama-34b", name: "Phind 34B", description: "Specialized for code" },
-  ],
-  "Specialized": [
-    { id: "meta-llama/codellama-34b", name: "CodeLlama 34B", description: "Code generation expert" },
-    { id: "anthropic/claude-2-100k", name: "Claude 2 (100k)", description: "Long context support" },
-    { id: "perplexity/pplx-70b-chat", name: "PPLX 70B", description: "Research focused" },
-  ]
-} as const;
+// Build model categories from AI_MODELS to ensure UI only shows supported models
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const MODEL_CATEGORIES: Record<string, { id: string; name: string; description?: string }[]> = {
+  OpenAI: Object.entries(AI_MODELS.OPENAI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
+  Gemini: Object.entries(AI_MODELS.GEMINI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 interface Message {
   role: 'user' | 'assistant'
@@ -73,13 +59,15 @@ interface TeamChatMessage {
 }
 
 function Chatbar({ className = '' }: { className?: string }) {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [teamMessages, setTeamMessages] = useState<TeamChatMessage[]>([])
   const [input, setInput] = useState('')
   const [teamChatInput, setTeamChatInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [activeModel, setActiveModel] = useState('x-ai/grok-4-fast:free') // Default model
+  // Default to a model known in `lib/constants.ts` to avoid sending unsupported provider formats
+  const [activeModel, setActiveModel] = useState('gemini-2.5-flash') // Default model
   const [showAPIKeySettings, setShowAPIKeySettings] = useState(false)
   const [useDocumentContext, setUseDocumentContext] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -111,12 +99,13 @@ function Chatbar({ className = '' }: { className?: string }) {
     ref.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  // Scroll to bottom whenever messages change or loading state changes
   useEffect(() => {
-    scrollToBottom(messagesEndRef)
-  }, [messages])
+    setTimeout(() => scrollToBottom(messagesEndRef), 100)
+  }, [messages, isLoading])
 
   useEffect(() => {
-    scrollToBottom(teamChatEndRef)
+    setTimeout(() => scrollToBottom(teamChatEndRef), 100)
   }, [teamMessages])
 
   // Reset to chat tab when sheet closes
@@ -191,10 +180,22 @@ function Chatbar({ className = '' }: { className?: string }) {
 
     try {
       // Get the document content from the DOM
-      const editorContent = (document.querySelector('.bn-container') as HTMLElement)?.textContent || ''
+      const container = document.querySelector('.bn-container')
+      if (!container) {
+        console.warn('Editor container not found')
+        return null
+      }
+
+      // Get all text content, including headers and content
+      const editorContent = container.textContent || ''
+      if (!editorContent.trim()) {
+        console.warn('Empty document content')
+        return null
+      }
+
       return editorContent
-    } catch {
-      console.error('Error getting document content')
+    } catch (error) {
+      console.error('Error getting document content:', error)
       return null
     }
   }
@@ -249,11 +250,21 @@ function Chatbar({ className = '' }: { className?: string }) {
           messages: [...messages, newMessage],
           model: activeModel,
           documentContext: context,
-          userApiKey: userApiKeys.openrouter
+          userApiKeys: userApiKeys
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to get response')
+      if (!response.ok) {
+        // Try to extract error message from body
+        let errorMsg = 'Failed to get response'
+        try {
+          const errorData = await response.json()
+          errorMsg = errorData.error || errorData.message || errorMsg
+        } catch {
+          // Ignore parse error
+        }
+        throw new Error(errorMsg)
+      }
 
       const data = await response.json()
       setMessages(prev => [...prev, {
@@ -264,10 +275,11 @@ function Chatbar({ className = '' }: { className?: string }) {
         model: data.model,
         usage: data.usage
       }])
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t("chatbar.error")
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: t("chatbar.error"),
+        content: errorMessage,
         timestamp: new Date(),
         status: 'error'
       }])
@@ -379,10 +391,10 @@ function Chatbar({ className = '' }: { className?: string }) {
             {/* Chat Tab */}
             <TabsContent
               value="chat"
-              className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-hidden"
+              className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-x-auto"
             >
               {/* Scrollable chat area */}
-              <ScrollArea className="flex-1 px-4">
+              <ScrollArea className="flex-1 px-4 overflow-y-scroll">
                 <div className="space-y-4 py-4">
                   {messages.map((message, i) => (
                     <div
@@ -392,15 +404,66 @@ function Chatbar({ className = '' }: { className?: string }) {
                         message.role === 'user' ? 'items-end' : 'items-start'
                       )}
                     >
-                      <div
-                        className={cn(
-                          "rounded-xl px-4 py-3 max-w-[80%] transition-all duration-200",
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground shadow-md hover-lift'
-                            : 'bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700'
-                        )}
-                      >
-                        {message.content}
+                      <div className="relative group">
+                        <div
+                          className={cn(
+                            "rounded-xl px-4 py-3 max-w-[80%] transition-all duration-200",
+                            message.role === 'user'
+                              ? 'bg-primary text-primary-foreground shadow-md hover-lift'
+                              : 'bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700'
+                          )}
+                        >
+                          {message.role === 'user' ? (
+                            message.content
+                          ) : (
+                            <>
+                              <div className="relative pb-8 max-w-[90%] break-words">
+                                <ReactMarkdown
+                                  components={{
+                                    code: ({ children, ...props }) => {
+                                      const code = String(children).replace(/\n$/, '')
+                                      // Check if the code contains HTML/XML tags or multiple lines
+                                      const isCodeBlock = code.includes('<') || code.includes('\n')
+                                      
+                                      if (isCodeBlock) {
+                                        return (
+                                          <div className="relative">
+                                            <pre className="!mt-0 overflow-x-auto max-w-full">
+                                              <code {...props} className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words">{code}</code>
+                                            </pre>
+                                          </div>
+                                        )
+                                      }
+                                      // For inline code or simple text, render as inline
+                                      return <code {...props} className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">{children}</code>
+                                    }
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                                <div className="absolute right-2 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 bg-background/90 backdrop-blur"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(message.content)
+                                      setCopiedCode('full-' + i)
+                                      setTimeout(() => setCopiedCode(null), 2000)
+                                    }}
+                                    title="Copy full response"
+                                  >
+                                    {copiedCode === 'full-' + i ? (
+                                      <Check className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                      <Copy className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                       {message.model && (
                         <span className="text-xs text-muted-foreground px-2">

@@ -1,3 +1,4 @@
+/* stylelint-disable at-rule-no-unknown */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -221,24 +222,30 @@
 
 /* Enhanced BlockNote Dark Mode */
 .dark .bn-editor {
-  background: #050505 !important;
+  background: transparent !important;
   color: #f9fafb !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   padding: 24px !important;
+  border: none !important;
 }
 
 .dark .bn-block-group {
   background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .dark .bn-block-content {
   background: transparent !important;
   color: #f5f5f5 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .dark .bn-block {
-  border-color: rgba(55, 65, 81, 0.3) !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Dark mode for text elements */
@@ -251,6 +258,9 @@
 .dark .bn-editor h5,
 .dark .bn-editor h6 {
   color: #f9fafb !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 /* Dark mode for code blocks */
@@ -898,27 +908,33 @@ button[data-test="comment-button"]:hover::after {
   letter-spacing: -0.01em;
 }
 
+.bn-editor {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
 /* BlockNote container - Notion whitespace */
 .notion-editor .bn-container {
   padding: 0 !important;
   max-width: 100% !important;
 }
 
-/* Block styling - minimal, clean */
+/* Block styling - completely seamless */
 .notion-editor .bn-block-outer {
-  margin: 0 0 2px 0 !important;
+  margin: 0 !important;
   padding: 3px 0 !important;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.15s ease;
+  border: none !important;
 }
 
 .notion-editor .bn-block-outer:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-  border-radius: 8px;
-  transform: translateX(2px);
+  background-color: rgba(0, 0, 0, 0.015);
 }
 
 .dark .notion-editor .bn-block-outer:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
 /* Notion-style drag handles */
@@ -976,10 +992,16 @@ button[data-test="comment-button"]:hover::after {
   line-height: 1.7;
   margin: 0.5rem 0;
   color: #1f2937;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .dark .notion-editor p {
   color: #e5e7eb;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Code blocks - ligature-enabled monospace */
@@ -1253,5 +1275,319 @@ button[data-test="comment-button"]:hover::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   ULTRA-PLAIN SEAMLESS CANVAS
+   Notion/Obsidian-inspired uniformity
+   Enhanced glassmorphism (50% intensity)
+   ============================================ */
+
+/* Seamless background system - pure uniformity */
+.seamless-canvas {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Universal hover effects - mode-agnostic */
+.seamless-hover {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seamless-hover:hover {
+  opacity: 0.85;
+}
+
+/* Markdown horizontal divider - Notion style */
+hr.notion-divider,
+.bn-block hr {
+  width: 100%;
+  height: 1px;
+  border: none;
+  background: var(--border);
+  margin: 1.5em 0;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+hr.notion-divider:hover,
+.bn-block hr:hover {
+  opacity: 1;
+}
+
+.dark hr.notion-divider,
+.dark .bn-block hr {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* AI Toolbar glassy styling enhancements */
+.ai-toolbar-glass {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px) saturate(120%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+}
+
+.dark .ai-toolbar-glass {
+  background: rgba(26, 26, 26, 0.45);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* AI icon buttons - material ripple effect */
+.ai-icon-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-icon-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.ai-icon-button:active::before {
+  width: 100px;
+  height: 100px;
+}
+
+/* Seamless block styling - completely borderless */
+.notion-editor .bn-block-content {
+  background: transparent !important;
+  border: none !important;
+  padding: 2px 0 !important;
+}
+
+/* Remove all container backgrounds */
+.notion-editor .bn-container,
+.notion-editor .bn-editor {
+  background: transparent !important;
+}
+
+/* Completely seamless - no borders anywhere */
+.notion-editor .bn-block,
+.notion-editor .bn-block-outer,
+.notion-editor .bn-block-content,
+.notion-editor .bn-block-group,
+.bn-block,
+.bn-block-outer,
+.bn-block-content,
+.bn-block-group,
+.bn-editor,
+.bn-container,
+div[class*="bn-"],
+div[class*="Block"] {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Markdown shortcut: --- becomes divider */
+.bn-inline-content[data-content="---"] {
+  display: none;
+}
+
+.bn-inline-content[data-content="---"] + hr {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  border: none;
+  margin: 1.5em 0;
+}
+
+/* Styled divider blocks created by --- shortcut */
+.notion-editor p[data-divider="true"],
+.notion-editor .bn-block-content:has(> span[style*="textColor: gray"]) {
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.6;
+  text-align: center;
+  letter-spacing: -0.5px;
+  color: var(--border) !important;
+  font-size: 12px;
+  margin: 1.5em 0 !important;
+  padding: 0.5em 0 !important;
+  border-top: 1px solid var(--border);
+  border-bottom: none !important;
+}
+
+/* Enhanced focus states - subtle ring */
+.notion-editor .bn-block:focus-within {
+  outline: 2px solid rgba(59, 130, 246, 0.15);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.dark .notion-editor .bn-block:focus-within {
+  outline-color: rgba(96, 165, 250, 0.2);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove all multi-tonal sections */
+main,
+article,
+section,
+.editor-container {
+  background: var(--background) !important;
+}
+
+/* Link hover - consistent across modes */
+a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+  transition: all 0.15s ease;
+}
+
+/* Keyboard navigation - accessibility */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Global override: Remove ALL borders and shadows from BlockNote editor */
+[class*="bn-"],
+[class*="Block"],
+[data-node-type],
+.ProseMirror,
+.ProseMirror > *,
+.bn-editor *,
+.notion-editor * {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Sidebar sticky and scrollable */
+.sidebar-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 40;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.sidebar-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-container::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 8px;
+}
+
+/* Prevent layout shift from full-width toggle */
+.will-change-auto {
+  will-change: max-width;
+}
+
+/* Inline Table of Contents - Notion style */
+.inline-toc-block {
+  font-family: 'Recursive', 'Inter', -apple-system, system-ui, sans-serif;
+  line-height: 1.5;
+  max-width: 100%;
+}
+
+.inline-toc-block ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.inline-toc-block li {
+  position: relative;
+  margin: 0;
+}
+
+.inline-toc-block a {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Smooth scroll behavior for TOC navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smooth TOC transitions */
+.toc-transition {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Active section highlight animation */
+@keyframes toc-active-fade {
+  from {
+    opacity: 0;
+    transform: scaleY(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+.inline-toc-block .active-indicator {
+  animation: toc-active-fade 0.2s ease-out;
+}
+
+/* Table of Contents custom scrollbar */
+nav[aria-label="Table of Contents"] div::-webkit-scrollbar {
+  width: 4px;
+}
+
+nav[aria-label="Table of Contents"] div::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+nav[aria-label="Table of Contents"] div::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+
+nav[aria-label="Table of Contents"] div::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.5);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .will-change-auto {
+    will-change: auto;
   }
 }

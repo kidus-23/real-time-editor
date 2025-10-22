@@ -79,7 +79,7 @@ function Summarize({ editor }: SummarizeProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="hover:text-gray-900 dark:hover:text-white">
         <DialogTrigger>
           <FileTextIcon />
           {t("editor.summarize.button")}

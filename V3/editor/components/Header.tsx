@@ -23,9 +23,27 @@ function Header({ className = '' }: { className?: string }) {
         <div className={`bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${className}`}>
             <div className="h-9 hover-scale transition-transform duration-200">
                 {mounted && theme === 'dark' ? (
-                    <Image src="/kenlogodark.png" alt="Ken Logo" width={36} height={36} className="h-full w-auto" />
+                    <Image 
+                        src="/kenlogodark.png" 
+                        alt="Ken Logo" 
+                        width={36} 
+                        height={36} 
+                        className="h-full w-auto" 
+                        quality={100}
+                        priority
+                        unoptimized
+                    />
                 ) : (
-                    <Image src="/kenlogo.png" alt="Ken Logo" width={36} height={36} className="h-full w-auto" />
+                    <Image 
+                        src="/kenlogo.png" 
+                        alt="Ken Logo" 
+                        width={36} 
+                        height={36} 
+                        className="h-full w-auto" 
+                        quality={100}
+                        priority
+                        unoptimized
+                    />
                 )}
             </div>
 
