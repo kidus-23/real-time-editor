@@ -8,7 +8,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
@@ -19,18 +19,19 @@ function Breadcrumbs() {
     const [documentTitles, setDocumentTitles] = useState<Record<string, string>>({});
 
     // Keep original segments for building hrefs
-    const originalSegments = path.split("/").filter(Boolean);
+    const originalSegments = useMemo(() => path.split("/").filter(Boolean), [path]);
 
     // Fetch document titles for doc IDs
     useEffect(() => {
         const fetchDocumentTitles = async () => {
             const titles: Record<string, string> = {};
+            const segments = path.split("/").filter(Boolean);
 
-            for (let i = 0; i < originalSegments.length; i++) {
-                const segment = originalSegments[i];
+            for (let i = 0; i < segments.length; i++) {
+                const segment = segments[i];
 
                 // Check if this is a document ID (comes after "doc" segment)
-                if (i > 0 && originalSegments[i - 1] === "doc") {
+                if (i > 0 && segments[i - 1] === "doc") {
                     try {
                         const docRef = doc(db, "documents", segment);
                         const docSnap = await getDoc(docRef);
@@ -51,7 +52,7 @@ function Breadcrumbs() {
         };
 
         fetchDocumentTitles();
-    }, [path, originalSegments]);
+    }, [path]);
 
     // Map segments to display names with i18n support
     const getDisplayName = (segment: string, index: number) => {
