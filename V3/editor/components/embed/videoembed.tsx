@@ -1,28 +1,38 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { createReactBlockSpec } from "@blocknote/react";
-import { ExternalLink, Copy, Loader2, Image as ImageIcon } from "lucide-react";
+// Import BaseBlockSpec and PartialBlock
+import {
+  createReactBlockSpec,
+  BaseBlockSpec,
+  PartialBlock,
+} from "@blocknote/react";
+import {
+  ExternalLink,
+  Copy,
+  Loader2,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { toast } from "sonner";
-interface ImageEmbedProps {
+
+interface VideoEmbedProps {
   block: {
     props: {
       url: string;
       caption?: string;
-      width?: number;
     };
   };
 }
 
-const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
-  const [loading, setLoading] = useState(true);
+const VideoEmbedComponent = ({ block }: VideoEmbedProps) => {
   const [error, setError] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
     y: 0,
   });
-  const [resizeWidth, setResizeWidth] = useState<number>(100);
+  const [width, setWidth] = useState<number>(100);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -37,22 +47,7 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(url);
-    toast.success("Image URL copied to clipboard!");
-    setShowContextMenu(false);
-  };
-
-  const handleCopyImage = async () => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob }),
-      ]);
-      toast.success("Image copied to clipboard!");
-    } catch (error) {
-      console.error("Failed to copy image:", error);
-      toast.error("Failed to copy image");
-    }
+    toast.success("Video URL copied to clipboard!");
     setShowContextMenu(false);
   };
 
@@ -76,7 +71,7 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
       if (containerRef.current) {
         const percentage =
           (newWidth / containerRef.current.parentElement!.offsetWidth) * 100;
-        setResizeWidth(Math.min(100, Math.max(20, percentage)));
+        setWidth(Math.min(100, Math.max(20, percentage)));
       }
     };
 
@@ -92,7 +87,7 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
 
   const setPresetSize = (size: "small" | "medium" | "large" | "full") => {
     const sizes = { small: 40, medium: 60, large: 80, full: 100 };
-    setResizeWidth(sizes[size]);
+    setWidth(sizes[size]);
     toast.success(`Size set to ${size}`);
   };
 
@@ -104,11 +99,41 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
     }
   }, [showContextMenu]);
 
-  if (!url) {
+  // Extract YouTube video ID
+  const getYouTubeId = (url: string): string | null => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?\s]+)/,
+      /youtube\.com\/shorts\/([^&?\s]+)/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  // Extract Vimeo video ID
+  const getVimeoId = (url: string): string | null => {
+    const match = url.match(/vimeo\.com\/(\d+)/);
+    return match ? match[1] : null;
+  };
+
+  const youtubeId = getYouTubeId(url);
+  const vimeoId = getVimeoId(url);
+
+  let embedUrl = url;
+  if (youtubeId) {
+    embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
+  } else if (vimeoId) {
+    embedUrl = `https://player.vimeo.com/video/${vimeoId}`;
+  }
+
+  if (error || !url) {
     return (
       <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 my-2 bg-gray-50 dark:bg-gray-800/50">
         <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
-          No image URL provided
+          Failed to load video
         </div>
       </div>
     );
@@ -119,7 +144,7 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
       ref={containerRef}
       className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden my-2 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-600 transition-colors group relative"
       onContextMenu={handleContextMenu}
-      style={{ width: `${resizeWidth}%`, margin: "8px auto" }}
+      style={{ width: `${width}%`, margin: "8px auto" }}
     >
       {/* Size Control Buttons */}
       <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-black/50 rounded-md p-1">
@@ -160,29 +185,15 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
         title="Drag to resize"
       />
 
-      <div className="relative bg-gray-100 dark:bg-gray-900">
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          </div>
-        )}
-        {error ? (
-          <div className="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
-            <ImageIcon className="h-12 w-12 mb-2" />
-            <p className="text-sm">Failed to load image</p>
-          </div>
-        ) : (
-          <img
-            src={url}
-            alt={caption || "Image"}
-            className="w-full h-auto max-h-[600px] object-contain"
-            onLoad={() => setLoading(false)}
-            onError={() => {
-              setLoading(false);
-              setError(true);
-            }}
-          />
-        )}
+      <div className="aspect-video w-full bg-black">
+        <iframe
+          src={embedUrl}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title="Video player"
+          onError={() => setError(true)}
+        />
       </div>
       {caption && (
         <div className="p-2 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
@@ -191,7 +202,6 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
       )}
       <div className="p-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <ImageIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
           <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
             {url}
           </span>
@@ -218,7 +228,6 @@ const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
           x={contextMenuPosition.x}
           y={contextMenuPosition.y}
           onCopyLink={handleCopyLink}
-          onCopyImage={handleCopyImage}
           onOpenInBrowser={handleOpenInBrowser}
         />
       )}
@@ -230,13 +239,11 @@ const ContextMenu = ({
   x,
   y,
   onCopyLink,
-  onCopyImage,
   onOpenInBrowser,
 }: {
   x: number;
   y: number;
   onCopyLink: () => void;
-  onCopyImage: () => void;
   onOpenInBrowser: () => void;
 }) => {
   return (
@@ -245,18 +252,11 @@ const ContextMenu = ({
       style={{ top: y, left: x }}
     >
       <button
-        onClick={onCopyImage}
-        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-      >
-        <Copy className="h-4 w-4" />
-        Copy Image
-      </button>
-      <button
         onClick={onCopyLink}
         className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
       >
         <Copy className="h-4 w-4" />
-        Copy Link
+        Copy Video URL
       </button>
       <button
         onClick={onOpenInBrowser}
@@ -270,8 +270,8 @@ const ContextMenu = ({
 };
 
 // Define the spec separately
-const imageEmbedSpec = {
-  type: "imageEmbed" as const,
+const videoEmbedSpec = {
+  type: "videoEmbed" as const,
   propSchema: {
     url: {
       default: "",
@@ -281,17 +281,16 @@ const imageEmbedSpec = {
     },
   },
   content: "none",
-};
+} satisfies BaseBlockSpec;
 
-export const ImageEmbed = createReactBlockSpec(imageEmbedSpec, {
-  render: (props) => <ImageEmbedComponent block={props.block as any} />,
+export const VideoEmbed = createReactBlockSpec(videoEmbedSpec, {
+  render: (props) => <VideoEmbedComponent block={props.block as any} />,
 
-  // Serialize to markdown
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  toMarkdown: (block: any) => {
-    const caption = block.props?.caption || "Image";
+  // ADDED THIS FUNCTION
+  toMarkdown: (block: PartialBlock<typeof videoEmbedSpec>) => {
     const url = block.props?.url || "";
-    // Serializes as a standard Markdown image
-    return `![${caption}](${url})`;
+    const caption = block.props?.caption || "Video";
+    // Serializes as a link to the video
+    return `[${caption}](${url})`;
   },
 });
