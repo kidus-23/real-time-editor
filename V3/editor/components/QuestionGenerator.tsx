@@ -276,24 +276,25 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
 
             <form onSubmit={handleSubmitAnswer} className="flex flex-col gap-4">
               {questionType === "trueFalse" && (
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant={userAnswer === "true" ? "default" : "outline"}
-                    onClick={() => setUserAnswer("true")}
-                    disabled={isPending || evaluation !== null}
-                  >
-                    True
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={userAnswer === "false" ? "default" : "outline"}
-                    onClick={() => setUserAnswer("false")}
-                    disabled={isPending || evaluation !== null}
-                  >
-                    False
-                  </Button>
-                </div>
+                <RadioGroup
+                  value={userAnswer}
+                  onValueChange={setUserAnswer}
+                  disabled={isPending || evaluation !== null}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="true" id="true-option" />
+                    <Label htmlFor="true-option" className="cursor-pointer">
+                      {t("editor.questionGenerator.true") || "True"}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="false" id="false-option" />
+                    <Label htmlFor="false-option" className="cursor-pointer">
+                      {t("editor.questionGenerator.false") || "False"}
+                    </Label>
+                  </div>
+                </RadioGroup>
               )}
 
               {questionType === "multipleChoice" && (
@@ -332,17 +333,29 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
             </form>
 
             {evaluation && (
-              <div className="p-4 bg-gray-100 rounded">
-                <p className="font-bold">
+              <div className={`p-4 rounded-lg border-2 ${evaluation.isCorrect
+                  ? "bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-700"
+                  : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
+                    ? "bg-blue-50 dark:bg-blue-950/30 border-blue-500 dark:border-blue-700"
+                    : "bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-700"
+                }`}>
+                <p className={`font-bold mb-2 ${evaluation.isCorrect
+                    ? "text-green-800 dark:text-green-200"
+                    : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
+                      ? "text-blue-800 dark:text-blue-200"
+                      : "text-red-800 dark:text-red-200"
+                  }`}>
                   {evaluation.isCorrect
                     ? t("editor.questionGenerator.correctAnswer")
                     : questionType === "shortAnswer"
-                    ? t("editor.questionGenerator.score", {
-                        score: evaluation.score,
+                      ? t("editor.questionGenerator.score", {
+                        score: evaluation.score ?? 0,
                       })
-                    : t("editor.questionGenerator.tryAgain")}
+                      : t("editor.questionGenerator.tryAgain")}
                 </p>
-                <p>{evaluation.explanation}</p>
+                <p className="text-gray-800 dark:text-gray-200 mb-3">
+                  {evaluation.explanation}
+                </p>
                 <Button
                   className="mt-2"
                   onClick={handleNextQuestion}
@@ -350,7 +363,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                 >
                   {currentQuestionIndex < questions.length - 1
                     ? t("editor.questionGenerator.nextQuestion")
-                    : t("editor.questionGenerator.startQuiz")}
+                    : t("editor.questionGenerator.finishQuiz")}
                 </Button>
               </div>
             )}

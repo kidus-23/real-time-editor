@@ -72,6 +72,7 @@ function Chatbar({ className = '' }: { className?: string }) {
   const [showSettings, setShowSettings] = useState(false)
   const [showAPIKeySettings, setShowAPIKeySettings] = useState(false)
   const [useDocumentContext, setUseDocumentContext] = useState(false)
+  const [documentContent, setDocumentContent] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [activeTab, setActiveTab] = useState('chat')
   const chatScrollRef = useRef<HTMLDivElement>(null)
