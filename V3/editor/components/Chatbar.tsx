@@ -109,6 +109,7 @@ function Chatbar({ className = "" }: { className?: string }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showAPIKeySettings, setShowAPIKeySettings] = useState(false);
   const [useDocumentContext, setUseDocumentContext] = useState(false);
+  const [documentContent, setDocumentContent] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState("chat");
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -134,7 +135,7 @@ function Chatbar({ className = "" }: { className?: string }) {
     localStorage.setItem(`teamchat-lastread-${roomId}`, Date.now().toString());
   };
 
-  const scrollToBottom = (scrollRef: React.RefObject<HTMLDivElement>) => {
+  const scrollToBottom = (scrollRef: React.RefObject<HTMLDivElement | null>) => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
@@ -143,7 +144,7 @@ function Chatbar({ className = "" }: { className?: string }) {
     }
   };
 
-  const isAtBottom = (scrollRef: React.RefObject<HTMLDivElement>) => {
+  const isAtBottom = (scrollRef: React.RefObject<HTMLDivElement | null>) => {
     if (!scrollRef.current) return true; // Assume at bottom if not loaded
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     return scrollTop + clientHeight >= scrollHeight - 10; // 10px threshold
@@ -542,17 +543,19 @@ function Chatbar({ className = "" }: { className?: string }) {
                                   components={{
                                     code: ({
                                       node,
-                                      inline,
                                       children,
+                                      className,
                                       ...props
                                     }) => {
                                       const code = String(children).replace(
                                         /\n$/,
                                         ""
                                       );
+                                      // Check if className indicates inline code (no language class)
+                                      const isInline = !className || !className.startsWith('language-');
                                       // Check if the code contains HTML/XML tags or multiple lines
                                       const isCodeBlock =
-                                        !inline &&
+                                        !isInline &&
                                         (code.includes("<") ||
                                           code.includes("\n"));
 
@@ -744,25 +747,25 @@ function Chatbar({ className = "" }: { className?: string }) {
                         <div className="flex items-center gap-2">
                           {message.userId !==
                             user?.emailAddresses[0].emailAddress && (
-                            <div className="flex items-center gap-1">
-                              <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
-                                {message.userAvatar ? (
-                                  <Image
-                                    src={message.userAvatar}
-                                    alt={message.userName}
-                                    width={24}
-                                    height={24}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  message.userName.charAt(0).toUpperCase()
-                                )}
+                              <div className="flex items-center gap-1">
+                                <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
+                                  {message.userAvatar ? (
+                                    <Image
+                                      src={message.userAvatar}
+                                      alt={message.userName}
+                                      width={24}
+                                      height={24}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    message.userName.charAt(0).toUpperCase()
+                                  )}
+                                </div>
+                                <span className="text-xs font-medium">
+                                  {message.userName}
+                                </span>
                               </div>
-                              <span className="text-xs font-medium">
-                                {message.userName}
-                              </span>
-                            </div>
-                          )}
+                            )}
                         </div>
                         <div
                           className={cn(
@@ -778,11 +781,11 @@ function Chatbar({ className = "" }: { className?: string }) {
                         <span className="text-xs text-muted-foreground px-2">
                           {message.timestamp?.toDate
                             ? message.timestamp
-                                .toDate()
-                                .toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
+                              .toDate()
+                              .toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : t("chatbar.justNow")}
                         </span>
                       </div>

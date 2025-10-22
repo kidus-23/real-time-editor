@@ -283,13 +283,13 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                   className="flex gap-4"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="true" id="true-option" />
+                    <RadioGroupItem value="True" id="true-option" />
                     <Label htmlFor="true-option" className="cursor-pointer">
                       {t("editor.questionGenerator.true") || "True"}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="false" id="false-option" />
+                    <RadioGroupItem value="False" id="false-option" />
                     <Label htmlFor="false-option" className="cursor-pointer">
                       {t("editor.questionGenerator.false") || "False"}
                     </Label>
@@ -334,16 +334,16 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
 
             {evaluation && (
               <div className={`p-4 rounded-lg border-2 ${evaluation.isCorrect
-                  ? "bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-700"
-                  : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
-                    ? "bg-blue-50 dark:bg-blue-950/30 border-blue-500 dark:border-blue-700"
-                    : "bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-700"
+                ? "bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-700"
+                : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
+                  ? "bg-blue-50 dark:bg-blue-950/30 border-blue-500 dark:border-blue-700"
+                  : "bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-700"
                 }`}>
                 <p className={`font-bold mb-2 ${evaluation.isCorrect
-                    ? "text-green-800 dark:text-green-200"
-                    : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
-                      ? "text-blue-800 dark:text-blue-200"
-                      : "text-red-800 dark:text-red-200"
+                  ? "text-green-800 dark:text-green-200"
+                  : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
+                    ? "text-blue-800 dark:text-blue-200"
+                    : "text-red-800 dark:text-red-200"
                   }`}>
                   {evaluation.isCorrect
                     ? t("editor.questionGenerator.correctAnswer")
