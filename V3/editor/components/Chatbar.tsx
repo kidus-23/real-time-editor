@@ -74,8 +74,8 @@ function Chatbar({ className = '' }: { className?: string }) {
   const [useDocumentContext, setUseDocumentContext] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [activeTab, setActiveTab] = useState('chat')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const teamChatEndRef = useRef<HTMLDivElement>(null)
+  const chatScrollRef = useRef<HTMLDivElement>(null)
+  const teamScrollRef = useRef<HTMLDivElement>(null)
 
   const pathname = usePathname();
   const { user } = useUser();
@@ -97,17 +97,29 @@ function Chatbar({ className = '' }: { className?: string }) {
     localStorage.setItem(`teamchat-lastread-${roomId}`, Date.now().toString());
   };
 
-  const scrollToBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = (scrollRef: React.RefObject<HTMLDivElement>) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    }
   }
 
-  // Scroll to bottom whenever messages change or loading state changes
+  const isAtBottom = (scrollRef: React.RefObject<HTMLDivElement>) => {
+    if (!scrollRef.current) return true; // Assume at bottom if not loaded
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    return scrollTop + clientHeight >= scrollHeight - 10; // 10px threshold
+  }
+
+  // Scroll to bottom only if user is already at bottom
   useEffect(() => {
-    setTimeout(() => scrollToBottom(messagesEndRef), 100)
+    if (isAtBottom(chatScrollRef)) {
+      setTimeout(() => scrollToBottom(chatScrollRef), 100);
+    }
   }, [messages, isLoading])
 
   useEffect(() => {
-    setTimeout(() => scrollToBottom(teamChatEndRef), 100)
+    if (isAtBottom(teamScrollRef)) {
+      setTimeout(() => scrollToBottom(teamScrollRef), 100);
+    }
   }, [teamMessages])
 
   // Reset messages when document changes
@@ -441,7 +453,7 @@ function Chatbar({ className = '' }: { className?: string }) {
               className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-x-auto"
             >
               {/* Scrollable chat area */}
-              <ScrollArea className="flex-1 px-4 overflow-y-scroll">
+              <div ref={chatScrollRef} className="flex-1 px-4 overflow-y-auto">
                 <div className="space-y-4 py-4">
                   {messages.map((message, i) => (
                     <div
@@ -466,28 +478,28 @@ function Chatbar({ className = '' }: { className?: string }) {
                             <>
                               <div className="relative pb-8 max-w-[90%] break-words">
                                 <ReactMarkdown
-                                components={{
-                                  code: ({ node, inline, children, ...props }) => {
-                                    const code = String(children).replace(/\n$/, '')
-                                    // Check if the code contains HTML/XML tags or multiple lines
-                                    const isCodeBlock = !inline && (code.includes('<') || code.includes('\n'))
-                                    
-                                    if (isCodeBlock) {
-                                      return (
-                                        <div className="relative">
-                                          <pre className="!mt-0 overflow-x-auto max-w-full">
-                                            <code {...props} className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words">{code}</code>
-                                          </pre>
-                                        </div>
-                                      )
+                                  components={{
+                                    code: ({ node, inline, children, ...props }) => {
+                                      const code = String(children).replace(/\n$/, '')
+                                      // Check if the code contains HTML/XML tags or multiple lines
+                                      const isCodeBlock = !inline && (code.includes('<') || code.includes('\n'))
+
+                                      if (isCodeBlock) {
+                                        return (
+                                          <div className="relative">
+                                            <pre className="!mt-0 overflow-x-auto max-w-full">
+                                              <code {...props} className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words">{code}</code>
+                                            </pre>
+                                          </div>
+                                        )
+                                      }
+                                      // For inline code or simple text, render as inline
+                                      return <code {...props} className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">{children}</code>
                                     }
-                                    // For inline code or simple text, render as inline
-                                    return <code {...props} className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">{children}</code>
-                                  }
-                                }}
-                              >
-                                {message.content}
-                              </ReactMarkdown>
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
                                 <div className="absolute right-2 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                   <Button
                                     size="icon"
@@ -528,9 +540,8 @@ function Chatbar({ className = '' }: { className?: string }) {
                       {t("chatbar.loading")}
                     </div>
                   )}
-                  <div ref={messagesEndRef} />
                 </div>
-              </ScrollArea>
+              </div>
 
               {/* Fixed Footer */}
               <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 p-4 space-y-4 bg-white dark:bg-[#0f0f0f] z-10">
@@ -625,7 +636,7 @@ function Chatbar({ className = '' }: { className?: string }) {
                 className="flex-1 flex flex-col mt-0 data-[state=active]:flex overflow-hidden"
               >
                 {/* Scrollable team chat area */}
-                <ScrollArea className="flex-1 px-4">
+                <div ref={teamScrollRef} className="flex-1 px-4 overflow-y-auto">
                   <div className="space-y-4 py-4">
                     {teamMessages.map((message) => (
                       <div
@@ -641,19 +652,19 @@ function Chatbar({ className = '' }: { className?: string }) {
                         <div className="flex items-center gap-2">
                           {message.userId !==
                             user?.emailAddresses[0].emailAddress && (
-                            <div className="flex items-center gap-1">
-                              <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
-                                {message.userAvatar ? (
-                                  <Image src={message.userAvatar} alt={message.userName} width={24} height={24} className="w-full h-full object-cover" />
-                                ) : (
-                                  message.userName.charAt(0).toUpperCase()
-                                )}
+                              <div className="flex items-center gap-1">
+                                <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
+                                  {message.userAvatar ? (
+                                    <Image src={message.userAvatar} alt={message.userName} width={24} height={24} className="w-full h-full object-cover" />
+                                  ) : (
+                                    message.userName.charAt(0).toUpperCase()
+                                  )}
+                                </div>
+                                <span className="text-xs font-medium">
+                                  {message.userName}
+                                </span>
                               </div>
-                              <span className="text-xs font-medium">
-                                {message.userName}
-                              </span>
-                            </div>
-                          )}
+                            )}
                         </div>
                         <div
                           className={cn(
@@ -668,18 +679,17 @@ function Chatbar({ className = '' }: { className?: string }) {
                         <span className="text-xs text-muted-foreground px-2">
                           {message.timestamp?.toDate
                             ? message.timestamp
-                                .toDate()
-                                .toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
+                              .toDate()
+                              .toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : t("chatbar.justNow")}
                         </span>
                       </div>
                     ))}
-                    <div ref={teamChatEndRef} />
                   </div>
-                </ScrollArea>
+                </div>
 
                 {/* Fixed Footer for Team Chat */}
                 <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#0f0f0f] z-10">
