@@ -70,9 +70,11 @@ const ImageEmbedComponent = ({ block, editor }: ImageEmbedProps) => {
     x: 0,
     y: 0,
   });
+  const [isFocused, setIsFocused] = useState(false);
   const [resizeWidth, setResizeWidth] = useState<number>(block.props.width ?? 100);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pasteInputRef = useRef<HTMLTextAreaElement>(null);
 
   const url = block.props.url || "";
   const caption = block.props.caption || "";
@@ -90,6 +92,15 @@ const ImageEmbedComponent = ({ block, editor }: ImageEmbedProps) => {
     e.preventDefault();
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setShowContextMenu(true);
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    pasteInputRef.current?.focus();
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -240,7 +251,7 @@ const ImageEmbedComponent = ({ block, editor }: ImageEmbedProps) => {
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => {
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const items = Array.from(e.clipboardData.items);
     const imageItem = items.find((item) => item.type.startsWith("image/"));
     if (imageItem) {
@@ -273,12 +284,15 @@ const ImageEmbedComponent = ({ block, editor }: ImageEmbedProps) => {
   if (!url) {
     return (
       <div
-        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 my-2 bg-gray-50 dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-600 focus:border-blue-500 focus:outline-none transition-colors cursor-pointer"
+        className={`border-2 border-dashed rounded-lg p-8 my-2 bg-gray-50 dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-600 transition-colors cursor-pointer ${
+          isFocused ? 'border-blue-500' : 'border-gray-300 dark:border-gray-600'
+        } focus:outline-none`}
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
-        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         onClick={() => fileInputRef.current?.click()}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         tabIndex={0}
       >
         <input
@@ -294,6 +308,13 @@ const ImageEmbedComponent = ({ block, editor }: ImageEmbedProps) => {
             // Reset input
             e.target.value = "";
           }}
+        />
+        <textarea
+          ref={pasteInputRef}
+          className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+          onPaste={handlePaste}
+          readOnly
+          tabIndex={-1}
         />
         <div className="text-center">
           <ImageIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
@@ -311,9 +332,12 @@ const ImageEmbedComponent = ({ block, editor }: ImageEmbedProps) => {
   return (
     <div
       ref={containerRef}
-      className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden my-2 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-600 focus:border-blue-500 focus:outline-none transition-colors group relative"
+      className={`border rounded-lg overflow-hidden my-2 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-600 transition-colors group relative ${
+        isFocused ? 'border-blue-500' : 'border-gray-200 dark:border-gray-700'
+      } focus:outline-none`}
       onContextMenu={handleContextMenu}
-      onPaste={handlePaste}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
       style={{ width: `${resizeWidth}%`, margin: "8px auto" }}
       tabIndex={0}
     >
@@ -438,6 +462,13 @@ const ImageEmbedComponent = ({ block, editor }: ImageEmbedProps) => {
           }
           e.target.value = "";
         }}
+      />
+      <textarea
+        ref={pasteInputRef}
+        className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+        onPaste={handlePaste}
+        readOnly
+        tabIndex={-1}
       />
     </div>
   );

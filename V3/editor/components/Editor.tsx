@@ -12,6 +12,7 @@ import {
   BlockNoteEditor,
   BlockNoteSchema,
   defaultBlockSpecs,
+  PartialBlock,
 } from "@blocknote/core";
 import TranslateDocument from "./TranslateDocument";
 import Summarize from "./Summarize";
@@ -25,6 +26,7 @@ import { ImageEmbed } from "./embed/ImageEmbed";
 import { MermaidEmbed } from "./embed/MermaidEmbed";
 import { MessageSquare, BrainCircuit } from "lucide-react";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { toast } from "sonner";
 import {
   FormattingToolbar,
   FormattingToolbarController,
@@ -359,6 +361,99 @@ function Editor({
           }
         });
 
+        const customPasteHandler = async (context: {
+          event: ClipboardEvent;
+          editor: BlockNoteEditor;
+          defaultPasteHandler: () => boolean;
+        }) => {
+          const { event, editor, defaultPasteHandler } = context;
+          const clipboardData = event.clipboardData;
+
+          if (!clipboardData) {
+            return defaultPasteHandler(); // Fallback for no data
+          }
+
+          const items = Array.from(clipboardData.items);
+          let imageUrl: string | null = null;
+
+          // Case 1: Local image from clipboard/files (e.g., Ctrl+V copied image)
+          const imageItem = items.find((item) => item.type.startsWith("image/"));
+          if (imageItem) {
+            event.preventDefault(); // Stop default paste
+            const file = imageItem.getAsFile();
+            if (file && file.type.startsWith("image/")) {
+              if (file.size > 5 * 1024 * 1024) {
+                toast.error("Image too large (max 5MB)");
+                return true;
+              }
+              // Convert to data URL
+              const reader = new FileReader();
+              imageUrl = await new Promise<string>((resolve, reject) => {
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+            }
+          }
+
+          // Case 2: Pasted HTML with <img> tag (e.g., from Google)
+          if (!imageUrl) {
+            const html = clipboardData.getData("text/html");
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            const img = doc.querySelector("img");
+            if (img && img.src && !img.src.startsWith("data:")) {
+              event.preventDefault();
+              imageUrl = img.src;
+            }
+          }
+
+          // Case 3: Plain URL (fallback for direct URL paste)
+          if (!imageUrl) {
+            const text = clipboardData.getData("text/plain").trim();
+            if (text.match(/\.(jpg|jpeg|png|gif|webp)$/i) || text.startsWith("http") && text.includes("images")) {
+              imageUrl = text;
+            }
+          }
+
+          // Insert the custom imageEmbed block if we have a URL
+          if (imageUrl) {
+            const newBlock: PartialBlock = {
+              type: "imageEmbed" as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+              props: {
+                url: imageUrl,
+                caption: "",
+              },
+            };
+            // Insert at the current cursor position
+            const selection = editor.getSelection();
+            if (selection?.blocks?.[0]) {
+              // Insert after the selected block
+              await editor.insertBlocks([newBlock], selection.blocks[0], "after");
+            } else {
+              // Insert at cursor position when no selection
+              const cursorBlock = editor.getTextCursorPosition().block;
+              if (cursorBlock) {
+                await editor.insertBlocks([newBlock], cursorBlock, "after");
+              } else {
+                // Fallback: insert at the end if no cursor position
+                const allBlocks = editor.document;
+                const lastBlock = allBlocks[allBlocks.length - 1];
+                if (lastBlock) {
+                  await editor.insertBlocks([newBlock], lastBlock, "after");
+                } else {
+                  // If no blocks exist, insert as the first block
+                  await editor.insertBlocks([newBlock], undefined as any, "after"); // eslint-disable-line @typescript-eslint/no-explicit-any
+                }
+              }
+            }
+            return true; // Handled
+          }
+
+          // Fallback to default for non-image pastes
+          return defaultPasteHandler();
+        };
+
         const schema = BlockNoteSchema.create({
           blockSpecs: {
             ...defaultBlockSpecs,
@@ -375,6 +470,7 @@ function Editor({
 
         const blockNoteEditor = BlockNoteEditor.create({
           schema,
+          pasteHandler: customPasteHandler as any, // eslint-disable-line @typescript-eslint/no-explicit-any
           collaboration: {
             fragment: yFragment,
             user: {
