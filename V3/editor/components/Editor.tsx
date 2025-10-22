@@ -34,6 +34,8 @@ import {
   NestBlockButton,
   UnnestBlockButton,
   CreateLinkButton,
+  SuggestionMenuController,
+  getDefaultReactSlashMenuItems,
 } from "@blocknote/react";
 
 type EditorProps = {
@@ -185,6 +187,7 @@ const BlockNote = memo(function BlockNote({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [editor]);
+
 
   return (
     <div className={`relative mx-auto ${darkMode ? "dark" : ""}`}>
