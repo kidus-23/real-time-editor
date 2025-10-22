@@ -28,9 +28,14 @@ import {
   Block,
   blocksToMarkdown,
   markdownToBlocks,
+  BlockNoteSchema,
+  defaultBlockSpecs,
 } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
+import { LinkPreview } from "./embed/LinkPreview";
+import { VideoEmbed } from "./embed/VideoEmbed";
+import { ImageEmbed } from "./embed/ImageEmbed";
 
 interface Version {
   id: string;
@@ -48,13 +53,28 @@ interface VersionHistoryProps {
   onClose?: () => void;
 }
 
+// Create a schema with custom blocks for the preview editor
+const previewSchema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    linkPreview: LinkPreview as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    videoEmbed: VideoEmbed as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    imageEmbed: ImageEmbed as any,
+  },
+});
+
 // Sub-component to render a read-only preview of a version
 function PreviewEditor({ markdownContent }: { markdownContent: string }) {
   const [blocks, setBlocks] = useState<Block[] | undefined>(undefined);
 
   // Create preview editor first so we can use its pmSchema for parsing
   // NOTE: do not pass an empty initialContent array — the hook validates that initialContent is non-empty.
-  const previewEditor = useCreateBlockNote();
+  const previewEditor = useCreateBlockNote({
+    schema: previewSchema,
+  });
 
   useEffect(() => {
     const convert = async () => {
