@@ -28,9 +28,14 @@ import {
   Block,
   blocksToMarkdown,
   markdownToBlocks,
+  BlockNoteSchema,
+  defaultBlockSpecs,
 } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
+import { LinkPreview } from "./embed/LinkPreview";
+import { VideoEmbed } from "./embed/VideoEmbed";
+import { ImageEmbed } from "./embed/ImageEmbed";
 
 interface Version {
   id: string;
@@ -48,13 +53,28 @@ interface VersionHistoryProps {
   onClose?: () => void;
 }
 
+// Create a schema with custom blocks for the preview editor
+const previewSchema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    linkPreview: LinkPreview as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    videoEmbed: VideoEmbed as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    imageEmbed: ImageEmbed as any,
+  },
+});
+
 // Sub-component to render a read-only preview of a version
 function PreviewEditor({ markdownContent }: { markdownContent: string }) {
   const [blocks, setBlocks] = useState<Block[] | undefined>(undefined);
 
   // Create preview editor first so we can use its pmSchema for parsing
   // NOTE: do not pass an empty initialContent array — the hook validates that initialContent is non-empty.
-  const previewEditor = useCreateBlockNote();
+  const previewEditor = useCreateBlockNote({
+    schema: previewSchema,
+  });
 
   useEffect(() => {
     const convert = async () => {
@@ -203,6 +223,63 @@ export default function VersionHistory({
     };
   }, [documentId, isOpen, editor, selectedVersion]);
 
+  // Helper function to manually serialize custom blocks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serializeCustomBlocks = (blocks: any[]): any[] => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return blocks.map((block: any) => {
+      // Handle linkPreview blocks
+      if (block.type === "linkPreview" && block.props?.url) {
+        return {
+          type: "paragraph",
+          content: [
+            {
+              type: "link",
+              href: block.props.url,
+              content: [{ type: "text", text: block.props.url }],
+            },
+          ],
+        };
+      }
+
+      // Handle imageEmbed blocks
+      if (block.type === "imageEmbed" && block.props?.url) {
+        return {
+          type: "image",
+          props: {
+            url: block.props.url,
+            caption: block.props.caption || "",
+          },
+        };
+      }
+
+      // Handle videoEmbed blocks
+      if (block.type === "videoEmbed" && block.props?.url) {
+        const caption = block.props.caption || "Video";
+        return {
+          type: "paragraph",
+          content: [
+            {
+              type: "link",
+              href: block.props.url,
+              content: [{ type: "text", text: `🎥 ${caption}` }],
+            },
+          ],
+        };
+      }
+
+      // Recursively handle nested blocks (children)
+      if (block.children && Array.isArray(block.children)) {
+        return {
+          ...block,
+          children: serializeCustomBlocks(block.children),
+        };
+      }
+
+      return block;
+    });
+  };
+
   // Client-side handler to create a snapshot
   const handleCreateSnapshot = async () => {
     if (!user || !editor) return;
@@ -220,9 +297,12 @@ export default function VersionHistory({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pmSchema = editorAny?.pmSchema as any | undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const topLevelBlocks = editorAny?.topLevelBlocks as any | undefined;
+        let topLevelBlocks = editorAny?.topLevelBlocks as any | undefined;
 
         if (editorAny && pmSchema && topLevelBlocks) {
+          // Convert custom blocks to standard markdown-compatible blocks
+          topLevelBlocks = serializeCustomBlocks(topLevelBlocks);
+
           // Pass the editor instance as the 3rd argument to blocksToMarkdown to ensure internal serializers
           // can access editor helpers (matches ImportExportMenu usage).
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

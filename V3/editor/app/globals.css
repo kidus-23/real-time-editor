@@ -792,10 +792,7 @@ button[data-test="comment-button"]:hover::after {
   width: 0 !important;
   height: 0 !important;
 }
-
 * {
-  scrollbar-width: none !important;
-  /* Firefox */
-  -ms-overflow-style: none !important;
-  /* IE 10+ */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE 10+ */
 }
