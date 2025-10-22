@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/mantine/style.css";
+import "@blocknote/shadcn/style.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import LiveBlocksProvider from "@/components/LiveBlocksProvider";
