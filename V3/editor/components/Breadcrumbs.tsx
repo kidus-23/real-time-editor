@@ -51,7 +51,7 @@ function Breadcrumbs() {
         };
 
         fetchDocumentTitles();
-    }, [path]);
+    }, [path, originalSegments]);
 
     // Map segments to display names with i18n support
     const getDisplayName = (segment: string, index: number) => {
@@ -71,11 +71,11 @@ function Breadcrumbs() {
     };
 
     return (
-        <Breadcrumb className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400 overflow-hidden">
+        <Breadcrumb className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-neutral-300 overflow-hidden">
             <BreadcrumbItem>
                 <BreadcrumbLink
                     href="/"
-                    className="px-1 py-0.5 rounded hover:bg-gray-50 dark:hover:bg-neutral-900 transition"
+                    className="px-1 py-0.5 rounded hover:bg-gray-50 dark:hover:bg-neutral-900 transition text-gray-800 dark:text-neutral-300 font-semibold"
                 >
                     {t("breadcrumbs.home")}
                 </BreadcrumbLink>
@@ -88,16 +88,16 @@ function Breadcrumbs() {
 
                 return (
                     <Fragment key={`${segment}-${index}`}>
-                        <BreadcrumbSeparator className="text-gray-300 dark:text-neutral-700 flex items-center" />
+                        <BreadcrumbSeparator className="text-gray-400 dark:text-neutral-600 flex items-center" />
                         <BreadcrumbItem>
                             {isLast ? (
-                                <BreadcrumbPage className="font-medium text-gray-900 dark:text-white capitalize truncate px-1 py-0.5 max-w-[200px]">
+                                <BreadcrumbPage className="font-bold text-gray-900 dark:text-white capitalize truncate px-1 py-0.5 max-w-[200px]">
                                     {displayName}
                                 </BreadcrumbPage>
                             ) : (
                                 <BreadcrumbLink
                                     href={href}
-                                    className="px-1 py-0.5 rounded hover:bg-gray-50 dark:hover:bg-neutral-900 transition capitalize truncate max-w-[200px]"
+                                    className="px-1 py-0.5 rounded hover:bg-gray-50 dark:hover:bg-neutral-900 transition capitalize truncate max-w-[200px] text-gray-800 dark:text-neutral-300 font-semibold"
                                 >
                                     {displayName}
                                 </BreadcrumbLink>

@@ -377,51 +377,38 @@ export async function sendRoomInviteNotification(
   }
 }
 
-export async function acceptRoomInvite(
-  roomId: string,
-  inviteeEmail: string,
-  notificationId: string
-) {
-  const { sessionClaims } = await auth();
-  if (!sessionClaims?.email || sessionClaims.email !== inviteeEmail) {
-    throw new Error("Unauthorized");
-  }
-
-  try {
-    // Add user to room
-    await adminDB
-      .collection("users")
-      .doc(inviteeEmail)
-      .collection("rooms")
-      .doc(roomId)
-      .set({
-        userId: inviteeEmail,
-        role: "editor",
-        createAt: new Date(),
-        roomId: roomId,
-        lastOpened: new Date(),
-      });
-
-    // Mark notification as read if method exists
-    // Some Liveblocks client typings may not include this helper method.
-    // Use optional chaining to call it when present.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((liveblocks as any)?.markInboxNotificationAsRead) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (liveblocks as any).markInboxNotificationAsRead({
-        userId: inviteeEmail,
-        inboxNotificationId: notificationId,
-      });
+export async function acceptRoomInvite(roomId: string, inviteeEmail: string, notificationId: string) {
+    const { sessionClaims } = await auth();
+    if (!sessionClaims?.email || sessionClaims.email !== inviteeEmail) {
+        throw new Error("Unauthorized");
     }
 
-    return { success: true };
-  } catch (error) {
-    console.error("Error accepting room invite:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+    try {
+        // Add user to room
+        await adminDB
+            .collection('users')
+            .doc(inviteeEmail)
+            .collection('rooms')
+            .doc(roomId)
+            .set({
+                userId: inviteeEmail,
+                role: "editor",
+                createAt: new Date(),
+                roomId: roomId,
+                lastOpened: new Date(),
+            });
+
+        // Delete the notification since the invite is accepted
+        await liveblocks.deleteInboxNotification({
+            userId: inviteeEmail,
+            inboxNotificationId: notificationId,
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error accepting room invite:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
 }
 
 export async function declineRoomInvite(
@@ -433,23 +420,16 @@ export async function declineRoomInvite(
     throw new Error("Unauthorized");
   }
 
-  try {
-    // Just mark notification as read without adding to room
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((liveblocks as any)?.markInboxNotificationAsRead) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (liveblocks as any).markInboxNotificationAsRead({
-        userId: inviteeEmail,
-        inboxNotificationId: notificationId,
-      });
-    }
+    try {
+        // Just delete the notification since the invite is declined
+        await liveblocks.deleteInboxNotification({
+            userId: inviteeEmail,
+            inboxNotificationId: notificationId,
+        });
 
-    return { success: true };
-  } catch (error) {
-    console.error("Error declining room invite:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+        return { success: true };
+    } catch (error) {
+        console.error("Error declining room invite:", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
 }

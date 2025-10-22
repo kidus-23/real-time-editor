@@ -49,20 +49,20 @@ function DeleteDocument() {
             <div onClick={handleClick} className="w-full cursor-pointer">
                 {t("deleteDocument.button")}
             </div>
-            <DialogContent onClick={e => e.stopPropagation()}>
+            <DialogContent onClick={e => e.stopPropagation()} className="bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-gray-800 rounded-lg">
                 <DialogHeader>
-                    <DialogTitle>{t("deleteDocument.title")}</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-2xl font-bold tracking-tight">{t("deleteDocument.title")}</DialogTitle>
+                    <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
                         {t("deleteDocument.description")}
                     </DialogDescription>
                 </DialogHeader>
-                <DialogFooter className="sm:justify-end gap-2">
-                    <Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending}>
+                <DialogFooter className="sm:justify-end gap-3 mt-6">
+                    <DialogClose asChild>
+                        <Button type="button" variant="outline" size="lg" className="hover-scale">{t("deleteDocument.close")}</Button>
+                    </DialogClose>
+                    <Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending} size="lg" className="hover-scale">
                         {isPending ? t("deleteDocument.deleting") : t("deleteDocument.button")}
                     </Button>
-                    <DialogClose asChild>
-                        <Button type="button" variant="secondary">{t("deleteDocument.close")}</Button>
-                    </DialogClose>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

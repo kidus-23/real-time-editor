@@ -79,7 +79,7 @@ function Summarize({ editor }: SummarizeProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="hover:text-gray-900 dark:hover:text-white">
         <DialogTrigger>
           <FileTextIcon />
           {t("editor.summarize.button")}
@@ -102,7 +102,7 @@ function Summarize({ editor }: SummarizeProps) {
                 AI {isPending ? t("editor.summarize.generating") : "Summary"}:
               </p>
             </div>
-            <p>{isPending ? t("editor.summarize.generating") : <Markdown>{summary}</Markdown>}</p>
+            <div>{isPending ? t("editor.summarize.generating") : <Markdown>{summary}</Markdown>}</div>
           </div>
         )}
 

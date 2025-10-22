@@ -1,20 +1,30 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
-
 export async function POST(req: NextRequest) {
     try {
-        const { content } = await req.json();
-        
+        const { content, userApiKey } = await req.json();
+
         if (!content || content.trim().length === 0) {
-            return NextResponse.json({ 
+            return NextResponse.json({
                 success: false,
-                error: "No content provided" 
+                error: "No content provided"
             }, { status: 400 });
         }
-        
-        const model = genAI.getGenerativeModel({ 
+
+        // Use user's API key if provided, otherwise fall back to environment variable
+        const apiKey = userApiKey || process.env.GOOGLE_AI_API_KEY;
+
+        if (!apiKey) {
+            return NextResponse.json(
+                { error: 'No API key provided. Please configure your Google Gemini API key in settings.' },
+                { status: 401 }
+            );
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
             generationConfig: {
                 temperature: 0.2, // Lower temperature for more consistent tags
@@ -40,7 +50,7 @@ Document content to analyze: ${content}`;
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text().trim();
-        
+
         // Parse the response as JSON
         try {
             // First clean any potential markdown or extra whitespace
@@ -48,14 +58,14 @@ Document content to analyze: ${content}`;
                 .replace(/```json\s*|```\s*/g, '')  // Remove code blocks
                 .replace(/[\n\r\t]/g, '')           // Remove newlines and tabs
                 .trim();
-                
+
             // Ensure the text starts with [ and ends with ]
             if (!cleanedText.startsWith('[') || !cleanedText.endsWith(']')) {
                 throw new Error("Response is not in the expected JSON array format");
             }
-            
+
             const tags = JSON.parse(cleanedText);
-            
+
             if (!Array.isArray(tags)) {
                 throw new Error("Response is not an array");
             }
@@ -73,14 +83,14 @@ Document content to analyze: ${content}`;
             if (cleanedTags.length !== 3) {
                 throw new Error("Invalid tags received");
             }
-            
-            return NextResponse.json({ 
+
+            return NextResponse.json({
                 success: true,
                 tags: cleanedTags
             });
         } catch (parseError) {
             console.error('Failed to parse tags JSON:', parseError);
-            return NextResponse.json({ 
+            return NextResponse.json({
                 success: false,
                 error: "Failed to parse tags from AI response",
                 rawResponse: text

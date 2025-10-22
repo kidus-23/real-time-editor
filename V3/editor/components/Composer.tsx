@@ -10,7 +10,7 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { FormEvent, useState, useTransition } from "react";
-import { BotIcon, PencilIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "./ui/input";
 import { BlockNoteEditor, Block } from "@blocknote/core";
@@ -208,7 +208,7 @@ function Composer({ editor }: ComposerProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="hover:text-gray-900 dark:hover:text-white">
         <DialogTrigger>
           <PencilIcon />
           {t("editor.compose.button")}

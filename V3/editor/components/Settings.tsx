@@ -9,185 +9,173 @@ import { Switch } from './ui/switch'
 import { Label } from './ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Input } from './ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { toast } from 'sonner'
+import { useTranslation } from '@/hooks/useTranslation'
 
 function Settings() {
+  const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { user } = useUser()
-  
+
   // Editor settings
   const [autoSave, setAutoSave] = useState(true)
   const [fontSize, setFontSize] = useState('16')
   const [fontFamily, setFontFamily] = useState('default')
-  
+
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [collaborationAlerts, setCollaborationAlerts] = useState(true)
-  
+
   // Privacy settings
   const [shareEditHistory, setShareEditHistory] = useState(true)
   const [showOnlineStatus, setShowOnlineStatus] = useState(true)
-  
+
   const handleSaveSettings = () => {
     // In a real implementation, these settings would be saved to a database
     // For now, we'll just show a toast notification
-    toast.success('Settings saved successfully')
+    toast.success(t("settings.saveSuccess"))
   }
-  
+
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-gray-100">Settings</h1>
-      
-      <Tabs defaultValue="appearance" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="editor">Editor</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="privacy">Privacy</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="appearance" className="space-y-6">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-gray-100 dark:border-neutral-700 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Theme Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="theme-select">Theme</Label>
-                <Select value={theme} onValueChange={setTheme}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select theme" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center justify-between mt-4">
-                <Label>Language</Label>
-                <div className="w-[180px]">
-                  <LanguageSwitcher />
-                </div>
+    <div className="container max-w-5xl mx-auto py-12 px-6 animate-fade-in min-h-screen">
+      <h1 className="text-5xl font-bold mb-12 text-gray-900 dark:text-white tracking-tight">{t("settings.title")}</h1>
+
+      <div className="space-y-6">
+        {/* Appearance Settings */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.appearance.title")}</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="theme-select">{t("settings.appearance.theme")}</Label>
+              <Select value={theme} onValueChange={setTheme}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t("settings.appearance.themePlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">{t("settings.appearance.themeOptions.light")}</SelectItem>
+                  <SelectItem value="dark">{t("settings.appearance.themeOptions.dark")}</SelectItem>
+                  <SelectItem value="system">{t("settings.appearance.themeOptions.system")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label>{t("settings.appearance.language")}</Label>
+              <div className="w-[180px]">
+                <LanguageSwitcher />
               </div>
             </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="editor" className="space-y-6">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-gray-100 dark:border-neutral-700 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Editor Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="autosave-toggle">Auto Save</Label>
-                <Switch 
-                  id="autosave-toggle" 
-                  checked={autoSave} 
-                  onCheckedChange={setAutoSave} 
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="font-size">Font Size</Label>
-                <Input 
-                  id="font-size" 
-                  type="number" 
-                  value={fontSize} 
-                  onChange={(e) => setFontSize(e.target.value)} 
-                  className="w-[180px]" 
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="font-family">Font Family</Label>
-                <Select value={fontFamily} onValueChange={setFontFamily}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select font" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default</SelectItem>
-                    <SelectItem value="serif">Serif</SelectItem>
-                    <SelectItem value="mono">Monospace</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        </div>
+
+        {/* Editor Settings */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.editor.title")}</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="autosave-toggle">{t("settings.editor.autoSave")}</Label>
+              <Switch
+                id="autosave-toggle"
+                checked={autoSave}
+                onCheckedChange={setAutoSave}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="font-size">{t("settings.editor.fontSize")}</Label>
+              <Input
+                id="font-size"
+                type="number"
+                value={fontSize}
+                onChange={(e) => setFontSize(e.target.value)}
+                className="w-[180px]"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="font-family">{t("settings.editor.fontFamily")}</Label>
+              <Select value={fontFamily} onValueChange={setFontFamily}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t("settings.editor.fontPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">{t("settings.editor.fontOptions.default")}</SelectItem>
+                  <SelectItem value="serif">{t("settings.editor.fontOptions.serif")}</SelectItem>
+                  <SelectItem value="mono">{t("settings.editor.fontOptions.mono")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="notifications" className="space-y-6">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-gray-100 dark:border-neutral-700 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Notification Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="email-notifications">Email Notifications</Label>
-                <Switch 
-                  id="email-notifications" 
-                  checked={emailNotifications} 
-                  onCheckedChange={setEmailNotifications} 
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="collaboration-alerts">Collaboration Alerts</Label>
-                <Switch 
-                  id="collaboration-alerts" 
-                  checked={collaborationAlerts} 
-                  onCheckedChange={setCollaborationAlerts} 
-                />
-              </div>
+        </div>
+
+        {/* Notification Settings */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.notifications.title")}</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="email-notifications">{t("settings.notifications.email")}</Label>
+              <Switch
+                id="email-notifications"
+                checked={emailNotifications}
+                onCheckedChange={setEmailNotifications}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="collaboration-alerts">{t("settings.notifications.collaboration")}</Label>
+              <Switch
+                id="collaboration-alerts"
+                checked={collaborationAlerts}
+                onCheckedChange={setCollaborationAlerts}
+              />
             </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="privacy" className="space-y-6">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-gray-100 dark:border-neutral-700 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Privacy Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="share-edit-history">Share Edit History</Label>
-                <Switch 
-                  id="share-edit-history" 
-                  checked={shareEditHistory} 
-                  onCheckedChange={setShareEditHistory} 
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-online-status">Show Online Status</Label>
-                <Switch 
-                  id="show-online-status" 
-                  checked={showOnlineStatus} 
-                  onCheckedChange={setShowOnlineStatus} 
-                />
-              </div>
+        </div>
+
+        {/* Privacy Settings */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.privacy.title")}</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="share-edit-history">{t("settings.privacy.shareHistory")}</Label>
+              <Switch
+                id="share-edit-history"
+                checked={shareEditHistory}
+                onCheckedChange={setShareEditHistory}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-online-status">{t("settings.privacy.onlineStatus")}</Label>
+              <Switch
+                id="show-online-status"
+                checked={showOnlineStatus}
+                onCheckedChange={setShowOnlineStatus}
+              />
             </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="account" className="space-y-6">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-gray-100 dark:border-neutral-700 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Account Information</h2>
-            {user && (
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm text-gray-500 dark:text-gray-400">Email</Label>
-                  <p className="text-gray-800 dark:text-gray-200">{user.emailAddresses[0].toString()}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-500 dark:text-gray-400">Name</Label>
-                  <p className="text-gray-800 dark:text-gray-200">{user.fullName || 'Not provided'}</p>
-                </div>
+        </div>
+
+        {/* Account Information */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.account.title")}</h2>
+          {user && (
+            <div className="space-y-5">
+              <div>
+                <Label className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">{t("settings.account.email")}</Label>
+                <p className="text-lg text-gray-900 dark:text-gray-100 mt-2">{user.emailAddresses[0].toString()}</p>
               </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="mt-8 flex justify-end">
-        <Button onClick={handleSaveSettings}>Save Settings</Button>
+              <div>
+                <Label className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">{t("settings.account.name")}</Label>
+                <p className="text-lg text-gray-900 dark:text-gray-100 mt-2">{user.fullName || t("settings.account.notProvided")}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-10 flex justify-end">
+        <Button onClick={handleSaveSettings} size="lg" className="hover-scale">{t("settings.saveButton")}</Button>
       </div>
     </div>
   )
