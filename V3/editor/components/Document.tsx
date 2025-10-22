@@ -150,6 +150,37 @@ function Document({
   }, [undoManager]);
 
   // ============================================
+  // KEYBOARD SHORTCUTS FOR UNDO/REDO
+  // ============================================
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle Ctrl+Z (Undo)
+      if (e.ctrlKey && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        if (undoManager && undoManager.canUndo()) {
+          undoManager.undo();
+        }
+        return;
+      }
+
+      // Handle Ctrl+Y or Ctrl+Shift+Z (Redo)
+      if (
+        (e.ctrlKey && e.key === "y") ||
+        (e.ctrlKey && e.shiftKey && e.key === "z")
+      ) {
+        e.preventDefault();
+        if (undoManager && undoManager.canRedo()) {
+          undoManager.redo();
+        }
+        return;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [undoManager]);
+
+  // ============================================
   // REMOVED: Incorrect useEffect that caused the error
   // ============================================
   // THIS CODE WAS DELETED (DO NOT ADD IT BACK):
