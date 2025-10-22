@@ -73,14 +73,14 @@ export default function AddCommentDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[600px] bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-gray-800 rounded-lg">
+            <DialogContent className="sm:max-w-[600px] bg-card border border-border rounded-lg">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold tracking-tight">{t("addCommentDialog.title")}</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                     <div className="space-y-3">
-                        <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                        <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                             {t("addCommentDialog.labels.selectedText")}
                         </label>
                         <div
@@ -90,12 +90,12 @@ export default function AddCommentDialog({
                                 borderLeftColor: userColor
                             }}
                         >
-                            <p className="text-sm italic text-gray-700 dark:text-gray-300">&quot;{selectedText}&quot;</p>
+                            <p className="text-sm italic text-card-foreground">&quot;{selectedText}&quot;</p>
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">{t("addCommentDialog.labels.yourComment")}</label>
+                        <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t("addCommentDialog.labels.yourComment")}</label>
                         <Textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}

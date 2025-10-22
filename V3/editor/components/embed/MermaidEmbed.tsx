@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { createReactBlockSpec } from "@blocknote/react";
-import type { BlockNoteEditor } from "@blocknote/core";
 import { Textarea } from "@/components/ui/textarea";
 import { BrainCircuit, Pencil, Check } from "lucide-react";
 import mermaid from "mermaid";
@@ -11,32 +10,25 @@ import { toast } from "sonner";
 // Counter for unique chart IDs
 let mermaidIdCounter = 0;
 
-type MermaidEmbedProps = {
-  block: {
-    props: {
-      code: string;
-    };
-  };
-  editor: BlockNoteEditor;
-};
+type MermaidEmbedProps = Parameters<typeof createReactBlockSpec>[1]['render'] extends (props: infer P) => unknown ? P : never;
 
-const MermaidEmbedComponent = ({ block, editor }: MermaidEmbedProps) => {
+const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
+  const { block, editor } = props;
   const chartRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [isResizing, setIsResizing] = useState<boolean>(false);
   const [resizeWidth, setResizeWidth] = useState<number>(100);
   const [chartId] = useState(`mermaid-embed-${mermaidIdCounter++}`);
 
-  if (!block) return null;
+  const code = block?.props?.code || '';
 
   useEffect(() => {
     // Only render if not in edit mode
     if (isEditMode) return;
 
-    const theme = editor.props?.theme === "dark" ? "dark" : "default";
+    const theme = document.documentElement.classList.contains("dark") ? "dark" : "default";
 
     mermaid.initialize({
       startOnLoad: false,
@@ -54,22 +46,23 @@ const MermaidEmbedComponent = ({ block, editor }: MermaidEmbedProps) => {
 
         const { svg: renderedSvg } = await mermaid.render(
           chartId,
-          block.props.code
+          code
         );
         setSvg(renderedSvg);
         setError("");
-      } catch (err: any) {
+      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         setError(err.message || "Failed to render diagram");
         setSvg("");
       }
     };
 
     render();
-  }, [block.props.code, editor.props?.theme, chartId, isEditMode]);
+  }, [code, chartId, isEditMode]);
+
+  if (!block) return null;
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsResizing(true);
     const startX = e.clientX;
     const startWidth = containerRef.current?.offsetWidth || 0;
 
@@ -87,7 +80,6 @@ const MermaidEmbedComponent = ({ block, editor }: MermaidEmbedProps) => {
     };
 
     const handleMouseUp = () => {
-      setIsResizing(false);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
@@ -183,8 +175,9 @@ const MermaidEmbedComponent = ({ block, editor }: MermaidEmbedProps) => {
               value={block.props.code}
               onChange={(e) => {
                 editor.updateBlock(block, {
+                  type: "mermaid",
                   props: { code: e.target.value },
-                });
+                } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
               }}
               placeholder="Enter Mermaid diagram code..."
               className="font-mono text-sm min-h-[200px]"
@@ -216,13 +209,20 @@ export const MermaidEmbedSpec = {
     code: {
       default: "graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;",
     },
+    caption: {
+      default: "" as const,
+    },
+    name: {
+      default: "" as const,
+    },
   },
   content: "none" as const,
+  isFileBlock: false,
 };
 
 // Create the React block spec
 export const MermaidEmbed = createReactBlockSpec(MermaidEmbedSpec, {
-  render: (props) => <MermaidEmbedComponent {...props} />,
+  render: MermaidEmbedComponent as any,
   toExternalHTML: (props) => {
     return (
       <div data-block-type="mermaid">
