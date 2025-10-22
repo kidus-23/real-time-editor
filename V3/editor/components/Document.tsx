@@ -12,13 +12,13 @@ import DeleteDocument from "./DeleteDocument";
 import InviteUser from "./InviteUser";
 import ManageUsers from "./ManageUsers";
 import Avatars from "./Avatars";
-import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, ChevronRight, Clock, FileText, Users2, UserPlus, Users, Trash2, Tag, Maximize2, Minimize2, Expand } from "lucide-react";
+import { Crown, MoreHorizontal, User, X, Plus, Wand2, MessageSquare, ChevronRight, Clock, FileText, Users2, UserPlus, Users, Trash2, Tag, Maximize2, Minimize2, Expand, List } from "lucide-react";
 import { generateTags } from "@/actions/actions";
 import { updateLastOpened } from "@/actions/actions";
 import { useTheme } from "next-themes";
 import CommentsSidebar from "./CommentsSidebar";
 import AddCommentDialog from "./AddCommentDialog";
-import TableOfContents from "./TableOfContents";
+import InlineTableOfContents from "./InlineTableOfContents";
 import { query, where, onSnapshot } from "firebase/firestore";
 import { Comment } from "@/types/comment";
 import { useUser } from "@clerk/nextjs";
@@ -70,6 +70,17 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     const { zenMode, setZenMode } = useZenMode();
     const [fullWidth, setFullWidth] = useState(false);
     const [isTocOpen, setIsTocOpen] = useState(true);
+    const titleFormRef = useRef<HTMLFormElement>(null);
+
+    // Memoize fullWidth toggle to prevent lag
+    const toggleFullWidth = useCallback(() => {
+        setFullWidth(prev => !prev);
+    }, []);
+
+    // Memoize TOC toggle to prevent lag
+    const toggleToc = useCallback(() => {
+        setIsTocOpen(prev => !prev);
+    }, []);
 
     // Use initialData for immediate rendering, fall back to liveData
     const data = liveData ?? initialData ?? null;
@@ -370,13 +381,17 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
     };
 
     return (
-        <div className="min-h-screen w-full bg-[#fafafa] dark:bg-[#0f0f0f] transition-colors duration-300">
+        <div className="min-h-screen w-full bg-white dark:bg-[#0f0f0f] transition-colors duration-300">
             {/* Header with document controls */}
             <header className="sticky top-0 z-10 bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-all duration-300">
                 <div className="w-full">
                     <div className="flex items-center justify-between gap-4">
                         {/* Document title form */}
-                        <form className="flex-1 flex items-center gap-3 group" onSubmit={updateTitle}>
+                        <form 
+                            ref={titleFormRef}
+                            className="flex-1 flex items-center gap-3 group relative" 
+                            onSubmit={updateTitle}
+                        >
                             <Input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
@@ -497,7 +512,7 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                         </div>
                                     </DropdownMenuItem>
                                     {/* Full Width Toggle */}
-                                    <DropdownMenuItem onSelect={() => setFullWidth(!fullWidth)}>
+                                    <DropdownMenuItem onSelect={toggleFullWidth}>
                                         <div className="flex items-center justify-between w-full">
                                             <div className="flex items-center gap-2">
                                                 <Expand className="h-4 w-4" />
@@ -505,6 +520,19 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
                                             </div>
                                             <div className={`w-9 h-5 rounded-full transition-colors ${fullWidth ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'} relative`}>
                                                 <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${fullWidth ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </div>
+                                        </div>
+                                    </DropdownMenuItem>
+
+                                    {/* Table of Contents Toggle */}
+                                    <DropdownMenuItem onSelect={toggleToc}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-2">
+                                                <List className="h-4 w-4" />
+                                                <span>Table of Contents</span>
+                                            </div>
+                                            <div className={`w-9 h-5 rounded-full transition-colors ${isTocOpen ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'} relative`}>
+                                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isTocOpen ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </div>
                                         </div>
                                     </DropdownMenuItem>
@@ -613,16 +641,16 @@ function Document({ id, initialData }: { id: string; initialData?: FirestoreDocu
             </header>
 
             {/* Main editor area with proper padding */}
-            <main className={`w-full ${fullWidth ? 'px-4 md:px-8' : 'px-4 md:px-8 lg:px-12'} py-6 relative ${
-                fullWidth ? 'max-w-full' : zenMode ? 'max-w-[1400px]' : 'max-w-[1400px]'
-            } mx-auto transition-all duration-300`}>
+            <main className={`w-full px-4 md:px-8 lg:px-12 py-6 relative ${
+                fullWidth ? 'max-w-full' : 'max-w-[1400px]'
+            } mx-auto transition-[max-width] duration-150 ease-out`}>
                 <div className="min-h-[80vh]">
                     <Editor darkMode={theme === 'dark'} onEditorReady={setBlockEditor} onCommentClick={handleCommentClick} />
                 </div>
             </main>
 
-            {/* Table of Contents */}
-            {!fullWidth && <TableOfContents isOpen={isTocOpen} onToggle={() => setIsTocOpen(!isTocOpen)} />}
+            {/* Table of Contents - Sticky top-right */}
+            {isTocOpen && <InlineTableOfContents key="toc" containerSelector=".bn-container" />}
 
             {/* Comment Components */}
             <CommentsSidebar
