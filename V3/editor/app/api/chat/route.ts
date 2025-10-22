@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         }
 
         // If document context is provided, add it to the messages
-        let chatMessages = [...messages];
+        const chatMessages = [...messages];
 
         if (documentContext) {
             // Add document context as a system message at the beginning
@@ -138,10 +138,11 @@ export async function POST(req: NextRequest) {
             model: data.model,
             usage: data.usage
         });
-    } catch (error: any) {
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your request';
         console.error('Chat Error:', error);
         return NextResponse.json(
-            { error: error.message || 'An error occurred while processing your request' },
+            { error: errorMessage },
             { status: 500 }
         );
     }

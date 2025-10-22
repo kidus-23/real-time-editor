@@ -23,10 +23,20 @@ interface APIKeySettingsProps {
     onOpenChange: (open: boolean) => void
 }
 
+interface Dictionary {
+    apiKeys?: {
+        features?: {
+            openrouter?: string[]
+            gemini?: string[]
+            cloudflare?: string[]
+        }
+    }
+}
+
 export default function APIKeySettings({ open, onOpenChange }: APIKeySettingsProps) {
     const { t } = useTranslation()
     const context = useContext(LocaleContext)
-    const dictionary = context?.dictionary as any
+    const dictionary = context?.dictionary as Dictionary
     const [apiKeys, setApiKeys] = useState<APIKeys>({})
     const [showKeys, setShowKeys] = useState<Record<string, boolean>>({})
     const [isSaving, setIsSaving] = useState(false)
@@ -51,7 +61,7 @@ export default function APIKeySettings({ open, onOpenChange }: APIKeySettingsPro
             localStorage.setItem('user-api-keys', JSON.stringify(apiKeys))
             toast.success(t("apiKeys.toast.saved"))
             onOpenChange(false)
-        } catch (error) {
+        } catch {
             toast.error(t("apiKeys.toast.saveFailed"))
         } finally {
             setIsSaving(false)

@@ -23,7 +23,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         <>
             <Header className={zenMode ? 'hidden' : ''} />
             <div className="flex min-h-screen">
-                <Sidebar className={zenMode ? 'hidden' : ''} />
+                <Sidebar className="" forceCollapsed={zenMode} />
                 <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto scrollbar-hide">
                     {children}
                 </div>

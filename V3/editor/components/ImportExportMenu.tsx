@@ -3,7 +3,7 @@
 import { ChangeEvent, useCallback, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Download, Upload, Loader2, FileDown, FileUp, FileText, File, FileJson, FileCode } from 'lucide-react';
+import { Download, Loader2, FileDown, FileUp, FileText, File, FileJson, FileCode } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     Block,
@@ -16,7 +16,6 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
-import { cn } from '@/lib/utils';
 
 const MIME_TYPES = {
     markdown: 'text/markdown',
@@ -81,8 +80,15 @@ function ImportExportMenu({ editor, asMenuItem = false }: ImportExportMenuProps)
                 }
             };
 
-            blocks.forEach((block: any) => {
-                const content = block.content?.map((c: any) => c.text).join('') || '';
+            blocks.forEach((block: Block) => {
+                const content = Array.isArray(block.content) 
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ? block.content.map((c: any) => {
+                        if ('text' in c) return c.text;
+                        if ('content' in c && typeof c.content === 'string') return c.content;
+                        return '';
+                    }).join('') 
+                    : '';
 
                 if (block.type === 'heading') {
                     const fontSize = block.props?.level === 1 ? 18 : block.props?.level === 2 ? 16 : 14;
@@ -135,8 +141,15 @@ function ImportExportMenu({ editor, asMenuItem = false }: ImportExportMenuProps)
 
             const docParagraphs: Paragraph[] = [];
 
-            blocks.forEach((block: any) => {
-                const content = block.content?.map((c: any) => c.text).join('') || '';
+            blocks.forEach((block: Block) => {
+                const content = Array.isArray(block.content) 
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ? block.content.map((c: any) => {
+                        if ('text' in c) return c.text;
+                        if ('content' in c && typeof c.content === 'string') return c.content;
+                        return '';
+                    }).join('') 
+                    : '';
 
                 if (block.type === 'heading') {
                     const level = block.props?.level === 1 ? HeadingLevel.HEADING_1 :
