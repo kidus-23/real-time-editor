@@ -203,6 +203,63 @@ export default function VersionHistory({
     };
   }, [documentId, isOpen, editor, selectedVersion]);
 
+  // Helper function to manually serialize custom blocks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serializeCustomBlocks = (blocks: any[]): any[] => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return blocks.map((block: any) => {
+      // Handle linkPreview blocks
+      if (block.type === "linkPreview" && block.props?.url) {
+        return {
+          type: "paragraph",
+          content: [
+            {
+              type: "link",
+              href: block.props.url,
+              content: [{ type: "text", text: block.props.url }],
+            },
+          ],
+        };
+      }
+
+      // Handle imageEmbed blocks
+      if (block.type === "imageEmbed" && block.props?.url) {
+        return {
+          type: "image",
+          props: {
+            url: block.props.url,
+            caption: block.props.caption || "",
+          },
+        };
+      }
+
+      // Handle videoEmbed blocks
+      if (block.type === "videoEmbed" && block.props?.url) {
+        const caption = block.props.caption || "Video";
+        return {
+          type: "paragraph",
+          content: [
+            {
+              type: "link",
+              href: block.props.url,
+              content: [{ type: "text", text: `🎥 ${caption}` }],
+            },
+          ],
+        };
+      }
+
+      // Recursively handle nested blocks (children)
+      if (block.children && Array.isArray(block.children)) {
+        return {
+          ...block,
+          children: serializeCustomBlocks(block.children),
+        };
+      }
+
+      return block;
+    });
+  };
+
   // Client-side handler to create a snapshot
   const handleCreateSnapshot = async () => {
     if (!user || !editor) return;
@@ -220,9 +277,12 @@ export default function VersionHistory({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pmSchema = editorAny?.pmSchema as any | undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const topLevelBlocks = editorAny?.topLevelBlocks as any | undefined;
+        let topLevelBlocks = editorAny?.topLevelBlocks as any | undefined;
 
         if (editorAny && pmSchema && topLevelBlocks) {
+          // Convert custom blocks to standard markdown-compatible blocks
+          topLevelBlocks = serializeCustomBlocks(topLevelBlocks);
+
           // Pass the editor instance as the 3rd argument to blocksToMarkdown to ensure internal serializers
           // can access editor helpers (matches ImportExportMenu usage).
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

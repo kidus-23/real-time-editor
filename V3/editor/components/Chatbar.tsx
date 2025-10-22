@@ -1,40 +1,77 @@
 // components/Chatbar.tsx
 "use client";
-
-import { useState, useRef, useEffect } from "react"
-import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users, FileText, Copy, Check } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Image from "next/image";
+import { useState, useRef, useEffect } from "react";
+import {
+  MessagesSquare,
+  Pencil,
+  X,
+  Bot,
+  Send,
+  Loader2,
+  Settings,
+  Users,
+  FileText,
+  Copy,
+  Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetClose,
-} from "@/components/ui/sheet"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
-import { AI_MODELS } from "@/lib/constants"
-import { usePathname } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
-import { Badge } from "@/components/ui/badge"
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, Timestamp } from "firebase/firestore"
-import { db } from "@/firebase"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { useTranslation } from "@/hooks/useTranslation"
-import APIKeySettings from "@/components/APIKeySettings"
-import ReactMarkdown from 'react-markdown'
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { AI_MODELS } from "@/lib/constants";
+import { usePathname } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { Badge } from "@/components/ui/badge";
+import {
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/firebase";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useTranslation } from "@/hooks/useTranslation";
+import APIKeySettings from "@/components/APIKeySettings";
+import ReactMarkdown from "react-markdown";
 
 // Import useRoom but don't use it directly
-import { useRoom } from "@liveblocks/react"
+import { useRoom } from "@liveblocks/react";
 
 // Build model categories from AI_MODELS to ensure UI only shows supported models
-const MODEL_CATEGORIES: Record<string, { id: string; name: string; description?: string }[]> = {
-  OpenAI: Object.entries(AI_MODELS.OPENAI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
-  Gemini: Object.entries(AI_MODELS.GEMINI).map(([id, meta]) => ({ id, name: (meta as any).name || id, description: (meta as any).type })),
-}
+const MODEL_CATEGORIES: Record<
+  string,
+  { id: string; name: string; description?: string }[]
+> = {
+  OpenAI: Object.entries(AI_MODELS.OPENAI).map(([id, meta]) => ({
+    id,
+    name: (meta as any).name || id,
+    description: (meta as any).type,
+  })),
+  Gemini: Object.entries(AI_MODELS.GEMINI).map(([id, meta]) => ({
+    id,
+    name: (meta as any).name || id,
+    description: (meta as any).type,
+  })),
+};
 
 interface Message {
   role: "user" | "assistant";
@@ -50,31 +87,31 @@ interface Message {
 }
 
 interface TeamChatMessage {
-  id?: string
-  content: string
-  userId: string
-  userName: string
-  userAvatar?: string
-  timestamp: Timestamp | null
+  id?: string;
+  content: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  timestamp: Timestamp | null;
 }
 
-function Chatbar({ className = '' }: { className?: string }) {
-  const [copiedCode, setCopiedCode] = useState<string | null>(null)
-  const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [teamMessages, setTeamMessages] = useState<TeamChatMessage[]>([])
-  const [input, setInput] = useState('')
-  const [teamChatInput, setTeamChatInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+function Chatbar({ className = "" }: { className?: string }) {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [teamMessages, setTeamMessages] = useState<TeamChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [teamChatInput, setTeamChatInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   // Default to a model known in `lib/constants.ts` to avoid sending unsupported provider formats
-  const [activeModel, setActiveModel] = useState('gemini-2.5-flash') // Default model
-  const [showSettings, setShowSettings] = useState(false)
-  const [showAPIKeySettings, setShowAPIKeySettings] = useState(false)
-  const [useDocumentContext, setUseDocumentContext] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [activeTab, setActiveTab] = useState('chat')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const teamChatEndRef = useRef<HTMLDivElement>(null)
+  const [activeModel, setActiveModel] = useState("gemini-2.5-flash"); // Default model
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAPIKeySettings, setShowAPIKeySettings] = useState(false);
+  const [useDocumentContext, setUseDocumentContext] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [activeTab, setActiveTab] = useState("chat");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const teamChatEndRef = useRef<HTMLDivElement>(null);
 
   const pathname = usePathname();
   const { user } = useUser();
@@ -97,23 +134,23 @@ function Chatbar({ className = '' }: { className?: string }) {
   };
 
   const scrollToBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    ref.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Scroll to bottom whenever messages change or loading state changes
   useEffect(() => {
-    setTimeout(() => scrollToBottom(messagesEndRef), 100)
-  }, [messages, isLoading])
+    setTimeout(() => scrollToBottom(messagesEndRef), 100);
+  }, [messages, isLoading]);
 
   useEffect(() => {
-    setTimeout(() => scrollToBottom(teamChatEndRef), 100)
-  }, [teamMessages])
+    setTimeout(() => scrollToBottom(teamChatEndRef), 100);
+  }, [teamMessages]);
 
   // Reset messages when document changes
   useEffect(() => {
-    setMessages([])
-    setUseDocumentContext(false)
-  }, [pathname])
+    setMessages([]);
+    setUseDocumentContext(false);
+  }, [pathname]);
 
   // Reset to chat tab when sheet closes
   useEffect(() => {
@@ -184,44 +221,44 @@ function Chatbar({ className = '' }: { className?: string }) {
   // Function to get document content
   const getDocumentContent = async () => {
     if (!isDocumentPage || !roomId) {
-      setDocumentContent(null)
-      return null
+      setDocumentContent(null);
+      return null;
     }
 
     try {
       // Get the document content from the DOM
-      const container = document.querySelector('.bn-container')
+      const container = document.querySelector(".bn-container");
       if (!container) {
-        console.warn('Editor container not found')
-        return null
+        console.warn("Editor container not found");
+        return null;
       }
 
       // Get all text content, including headers and content
-      const editorContent = container.textContent || ''
+      const editorContent = container.textContent || "";
       if (!editorContent.trim()) {
-        console.warn('Empty document content')
-        return null
+        console.warn("Empty document content");
+        return null;
       }
 
-      setDocumentContent(editorContent)
-      return editorContent
+      setDocumentContent(editorContent);
+      return editorContent;
     } catch (error) {
-      console.error('Error getting document content:', error)
-      return null
+      console.error("Error getting document content:", error);
+      return null;
     }
   };
 
   // Update document content when context is enabled
   useEffect(() => {
     if (useDocumentContext && isDocumentPage) {
-      getDocumentContent()
+      getDocumentContent();
     }
-  }, [useDocumentContext, isDocumentPage])
+  }, [useDocumentContext, isDocumentPage]);
 
   // Toggle document context
   const toggleDocumentContext = () => {
-    setUseDocumentContext(!useDocumentContext)
-  }
+    setUseDocumentContext(!useDocumentContext);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,90 +276,108 @@ function Chatbar({ className = '' }: { className?: string }) {
 
     try {
       // If document context is enabled, ensure we have the latest content
-      let context = null
+      let context = null;
       if (useDocumentContext) {
-        context = await getDocumentContent()
+        context = await getDocumentContent();
         if (!context) {
-          throw new Error('Could not get document content. Make sure a document is open.')
+          throw new Error(
+            "Could not get document content. Make sure a document is open."
+          );
         }
       }
 
       // Get user's API keys from localStorage
-      let userApiKeys: Record<string, string> = {}
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('user-api-keys')
+      let userApiKeys: Record<string, string> = {};
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("user-api-keys");
         if (stored) {
           try {
-            userApiKeys = JSON.parse(stored)
+            userApiKeys = JSON.parse(stored);
           } catch (e) {
-            console.error('Failed to parse API keys:', e)
+            console.error("Failed to parse API keys:", e);
           }
         }
       }
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [...messages, newMessage],
           model: activeModel,
           documentContext: context,
-          userApiKeys: userApiKeys
+          userApiKeys: userApiKeys,
         }),
-      })
-      let data: any = null
+      });
+      let data: any = null;
       if (!response.ok) {
         // Try to extract error message from body
-        let bodyText = ''
+        let bodyText = "";
         try {
-          bodyText = await response.text()
-          const parsed = bodyText ? JSON.parse(bodyText) : null
-          const msg = parsed?.error || parsed?.message || bodyText
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: (typeof msg === 'string' ? msg : JSON.stringify(msg)),
-            timestamp: new Date(),
-            status: 'error'
-          }])
+          bodyText = await response.text();
+          const parsed = bodyText ? JSON.parse(bodyText) : null;
+          const msg = parsed?.error || parsed?.message || bodyText;
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: typeof msg === "string" ? msg : JSON.stringify(msg),
+              timestamp: new Date(),
+              status: "error",
+            },
+          ]);
         } catch (e) {
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: 'Failed to get response from server',
-            timestamp: new Date(),
-            status: 'error'
-          }])
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Failed to get response from server",
+              timestamp: new Date(),
+              status: "error",
+            },
+          ]);
         }
-        throw new Error('Non-OK response')
+        throw new Error("Non-OK response");
       }
 
       try {
-        data = await response.json()
+        data = await response.json();
       } catch (e) {
-        const text = await response.text()
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: 'Invalid JSON response from server: ' + text,
-          timestamp: new Date(),
-          status: 'error'
-        }])
-        throw e
+        const text = await response.text();
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Invalid JSON response from server: " + text,
+            timestamp: new Date(),
+            status: "error",
+          },
+        ]);
+        throw e;
       }
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date(),
-        status: 'success',
-        model: data.model,
-        usage: data.usage
-      }])
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: data.response,
+          timestamp: new Date(),
+          status: "success",
+          model: data.model,
+          usage: data.usage,
+        },
+      ]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : t("chatbar.error")
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: errorMessage,
-        timestamp: new Date(),
-        status: 'error'
-      }])
+      const errorMessage =
+        error instanceof Error ? error.message : t("chatbar.error");
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: errorMessage,
+          timestamp: new Date(),
+          status: "error",
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -347,14 +402,16 @@ function Chatbar({ className = '' }: { className?: string }) {
     } catch (error) {
       console.error("Error sending team chat message:", error);
     }
-  }
+  };
 
   // Determine if Team Chat tab should be shown
   const showTeamChat = isDocumentPage && roomId;
 
   return (
     <>
-      <div className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${className}`}>
+      <div
+        className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${className}`}
+      >
         <Button
           onClick={() => setIsOpen(true)}
           className="relative h-12 w-12 rounded-full bg-primary shadow-lg hover:shadow-primary/25 transition-all duration-300"
@@ -455,52 +512,80 @@ function Chatbar({ className = '' }: { className?: string }) {
                         <div
                           className={cn(
                             "rounded-lg px-3 py-2 w-fit",
-                            message.role === 'user'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
+                            message.role === "user"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
                           )}
                         >
-                          {message.role === 'user' ? (
+                          {message.role === "user" ? (
                             message.content
                           ) : (
                             <>
                               <div className="relative pb-8 max-w-[90%] break-words">
                                 <ReactMarkdown
-                                components={{
-                                  code: ({ node, inline, children, ...props }) => {
-                                    const code = String(children).replace(/\n$/, '')
-                                    // Check if the code contains HTML/XML tags or multiple lines
-                                    const isCodeBlock = !inline && (code.includes('<') || code.includes('\n'))
-                                    
-                                    if (isCodeBlock) {
+                                  components={{
+                                    code: ({
+                                      node,
+                                      inline,
+                                      children,
+                                      ...props
+                                    }) => {
+                                      const code = String(children).replace(
+                                        /\n$/,
+                                        ""
+                                      );
+                                      // Check if the code contains HTML/XML tags or multiple lines
+                                      const isCodeBlock =
+                                        !inline &&
+                                        (code.includes("<") ||
+                                          code.includes("\n"));
+
+                                      if (isCodeBlock) {
+                                        return (
+                                          <div className="relative">
+                                            <pre className="!mt-0 overflow-x-auto max-w-full">
+                                              <code
+                                                {...props}
+                                                className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words"
+                                              >
+                                                {code}
+                                              </code>
+                                            </pre>
+                                          </div>
+                                        );
+                                      }
+                                      // For inline code or simple text, render as inline
                                       return (
-                                        <div className="relative">
-                                          <pre className="!mt-0 overflow-x-auto max-w-full">
-                                            <code {...props} className="block p-4 bg-zinc-950 dark:bg-zinc-900 text-zinc-50 dark:text-zinc-50 rounded-lg whitespace-pre-wrap break-words">{code}</code>
-                                          </pre>
-                                        </div>
-                                      )
-                                    }
-                                    // For inline code or simple text, render as inline
-                                    return <code {...props} className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">{children}</code>
-                                  }
-                                }}
-                              >
-                                {message.content}
-                              </ReactMarkdown>
+                                        <code
+                                          {...props}
+                                          className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded"
+                                        >
+                                          {children}
+                                        </code>
+                                      );
+                                    },
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
                                 <div className="absolute right-2 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                   <Button
                                     size="icon"
                                     variant="ghost"
                                     className="h-8 w-8 bg-background/90 backdrop-blur"
                                     onClick={() => {
-                                      navigator.clipboard.writeText(message.content)
-                                      setCopiedCode('full-' + i)
-                                      setTimeout(() => setCopiedCode(null), 2000)
+                                      navigator.clipboard.writeText(
+                                        message.content
+                                      );
+                                      setCopiedCode("full-" + i);
+                                      setTimeout(
+                                        () => setCopiedCode(null),
+                                        2000
+                                      );
                                     }}
                                     title="Copy full response"
                                   >
-                                    {copiedCode === 'full-' + i ? (
+                                    {copiedCode === "full-" + i ? (
                                       <Check className="h-4 w-4 text-green-500" />
                                     ) : (
                                       <Copy className="h-4 w-4" />
@@ -644,7 +729,13 @@ function Chatbar({ className = '' }: { className?: string }) {
                             <div className="flex items-center gap-1">
                               <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
                                 {message.userAvatar ? (
-                                  <Image src={message.userAvatar} alt={message.userName} width={24} height={24} className="w-full h-full object-cover" />
+                                  <Image
+                                    src={message.userAvatar}
+                                    alt={message.userName}
+                                    width={24}
+                                    height={24}
+                                    className="w-full h-full object-cover"
+                                  />
                                 ) : (
                                   message.userName.charAt(0).toUpperCase()
                                 )}
@@ -658,9 +749,10 @@ function Chatbar({ className = '' }: { className?: string }) {
                         <div
                           className={cn(
                             "rounded-xl px-4 py-3 max-w-[80%] transition-all duration-200",
-                            message.userId === user?.emailAddresses[0].emailAddress
-                              ? 'bg-primary text-primary-foreground shadow-md hover-lift'
-                              : 'bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700'
+                            message.userId ===
+                              user?.emailAddresses[0].emailAddress
+                              ? "bg-primary text-primary-foreground shadow-md hover-lift"
+                              : "bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700"
                           )}
                         >
                           {message.content}
@@ -683,7 +775,10 @@ function Chatbar({ className = '' }: { className?: string }) {
 
                 {/* Fixed Footer for Team Chat */}
                 <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#0f0f0f] z-10">
-                  <form onSubmit={handleTeamChatSubmit} className="flex items-center gap-2">
+                  <form
+                    onSubmit={handleTeamChatSubmit}
+                    className="flex items-center gap-2"
+                  >
                     <Textarea
                       value={teamChatInput}
                       onChange={(e) => setTeamChatInput(e.target.value)}

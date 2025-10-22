@@ -227,20 +227,33 @@ const ContextMenu = ({
     );
 };
 
-export const VideoEmbed = createReactBlockSpec(
-    {
-        type: 'videoEmbed' as const,
-        propSchema: {
-            url: {
-                default: '',
-            },
-            caption: {
-                default: '',
-            },
+const videoEmbedSpec = {
+    type: 'videoEmbed' as const,
+    propSchema: {
+        url: {
+            default: '',
         },
-        content: 'none',
+        caption: {
+            default: '',
+        },
     },
-    {
-        render: (props) => <VideoEmbedComponent block={props.block} />,
-    }
-);
+    content: 'none',
+};
+
+export const VideoEmbed = createReactBlockSpec(videoEmbedSpec, {
+    render: (props) => <VideoEmbedComponent block={props.block} />,
+    
+    // Serialize video embeds to markdown as links with a video indicator
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    toMarkdown: (block: any) => {
+        const url = block.props?.url || '';
+        const caption = block.props?.caption;
+        if (!url) return '';
+        
+        // Format as a markdown link with caption if available
+        if (caption) {
+            return `[🎥 ${caption}](${url})`;
+        }
+        return `[🎥 Video](${url})`;
+    },
+});
