@@ -253,8 +253,20 @@ function Editor({
         // Create UndoManager for the fragment
         const undoManager = new Y.UndoManager(yFragment);
 
-        // Send undoManager to parent component
-        onUndoManagerReady?.(undoManager);
+        // Capture and track the PluginKey origin that BlockNote uses
+        let capturedOrigin: any = null;
+        yDoc.on("update", (update: Uint8Array, origin: any) => {
+          // Capture the first PluginKey origin we see and add it to tracked origins
+          if (
+            origin &&
+            typeof origin === "object" &&
+            origin.key === "y-sync$" &&
+            !capturedOrigin
+          ) {
+            capturedOrigin = origin;
+            undoManager.trackedOrigins.add(origin);
+          }
+        });
 
         const schema = BlockNoteSchema.create({
           blockSpecs: {
@@ -279,7 +291,6 @@ function Editor({
                 stringToColor(room.getSelf()?.info?.email || "1"),
             },
             provider: yProvider,
-            undoManager: undoManager,
           },
           _tiptapOptions: {
             editorProps: {
@@ -289,6 +300,11 @@ function Editor({
             },
           },
         });
+
+        // Send UndoManager to parent component
+        onUndoManagerReady?.(undoManager);
+        console.log("Sent UndoManager to parent component");
+
         setEditor(blockNoteEditor as BlockNoteEditor<any>);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (onEditorReady as any)?.(blockNoteEditor as any);
