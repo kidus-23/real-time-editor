@@ -79,7 +79,7 @@ function Summarize({ editor }: SummarizeProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline" className="hover:bg-black hover:text-white dark:hover:text-white">
+      <Button asChild variant="outline" className="hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black">
         <DialogTrigger>
           <FileTextIcon />
           {t("editor.summarize.button")}
@@ -95,7 +95,7 @@ function Summarize({ editor }: SummarizeProps) {
         </DialogHeader>
 
         {summary && (
-          <div className="flex flex-col items-start max-h-96 overflow-y-scroll gap-2 p-5 bg-grey-100">
+          <div className="flex flex-col items-start max-h-96 overflow-y-scroll gap-2 p-5 bg-card">
             <div className="flex">
               <BotIcon className="w-10 flex-shrink-0" />
               <p className="font-bold">

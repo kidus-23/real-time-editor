@@ -178,13 +178,13 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-gray-800 rounded-lg">
+      <DialogContent className="sm:max-w-2xl bg-card border border-border rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold tracking-tight">{t("searchDialog.title")}</DialogTitle>
         </DialogHeader>
         <div className="relative mt-4">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            <Search className="h-5 w-5 text-muted-foreground" />
           </div>
           <Input
             type="text"
@@ -206,8 +206,8 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
         <div className="mt-6 max-h-[400px] overflow-y-auto scrollbar-custom">
           {results.length === 0 && searchQuery && !isSearching ? (
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-8 text-center">
-              <p className="text-base text-gray-600 dark:text-gray-400 font-medium">
+            <div className="bg-muted rounded-lg p-8 text-center">
+              <p className="text-base text-muted-foreground font-medium">
                 {t("searchDialog.noResults")}
               </p>
             </div>
@@ -217,11 +217,11 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                 <div
                   key={result.id}
                   onClick={() => handleResultClick(result.roomId)}
-                  className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg p-5 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer transition-all duration-300"
+                  className="bg-muted rounded-lg p-5 hover:bg-muted/80 cursor-pointer transition-all duration-300"
                 >
-                  <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{result.title}</h3>
+                  <h3 className="font-bold text-lg text-card-foreground mb-2">{result.title}</h3>
                   {result.content && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                       {result.content}
                     </p>
                   )}

@@ -218,10 +218,10 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline" className="hover:bg-black hover:text-white dark:hover:text-white">
+            <Button asChild variant="outline" className="hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black">
         <DialogTrigger>
           <HelpCircleIcon />
-          {t("editor.questionGenerator.button")}
+          {t("editor.question.button")}
         </DialogTrigger>
       </Button>
       <DialogContent className="max-w-2xl">
@@ -233,7 +233,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
         </DialogHeader>
 
         {error && (
-          <div className="p-4 bg-red-100 text-red-700 rounded">
+          <div className="p-4 bg-destructive/10 text-destructive rounded">
             {t("editor.questionGenerator.error")}: {error}
           </div>
         )}
@@ -333,18 +333,14 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
             </form>
 
             {evaluation && (
-              <div className={`p-4 rounded-lg border-2 ${evaluation.isCorrect
-                ? "bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-700"
-                : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
-                  ? "bg-blue-50 dark:bg-blue-950/30 border-blue-500 dark:border-blue-700"
-                  : "bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-700"
-                }`}>
-                <p className={`font-bold mb-2 ${evaluation.isCorrect
-                  ? "text-green-800 dark:text-green-200"
+              <div className={`p-4 rounded-lg border-2 ${
+                evaluation.isCorrect
+                  ? "bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-700 text-green-800 dark:text-green-200"
                   : questionType === "shortAnswer" && (evaluation.score ?? 0) >= 7
-                    ? "text-blue-800 dark:text-blue-200"
-                    : "text-red-800 dark:text-red-200"
-                  }`}>
+                    ? "bg-blue-50 dark:bg-blue-950/30 border-blue-500 dark:border-blue-700 text-blue-800 dark:text-blue-200"
+                    : "bg-destructive/10 border-destructive text-destructive"
+                }`}>
+                <p className="font-bold mb-2">
                   {evaluation.isCorrect
                     ? t("editor.questionGenerator.correctAnswer")
                     : questionType === "shortAnswer"
@@ -353,7 +349,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
                       })
                       : t("editor.questionGenerator.tryAgain")}
                 </p>
-                <p className="text-gray-800 dark:text-gray-200 mb-3">
+                <p className="text-card-foreground mb-3">
                   {evaluation.explanation}
                 </p>
                 <Button

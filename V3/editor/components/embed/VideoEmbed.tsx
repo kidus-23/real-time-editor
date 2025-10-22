@@ -1,18 +1,10 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-// Import BaseBlockSpec and PartialBlock
-import {
-  createReactBlockSpec,
-  BaseBlockSpec,
-  PartialBlock,
-} from "@blocknote/react";
+import { createReactBlockSpec } from "@blocknote/react";
 import {
   ExternalLink,
   Copy,
-  Loader2,
-  Maximize2,
-  Minimize2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,11 +25,10 @@ const VideoEmbedComponent = ({ block }: VideoEmbedProps) => {
     y: 0,
   });
   const [width, setWidth] = useState<number>(100);
-  const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const url = block.props.url;
-  const caption = block.props.caption;
+  const url = block?.props?.url || '';
+  const caption = block?.props?.caption || '';
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,7 +49,6 @@ const VideoEmbedComponent = ({ block }: VideoEmbedProps) => {
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsResizing(true);
     const startX = e.clientX;
     const startWidth = containerRef.current?.offsetWidth || 0;
 
@@ -76,7 +66,6 @@ const VideoEmbedComponent = ({ block }: VideoEmbedProps) => {
     };
 
     const handleMouseUp = () => {
-      setIsResizing(false);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
@@ -98,6 +87,8 @@ const VideoEmbedComponent = ({ block }: VideoEmbedProps) => {
       return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [showContextMenu]);
+
+  if (!block) return null;
 
   // Extract YouTube video ID
   const getYouTubeId = (url: string): string | null => {
@@ -274,23 +265,19 @@ const videoEmbedSpec = {
   type: "videoEmbed" as const,
   propSchema: {
     url: {
-      default: "",
+      default: "" as const,
     },
     caption: {
-      default: "",
+      default: "" as const,
+    },
+    name: {
+      default: "" as const,
     },
   },
-  content: "none",
-} satisfies BaseBlockSpec;
+  content: "none" as const,
+  isFileBlock: false,
+};
 
 export const VideoEmbed = createReactBlockSpec(videoEmbedSpec, {
-  render: (props) => <VideoEmbedComponent block={props.block as any} />,
-
-  // ADDED THIS FUNCTION
-  toMarkdown: (block: PartialBlock<typeof videoEmbedSpec>) => {
-    const url = block.props?.url || "";
-    const caption = block.props?.caption || "Video";
-    // Serializes as a link to the video
-    return `[${caption}](${url})`;
-  },
+  render: (props) => <VideoEmbedComponent block={props.block as any} />, // eslint-disable-line @typescript-eslint/no-explicit-any
 });

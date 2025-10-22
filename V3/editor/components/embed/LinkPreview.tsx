@@ -20,7 +20,6 @@ interface LinkPreviewProps {
 }
 
 const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
-  if (!block) return null;
   const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -30,10 +29,59 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
     y: 0,
   });
   const [resizeWidth, setResizeWidth] = useState<number>(100);
-  const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const url = block.props.url;
+  const url = block?.props?.url || '';
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    setShowContextMenu(true);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(url);
+    toast.success("Link copied to clipboard!");
+    setShowContextMenu(false);
+  };
+
+  const handleOpenInBrowser = () => {
+    window.open(url, "_blank", "noopener,noreferrer");
+    setShowContextMenu(false);
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = containerRef.current?.offsetWidth || 0;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - startX;
+      const newWidth = Math.max(
+        200,
+        Math.min(startWidth + deltaX, window.innerWidth - 100)
+      );
+      if (containerRef.current) {
+        const percentage =
+          (newWidth / containerRef.current.parentElement!.offsetWidth) * 100;
+        setResizeWidth(Math.min(100, Math.max(20, percentage)));
+      }
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const setPresetSize = (size: "small" | "medium" | "large" | "full") => {
+    const sizes = { small: 40, medium: 60, large: 80, full: 100 };
+    setResizeWidth(sizes[size]);
+    toast.success(`Size set to ${size}`);
+  };
 
   useEffect(() => {
     if (!url || !isValidUrl(url)) {
@@ -59,58 +107,6 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
     loadMetadata();
   }, [url]);
 
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setContextMenuPosition({ x: e.clientX, y: e.clientY });
-    setShowContextMenu(true);
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard!");
-    setShowContextMenu(false);
-  };
-
-  const handleOpenInBrowser = () => {
-    window.open(url, "_blank", "noopener,noreferrer");
-    setShowContextMenu(false);
-  };
-
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    const startX = e.clientX;
-    const startWidth = containerRef.current?.offsetWidth || 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = e.clientX - startX;
-      const newWidth = Math.max(
-        200,
-        Math.min(startWidth + deltaX, window.innerWidth - 100)
-      );
-      if (containerRef.current) {
-        const percentage =
-          (newWidth / containerRef.current.parentElement!.offsetWidth) * 100;
-        setResizeWidth(Math.min(100, Math.max(20, percentage)));
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
-  const setPresetSize = (size: "small" | "medium" | "large" | "full") => {
-    const sizes = { small: 40, medium: 60, large: 80, full: 100 };
-    setResizeWidth(sizes[size]);
-    toast.success(`Size set to ${size}`);
-  };
-
   useEffect(() => {
     const handleClickOutside = () => setShowContextMenu(false);
     if (showContextMenu) {
@@ -118,6 +114,8 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
       return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [showContextMenu]);
+
+  if (!block) return null;
 
   if (loading) {
     return (
@@ -310,6 +308,7 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
         />
 
         <div className="relative bg-gray-100 dark:bg-gray-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={metadata.image || url}
             alt={metadata.title || "Image preview"}
@@ -322,6 +321,7 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
         </div>
         <div className="p-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
           <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image className="h-4 w-4 text-blue-500 flex-shrink-0" />
             <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
               {getDomainFromUrl(url)}
@@ -368,6 +368,7 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
       <div className="flex">
         {metadata.image && (
           <div className="w-48 flex-shrink-0 bg-gray-100 dark:bg-gray-900">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={metadata.image}
               alt={metadata.title || "Preview"}
@@ -393,6 +394,7 @@ const LinkPreviewComponent = ({ block }: LinkPreviewProps) => {
               )}
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
                 {metadata.favicon && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={metadata.favicon}
                     alt=""
@@ -473,23 +475,19 @@ const linkPreviewSpec = {
   type: "linkPreview" as const,
   propSchema: {
     url: {
-      default: "",
+      default: "" as const,
+    },
+    caption: {
+      default: "" as const,
+    },
+    name: {
+      default: "" as const,
     },
   },
-  content: "none",
+  content: "none" as const,
+  isFileBlock: false,
 };
 
 export const LinkPreview = createReactBlockSpec(linkPreviewSpec, {
-  render: (props) => <LinkPreviewComponent block={props.block as any} />,
-
-  // Serialize link previews to markdown
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  toMarkdown: (block: any) => {
-    const url = block.props?.url;
-    if (!url) {
-      return "";
-    }
-    // Serialize as a standard Markdown link: [url](url)
-    return `[${url}](${url})`;
-  },
+  render: (props) => <LinkPreviewComponent block={props.block as any} />, // eslint-disable-line @typescript-eslint/no-explicit-any
 });

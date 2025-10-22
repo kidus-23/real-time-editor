@@ -53,11 +53,11 @@ const insertMermaid = (editor: BlockNoteEditor) => ({
     editor.insertBlocks(
       [
         {
-          type: "mermaid",
+          type: "mermaid" as any, // eslint-disable-line @typescript-eslint/no-explicit-any
           props: {
             code: "graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;",
           },
-        } as any,
+        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       ],
       editor.getTextCursorPosition().block,
       "after"
@@ -112,20 +112,20 @@ const BlockNote = memo(function BlockNote({
 
       // Auto-convert code blocks with language="mermaid" to mermaid diagram blocks
       const blocks = editor.document;
-      blocks.forEach((block: any) => {
+      blocks.forEach((block) => {
         if (
           block.type === "codeBlock" &&
           block.props?.language === "mermaid" &&
           block.content
         ) {
           // Extract the code from the content
-          const code = block.content.map((c: any) => c.text || "").join("");
+          const code = block.content.map((c: any) => c.text || "").join(""); // eslint-disable-line @typescript-eslint/no-explicit-any
           if (code.trim()) {
             // Replace the code block with a mermaid diagram block
             editor.updateBlock(block, {
-              type: "mermaid",
+              type: "mermaid" as any, // eslint-disable-line @typescript-eslint/no-explicit-any
               props: { code },
-            } as any);
+            } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
           }
         }
       });
@@ -159,8 +159,7 @@ const BlockNote = memo(function BlockNote({
       if (e.key === "Enter" && editor) {
         const currentBlock = editor.getTextCursorPosition().block;
         const blockContent = Array.isArray(currentBlock?.content)
-          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            currentBlock.content.map((c: any) => c.text || "").join("")
+          ? currentBlock.content.map((c: any) => c.text || "").join("") // eslint-disable-line @typescript-eslint/no-explicit-any
           : "";
         if (blockContent.trim() === "---") {
           e.preventDefault();
@@ -468,7 +467,7 @@ function Editor({
 
         {/* Action buttons - appear when hovering on this area */}
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto">
-          <div className="bg-white/95 dark:bg-neutral-900/60 backdrop-blur-md rounded-xl px-4 py-3">
+          <div className="rounded-xl px-4 py-3">
             <div className="flex flex-wrap gap-2">
               <TranslateDocument doc={doc} editor={editor} />
               <Summarize editor={editor} />
