@@ -765,6 +765,7 @@ function Chatbar({ className = "" }: { className?: string }) {
                                 )}
                               </div>
                             </div>
+                          )}
                         </div>
                         <div
                           className={cn(
