@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
 import { MessagesSquare, Pencil, X, Bot, Send, Loader2, Settings, Users, FileText, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
