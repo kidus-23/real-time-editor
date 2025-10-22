@@ -111,7 +111,7 @@ function TranslateDocument({ editor }: TranslateDocumentProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline" className="hover:text-gray-900 dark:hover:text-white">
+      <Button asChild variant="outline" className="hover:text-white dark:hover:text-white">
         <DialogTrigger>
           <LanguagesIcon />
           {t("editor.translate.button")}

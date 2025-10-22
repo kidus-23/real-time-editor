@@ -401,13 +401,38 @@ function Editor({
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-gray-200/30 dark:border-gray-700/30">
-        <TranslateDocument doc={doc} editor={editor} />
-        <Summarize editor={editor} />
-        <Composer editor={editor} />
-        <QuestionGenerator editor={editor} />
+            {/* Dedicated hover area above the editor */}
+      <div className="group relative h-16 -mb-8 cursor-pointer">
+        {/* Invisible hover trigger - full height */}
+        <div className="absolute inset-0" />
+
+        {/* Small arrow indicator */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg
+            className="w-4 h-4 text-gray-400 dark:text-gray-500 opacity-60 group-hover:opacity-100 group-hover:scale-110 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all duration-300 ease-out animate-pulse group-hover:animate-bounce"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+
+        {/* Action buttons - appear when hovering on this area */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto">
+          <div className="bg-white/95 dark:bg-neutral-900/60 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/40 rounded-xl shadow-xl px-4 py-3 dark:shadow-gray-900/30">
+            <div className="flex flex-wrap gap-2">
+              <TranslateDocument doc={doc} editor={editor} />
+              <Summarize editor={editor} />
+              <Composer editor={editor} />
+              <QuestionGenerator editor={editor} />
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="pt-2">
+
+      {/* Editor with top margin to create space */}
+      <div className="mt-12">
         <BlockNote
           doc={doc}
           provider={provider}
