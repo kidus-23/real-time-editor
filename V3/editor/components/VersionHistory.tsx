@@ -36,6 +36,7 @@ import { BlockNoteView } from "@blocknote/shadcn";
 import { LinkPreview } from "./embed/LinkPreview";
 import { VideoEmbed } from "./embed/VideoEmbed";
 import { ImageEmbed } from "./embed/ImageEmbed";
+import { MermaidEmbed } from "./embed/MermaidEmbed";
 
 interface Version {
   id: string;
@@ -63,6 +64,8 @@ const previewSchema = BlockNoteSchema.create({
     videoEmbed: VideoEmbed as any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     imageEmbed: ImageEmbed as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mermaid: MermaidEmbed as any,
   },
 });
 
@@ -265,6 +268,17 @@ export default function VersionHistory({
               content: [{ type: "text", text: `🎥 ${caption}` }],
             },
           ],
+        };
+      }
+
+      // Handle mermaid blocks - convert to code block
+      if (block.type === "mermaid" && block.props?.code) {
+        return {
+          type: "codeBlock",
+          props: {
+            language: "mermaid",
+          },
+          content: [{ type: "text", text: block.props.code }],
         };
       }
 

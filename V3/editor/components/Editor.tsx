@@ -22,7 +22,8 @@ import { LinkPreview } from "./embed/LinkPreview";
 import { useLinkPreviewDetection } from "./embed/useLinkPreviewDetection";
 import { VideoEmbed } from "./embed/VideoEmbed";
 import { ImageEmbed } from "./embed/ImageEmbed";
-import { MessageSquare } from "lucide-react";
+import { MermaidEmbed } from "./embed/MermaidEmbed";
+import { MessageSquare, BrainCircuit } from "lucide-react";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import {
   FormattingToolbar,
@@ -45,6 +46,27 @@ type EditorProps = {
   editor: BlockNoteEditor;
   onCommentClick?: (selectedText: string) => void;
 };
+
+const insertMermaid = (editor: BlockNoteEditor) => ({
+  title: "Mermaid Diagram",
+  onItemClick: () => {
+    editor.insertBlocks(
+      [
+        {
+          type: "mermaid",
+          props: {
+            code: "graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;",
+          },
+        } as any,
+      ],
+      editor.getTextCursorPosition().block,
+      "after"
+    );
+  },
+  aliases: ["mermaid", "diagram", "graph", "flowchart", "chart"],
+  group: "Diagrams",
+  icon: <BrainCircuit size={18} />,
+});
 
 const BlockNote = memo(function BlockNote({
   doc,
@@ -87,6 +109,26 @@ const BlockNote = memo(function BlockNote({
 
     const unsubscribe = editor.onChange(() => {
       triggerSave();
+
+      // Auto-convert code blocks with language="mermaid" to mermaid diagram blocks
+      const blocks = editor.document;
+      blocks.forEach((block: any) => {
+        if (
+          block.type === "codeBlock" &&
+          block.props?.language === "mermaid" &&
+          block.content
+        ) {
+          // Extract the code from the content
+          const code = block.content.map((c: any) => c.text || "").join("");
+          if (code.trim()) {
+            // Replace the code block with a mermaid diagram block
+            editor.updateBlock(block, {
+              type: "mermaid",
+              props: { code },
+            } as any);
+          }
+        }
+      });
     });
 
     return unsubscribe;
@@ -114,49 +156,30 @@ const BlockNote = memo(function BlockNote({
       }
 
       // Markdown shortcut: '---' + Enter creates horizontal divider
-      if (e.key === 'Enter' && editor) {
+      if (e.key === "Enter" && editor) {
         const currentBlock = editor.getTextCursorPosition().block;
-        const blockContent = Array.isArray(currentBlock?.content) 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ? currentBlock.content.map((c: any) => c.text || '').join('') 
-          : '';
-        
-        if (blockContent.trim() === '---') {
+        const blockContent = Array.isArray(currentBlock?.content)
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            currentBlock.content.map((c: any) => c.text || "").join("")
+          : "";
+        if (blockContent.trim() === "---") {
           e.preventDefault();
           // Replace current block with a divider (using a paragraph with special styling)
           editor.updateBlock(currentBlock, {
-            type: 'paragraph',
-            content: [{ type: 'text', text: '─'.repeat(50), styles: { textColor: 'gray' } }],
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "─".repeat(50),
+                styles: { textColor: "gray" },
+              },
+            ],
           });
           // Insert a new paragraph below for continued typing
           editor.insertBlocks(
-            [{ type: 'paragraph' }],
+            [{ type: "paragraph" }],
             editor.getTextCursorPosition().block,
-            'after'
-          );
-        }
-      }
-
-      // Markdown shortcut: '---' + Enter creates horizontal divider
-      if (e.key === 'Enter' && editor) {
-        const currentBlock = editor.getTextCursorPosition().block;
-        const blockContent = Array.isArray(currentBlock?.content) 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ? currentBlock.content.map((c: any) => c.text || '').join('') 
-          : '';
-        
-        if (blockContent.trim() === '---') {
-          e.preventDefault();
-          // Replace current block with a divider (using a paragraph with special styling)
-          editor.updateBlock(currentBlock, {
-            type: 'paragraph',
-            content: [{ type: 'text', text: '─'.repeat(50), styles: { textColor: 'gray' } }],
-          });
-          // Insert a new paragraph below for continued typing
-          editor.insertBlocks(
-            [{ type: 'paragraph' }],
-            editor.getTextCursorPosition().block,
-            'after'
+            "after"
           );
         }
       }
@@ -187,7 +210,6 @@ const BlockNote = memo(function BlockNote({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [editor]);
-
 
   return (
     <div className={`relative mx-auto ${darkMode ? "dark" : ""}`}>
@@ -267,6 +289,21 @@ const BlockNote = memo(function BlockNote({
             </FormattingToolbar>
           )}
         />
+        <SuggestionMenuController
+          triggerCharacter={"/"}
+          getItems={async (query) =>
+            [
+              ...getDefaultReactSlashMenuItems(editor),
+              insertMermaid(editor),
+            ].filter(
+              (item) =>
+                item.title.toLowerCase().includes(query.toLowerCase()) ||
+                item.aliases?.some((alias) =>
+                  alias.toLowerCase().includes(query.toLowerCase())
+                )
+            )
+          }
+        />
       </BlockNoteView>
     </div>
   );
@@ -331,6 +368,8 @@ function Editor({
             videoEmbed: VideoEmbed as any,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             imageEmbed: ImageEmbed as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mermaid: MermaidEmbed as any,
           },
         });
 
@@ -404,7 +443,7 @@ function Editor({
 
   return (
     <div className="relative">
-            {/* Dedicated hover area above the editor */}
+      {/* Dedicated hover area above the editor */}
       <div className="group relative h-16 -mb-8 cursor-pointer">
         {/* Invisible hover trigger - full height */}
         <div className="absolute inset-0" />
@@ -417,7 +456,12 @@ function Editor({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
           </svg>
         </div>
 
