@@ -135,7 +135,9 @@ function Chatbar({ className = "" }: { className?: string }) {
     localStorage.setItem(`teamchat-lastread-${roomId}`, Date.now().toString());
   };
 
-  const scrollToBottom = (scrollRef: React.RefObject<HTMLDivElement | null>) => {
+  const scrollToBottom = (
+    scrollRef: React.RefObject<HTMLDivElement | null>
+  ) => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
@@ -551,8 +553,9 @@ function Chatbar({ className = "" }: { className?: string }) {
                                         /\n$/,
                                         ""
                                       );
-                                      // Check if className indicates inline code (no language class)
-                                      const isInline = !className || !className.startsWith('language-');
+                                      const isInline =
+                                        !className ||
+                                        !className.startsWith("language-");
                                       // Check if the code contains HTML/XML tags or multiple lines
                                       const isCodeBlock =
                                         !isInline &&
@@ -747,25 +750,21 @@ function Chatbar({ className = "" }: { className?: string }) {
                         <div className="flex items-center gap-2">
                           {message.userId !==
                             user?.emailAddresses[0].emailAddress && (
-                              <div className="flex items-center gap-1">
-                                <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
-                                  {message.userAvatar ? (
-                                    <Image
-                                      src={message.userAvatar}
-                                      alt={message.userName}
-                                      width={24}
-                                      height={24}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    message.userName.charAt(0).toUpperCase()
-                                  )}
-                                </div>
-                                <span className="text-xs font-medium">
-                                  {message.userName}
-                                </span>
+                            <div className="flex items-center gap-1">
+                              <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium">
+                                {message.userAvatar ? (
+                                  <Image
+                                    src={message.userAvatar}
+                                    alt={message.userName}
+                                    width={24}
+                                    height={24}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  message.userName.charAt(0).toUpperCase()
+                                )}
                               </div>
-                            )}
+                            </div>
                         </div>
                         <div
                           className={cn(
