@@ -1,4 +1,3 @@
-/* stylelint-disable at-rule-no-unknown */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -43,114 +42,72 @@
 }
 
 :root {
-  /* Border Radius - Softer, more organic */
-  --radius: 0.75rem;
-  
-  /* Light Mode - Clean, premium palette inspired by Apple/Google */
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  
-  --card: rgba(255, 255, 255, 0.7);
-  --card-foreground: #1a1a1a;
-  
-  --popover: rgba(255, 255, 255, 0.95);
-  --popover-foreground: #1a1a1a;
-  
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  
-  --secondary: #f8f9fa;
-  --secondary-foreground: #1a1a1a;
-  
-  --muted: #f8f9fa;
-  --muted-foreground: #6b7280;
-  
-  --accent: #3b82f6;
-  --accent-foreground: #ffffff;
-  
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  
-  /* Subtle, hairline borders */
-  --border: rgba(0, 0, 0, 0.06);
-  --input: rgba(0, 0, 0, 0.08);
-  --ring: rgba(59, 130, 246, 0.2);
-  
-  /* Glassmorphism variables */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  
-  /* Sidebar - Clean, minimal */
-  --sidebar: rgba(248, 249, 250, 0.8);
-  --sidebar-foreground: #1a1a1a;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(59, 130, 246, 0.1);
-  --sidebar-accent-foreground: #3b82f6;
-  --sidebar-border: rgba(0, 0, 0, 0.06);
-  --sidebar-ring: rgba(59, 130, 246, 0.2);
-  
-  /* Chart colors - Muted, cohesive */
-  --chart-1: #3b82f6;
-  --chart-2: #10b981;
-  --chart-3: #8b5cf6;
-  --chart-4: #f59e0b;
-  --chart-5: #ec4899;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
 .dark {
-  /* Dark Mode - Deep, premium blacks with high contrast */
-  --background: #0f0f0f;
-  --foreground: #f5f5f5;
-  
-  --card: rgba(26, 26, 26, 0.6);
-  --card-foreground: #f5f5f5;
-  
-  --popover: rgba(26, 26, 26, 0.95);
-  --popover-foreground: #f5f5f5;
-  
-  --primary: #60a5fa;
-  --primary-foreground: #0f0f0f;
-  
-  --secondary: #1a1a1a;
-  --secondary-foreground: #f5f5f5;
-  
-  --muted: #1a1a1a;
-  --muted-foreground: #9ca3af;
-  
-  --accent: #60a5fa;
-  --accent-foreground: #0f0f0f;
-  
-  --destructive: #f87171;
-  --destructive-foreground: #0f0f0f;
-  
-  /* Subtle borders for dark mode */
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: rgba(96, 165, 250, 0.3);
-  
-  /* Glassmorphism for dark mode */
-  --glass-bg: rgba(0, 0, 0, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  
-  /* Sidebar - Deep, glassy */
-  --sidebar: rgba(15, 15, 15, 0.8);
-  --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #60a5fa;
-  --sidebar-primary-foreground: #0f0f0f;
-  --sidebar-accent: rgba(96, 165, 250, 0.15);
-  --sidebar-accent-foreground: #60a5fa;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: rgba(96, 165, 250, 0.3);
-  
-  /* Chart colors for dark mode */
-  --chart-1: #60a5fa;
-  --chart-2: #34d399;
-  --chart-3: #a78bfa;
-  --chart-4: #fbbf24;
-  --chart-5: #f472b6;
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
 @layer base {
@@ -160,92 +117,57 @@
 
   body {
     @apply bg-background text-foreground;
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", 
-                 "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* Elegant gradient background for dark mode */
+  /* Enhanced Dark Mode Styles */
   .dark body {
-    background: radial-gradient(ellipse at top, #0f0f0f 0%, #050505 50%, #000000 100%);
+    background: linear-gradient(135deg, #0a0a0f 0%, #111827 100%);
   }
 
-  /* Modern glassmorphism containers */
+  /* Static container styling - no layout shifts */
   .max-w-6xl,
   .max-w-7xl {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
     padding: 32px;
     margin: 16px auto;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(229, 231, 235, 0.8);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     max-width: 80rem;
   }
 
-  /* Dark mode container - glassy, premium feel */
+  /* Dark mode container - only color changes, no layout changes */
   .dark .max-w-6xl,
   .dark .max-w-7xl {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    border-color: var(--glass-border) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-  }
-  
-  /* Smooth, fluid animations */
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    background: rgba(17, 24, 39, 0.9) !important;
+    border-color: rgba(55, 65, 81, 0.4) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px);
   }
 }
 
 /* Enhanced BlockNote Dark Mode */
 .dark .bn-editor {
-  background: transparent !important;
+  background: #020518 !important;
   color: #f9fafb !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2) !important;
   padding: 24px !important;
-  border: none !important;
 }
 
 .dark .bn-block-group {
   background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
 }
 
 .dark .bn-block-content {
   background: transparent !important;
-  color: #f5f5f5 !important;
-  border: none !important;
-  box-shadow: none !important;
+  color: #f9fafb !important;
 }
 
 .dark .bn-block {
-  border: none !important;
-  box-shadow: none !important;
+  border-color: rgba(55, 65, 81, 0.3) !important;
 }
 
 /* Dark mode for text elements */
@@ -258,9 +180,6 @@
 .dark .bn-editor h5,
 .dark .bn-editor h6 {
   color: #f9fafb !important;
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
 }
 
 /* Dark mode for code blocks */
@@ -347,88 +266,96 @@
   color: #c7d2fe !important;
 }
 
-/* Modern Sidebar Styling */
+/* Fix BlockNote dropdown z-index issues */
+.bn-formatting-toolbar [role="combobox"],
+.bn-formatting-toolbar button[data-slot="select-trigger"] {
+  position: relative;
+  z-index: auto;
+}
+
+[role="listbox"],
+[data-radix-select-content],
+.bn-select-content {
+  z-index: 9999 !important;
+}
+
+/* Ensure BlockNote select dropdown is visible */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Enhanced Sidebar Dark Mode */
 .dark aside,
 .dark .sidebar,
 .dark .bg-gray-200 {
-  background: var(--sidebar) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border-color: var(--sidebar-border) !important;
+  background: rgba(9, 14, 26, 0.95) !important;
+  border-color: rgba(55, 65, 81, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
 }
 
 .dark .sidebar-content,
 .dark .sidebar-header,
 .dark .sidebar-footer {
   background: transparent !important;
-  color: var(--sidebar-foreground) !important;
+  color: #f9fafb !important;
 }
 
-/* Sidebar navigation - pill-shaped, soft hover */
+/* Sidebar navigation items */
 .dark .sidebar nav a,
 .dark .sidebar nav button {
-  color: var(--sidebar-foreground) !important;
-  border-radius: 10px !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  border: none !important;
+  color: #e5e7eb !important;
+  border-color: rgba(55, 65, 81, 0.3) !important;
 }
 
 .dark .sidebar nav a:hover,
 .dark .sidebar nav button:hover {
-  background: var(--sidebar-accent) !important;
-  color: var(--sidebar-accent-foreground) !important;
-  transform: translateX(2px) !important;
+  background: rgba(55, 65, 81, 0.4) !important;
+  color: #f9fafb !important;
 }
 
-/* Owner/Editor badges - refined */
+/* Owner/Editor status text styling */
 .dark .text-gray-600,
 .dark div:has-text("Owner"),
 .dark div:has-text("Editor") {
-  color: var(--sidebar-foreground) !important;
+  color: white !important;
   font-weight: 500 !important;
 }
 
+/* Specific targeting for owner/editor status */
 .dark .flex.items-center.text-sm.text-gray-600 {
-  color: var(--sidebar-foreground) !important;
+  color: white !important;
 }
 
-/* Sidebar document items - floating cards */
+/* Sidebar document items */
 .dark .sidebar .document-item,
 .dark .border.p-2.rounded-md {
-  background: var(--card) !important;
-  backdrop-filter: blur(10px) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 10px !important;
-  color: var(--foreground) !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: rgba(17, 24, 39, 0.6) !important;
+  border-color: rgba(55, 65, 81, 0.4) !important;
+  color: #f9fafb !important;
 }
 
 .dark .sidebar .document-item:hover,
 .dark .border.p-2.rounded-md:hover {
-  background: var(--sidebar-accent) !important;
-  border-color: var(--sidebar-accent-foreground) !important;
-  transform: translateX(3px) !important;
+  background: rgba(55, 65, 81, 0.5) !important;
+  border-color: rgba(75, 85, 99, 0.5) !important;
 }
 
-/* Active sidebar item - elegant highlight */
+/* Active sidebar item */
 .dark .bg-gray-300 {
-  background: var(--sidebar-accent) !important;
-  color: var(--sidebar-accent-foreground) !important;
-  box-shadow: 0 0 0 1px var(--sidebar-accent-foreground) inset !important;
+  background: rgba(99, 102, 241, 0.3) !important;
+  color: white !important;
 }
 
-/* Sidebar headings - refined typography */
+/* Sidebar headings */
 .dark .text-gray-500 {
-  color: var(--muted-foreground) !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.05em !important;
+  color: #9ca3af !important;
 }
 
-/* Sheet (mobile menu) - glassy overlay */
+/* Sheet (mobile menu) dark mode */
 .dark .sheet-content {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(40px) saturate(200%) !important;
-  border-color: var(--glass-border) !important;
-  color: var(--foreground) !important;
+  background: rgba(9, 14, 26, 0.98) !important;
+  border-color: rgba(55, 65, 81, 0.4) !important;
+  color: #f9fafb !important;
 }
 
 /* BlockNote Slash Command Menu Styling */
@@ -659,15 +586,13 @@
 }
 
 @layer utilities {
-  /* Custom scrollbar - minimal, elegant */
   .scrollbar-custom {
     scrollbar-width: thin;
-    scrollbar-color: var(--muted) transparent;
+    scrollbar-color: hsl(var(--muted)) transparent;
   }
 
   .scrollbar-custom::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
   }
 
   .scrollbar-custom::-webkit-scrollbar-track {
@@ -675,77 +600,19 @@
   }
 
   .scrollbar-custom::-webkit-scrollbar-thumb {
-    background-color: var(--muted);
-    border-radius: 8px;
-    transition: background-color 0.2s ease;
-  }
-  
-  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    background-color: var(--muted-foreground);
+    background-color: hsl(var(--muted));
+    border-radius: 2px;
   }
 
-  /* Hide scrollbar */
+  /* Hide scrollbar in WebKit */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 
+  /* Hide scrollbar in Firefox */
   .scrollbar-hide {
     scrollbar-width: none;
     -ms-overflow-style: none;
-  }
-  
-  /* Glassmorphism utilities */
-  .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-  }
-  
-  .glass-intense {
-    background: var(--glass-bg);
-    backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Elegant hover effects */
-  .hover-lift {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-  }
-  
-  .dark .hover-lift:hover {
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-  }
-  
-  /* Smooth scale animation */
-  .hover-scale {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .hover-scale:hover {
-    transform: scale(1.02);
-  }
-  
-  /* Ripple effect placeholder */
-  .ripple {
-    position: relative;
-    overflow: hidden;
-  }
-  
-  /* Fade in animation */
-  .animate-fade-in {
-    animation: fade-in-up 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .animate-scale-in {
-    animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -795,6 +662,30 @@
   }
 }
 
+@keyframes flash-highlight-dark {
+
+  0%,
+  100% {
+    background-color: #a16207;
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+  }
+
+  25% {
+    background-color: #ca8a04;
+    box-shadow: 0 0 20px 10px rgba(234, 179, 8, 0.4);
+  }
+
+  50% {
+    background-color: #eab308;
+    box-shadow: 0 0 30px 15px rgba(234, 179, 8, 0.6);
+  }
+
+  75% {
+    background-color: #ca8a04;
+    box-shadow: 0 0 20px 10px rgba(234, 179, 8, 0.4);
+  }
+}
+
 .comment-highlight-active {
   animation: flash-highlight 1.5s ease-in-out 2;
   border-left: 4px solid #facc15 !important;
@@ -804,6 +695,7 @@
 }
 
 .dark .comment-highlight-active {
+  animation: flash-highlight-dark 1.5s ease-in-out 2;
   border-left-color: #eab308 !important;
 }
 
@@ -892,702 +784,4 @@ button[data-test="comment-button"][aria-label]::after {
 button[data-test="comment-button"]:hover::before,
 button[data-test="comment-button"]:hover::after {
   opacity: 1;
-}
-
-/* ============================================
-   NOTION-INSPIRED EDITOR STYLES
-   Refined glassmorphism (70% intensity)
-   Material You elevation & Notion minimalism
-   ============================================ */
-
-/* Notion-style editor canvas */
-.notion-editor {
-  font-family: 'Recursive', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.7;
-  letter-spacing: -0.01em;
-}
-
-.bn-editor {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-}
-
-/* BlockNote container - Notion whitespace */
-.notion-editor .bn-container {
-  padding: 0 !important;
-  max-width: 100% !important;
-}
-
-/* Block styling - completely seamless */
-.notion-editor .bn-block-outer {
-  margin: 0 !important;
-  padding: 3px 0 !important;
-  transition: background-color 0.15s ease;
-  border: none !important;
-}
-
-.notion-editor .bn-block-outer:hover {
-  background-color: rgba(0, 0, 0, 0.015);
-}
-
-.dark .notion-editor .bn-block-outer:hover {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-/* Notion-style drag handles */
-.notion-editor .bn-block-outer .bn-drag-handle-menu {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.notion-editor .bn-block-outer:hover .bn-drag-handle-menu {
-  opacity: 1;
-}
-
-/* Typography - premium readability */
-.notion-editor h1 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  line-height: 1.4;
-  margin: 1.5rem 0 0.75rem 0;
-  letter-spacing: -0.02em;
-  color: #1a1a1a;
-}
-
-.dark .notion-editor h1 {
-  color: #f5f5f5;
-}
-
-.notion-editor h2 {
-  font-size: 1.875rem;
-  font-weight: 600;
-  line-height: 1.4;
-  margin: 1.25rem 0 0.625rem 0;
-  letter-spacing: -0.015em;
-  color: #1a1a1a;
-}
-
-.dark .notion-editor h2 {
-  color: #f5f5f5;
-}
-
-.notion-editor h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.45;
-  margin: 1rem 0 0.5rem 0;
-  letter-spacing: -0.01em;
-  color: #1a1a1a;
-}
-
-.dark .notion-editor h3 {
-  color: #f5f5f5;
-}
-
-.notion-editor p {
-  font-size: 1rem;
-  line-height: 1.7;
-  margin: 0.5rem 0;
-  color: #1f2937;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.dark .notion-editor p {
-  color: #e5e7eb;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Code blocks - ligature-enabled monospace */
-.notion-editor code {
-  font-family: 'Iosevka', 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.875rem;
-  background-color: rgba(135, 131, 120, 0.15);
-  color: #eb5757;
-  padding: 0.2em 0.4em;
-  border-radius: 4px;
-  font-feature-settings: "liga" 1, "calt" 1;
-}
-
-.dark .notion-editor code {
-  background-color: rgba(135, 131, 120, 0.2);
-  color: #ff6b6b;
-}
-
-.notion-editor pre {
-  background-color: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 8px;
-  padding: 1rem;
-  margin: 0.75rem 0;
-  overflow-x: auto;
-}
-
-.dark .notion-editor pre {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-/* Lists - Notion-style subtle bullets */
-.notion-editor ul {
-  list-style: none;
-  padding-left: 1.5rem;
-  margin: 0.5rem 0;
-}
-
-.notion-editor ul li::before {
-  content: "•";
-  color: #9ca3af;
-  font-weight: bold;
-  display: inline-block;
-  width: 1rem;
-  margin-left: -1rem;
-}
-
-.notion-editor ol {
-  list-style: none;
-  counter-reset: item;
-  padding-left: 1.5rem;
-  margin: 0.5rem 0;
-}
-
-.notion-editor ol li {
-  counter-increment: item;
-}
-
-.notion-editor ol li::before {
-  content: counter(item) ".";
-  color: #9ca3af;
-  font-weight: 600;
-  display: inline-block;
-  width: 1.5rem;
-  margin-left: -1.5rem;
-}
-
-/* Blockquotes - Notion-style left border */
-.notion-editor blockquote {
-  border-left: 3px solid #3b82f6;
-  padding-left: 1rem;
-  margin: 0.75rem 0;
-  color: #6b7280;
-  font-style: italic;
-}
-
-.dark .notion-editor blockquote {
-  border-left-color: #60a5fa;
-  color: #9ca3af;
-}
-
-/* Formatting toolbar - toned glassmorphism */
-.notion-editor .bn-formatting-toolbar {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(4px) saturate(110%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  border-radius: 10px !important;
-  padding: 6px 8px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-}
-
-.dark .notion-editor .bn-formatting-toolbar {
-  background: rgba(26, 26, 26, 0.95) !important;
-  backdrop-filter: blur(4px) saturate(110%) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-}
-
-/* Toolbar buttons - Material ripple effect */
-.notion-editor .bn-button,
-.notion-editor .bn-toolbar-button {
-  border-radius: 6px !important;
-  padding: 6px 8px !important;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative;
-  overflow: hidden;
-}
-
-.notion-editor .bn-button:hover,
-.notion-editor .bn-toolbar-button:hover {
-  background-color: rgba(0, 0, 0, 0.06) !important;
-  transform: scale(1.05);
-}
-
-.dark .notion-editor .bn-button:hover,
-.dark .notion-editor .bn-toolbar-button:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.notion-editor .bn-button:active,
-.notion-editor .bn-toolbar-button:active {
-  transform: scale(0.95);
-}
-
-/* Slash menu - toned glass */
-.bn-suggestion-menu,
-.bn-slash-menu {
-  background: rgba(255, 255, 255, 0.98) !important;
-  backdrop-filter: blur(3px) saturate(110%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  border-radius: 10px !important;
-  padding: 8px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
-  max-height: 400px !important;
-  overflow-y: auto !important;
-  min-width: 280px !important;
-}
-
-.dark .bn-suggestion-menu,
-.dark .bn-slash-menu {
-  background: rgba(26, 26, 26, 0.98) !important;
-  backdrop-filter: blur(3px) saturate(110%) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
-}
-
-/* Menu items - Notion-style hover */
-.bn-suggestion-menu-item,
-.bn-slash-menu-item {
-  padding: 10px 14px !important;
-  border-radius: 6px !important;
-  margin: 2px 0 !important;
-  transition: all 0.12s ease !important;
-  font-size: 14px !important;
-  line-height: 1.5 !important;
-}
-
-.bn-suggestion-menu-item:hover,
-.bn-slash-menu-item:hover,
-.bn-suggestion-menu-item[data-selected="true"],
-.bn-slash-menu-item[data-selected="true"] {
-  background-color: rgba(59, 130, 246, 0.12) !important;
-  transform: translateX(4px);
-}
-
-.dark .bn-suggestion-menu-item:hover,
-.dark .bn-slash-menu-item:hover,
-.dark .bn-suggestion-menu-item[data-selected="true"],
-.dark .bn-slash-menu-item[data-selected="true"] {
-  background-color: rgba(96, 165, 250, 0.18) !important;
-}
-
-/* Link preview and embeds - subtle elevation */
-.bn-inline-content a {
-  color: #3b82f6;
-  text-decoration: underline;
-  text-decoration-color: rgba(59, 130, 246, 0.3);
-  text-underline-offset: 2px;
-  transition: all 0.2s ease;
-}
-
-.bn-inline-content a:hover {
-  text-decoration-color: rgba(59, 130, 246, 1);
-  color: #2563eb;
-}
-
-.dark .bn-inline-content a {
-  color: #60a5fa;
-  text-decoration-color: rgba(96, 165, 250, 0.3);
-}
-
-.dark .bn-inline-content a:hover {
-  text-decoration-color: rgba(96, 165, 250, 1);
-  color: #93c5fd;
-}
-
-/* Tables - Notion-style minimal lines */
-.notion-editor table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1rem 0;
-}
-
-.notion-editor table th,
-.notion-editor table td {
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 8px 12px;
-  text-align: left;
-}
-
-.dark .notion-editor table th,
-.dark .notion-editor table td {
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.notion-editor table th {
-  background-color: rgba(0, 0, 0, 0.02);
-  font-weight: 600;
-}
-
-.dark .notion-editor table th {
-  background-color: rgba(255, 255, 255, 0.03);
-}
-
-/* Collaborative cursors - Material elevation */
-.bn-collaboration-cursor {
-  border-radius: 4px;
-  padding: 0 2px;
-  transition: all 0.2s ease;
-}
-
-/* Selection - Notion blue */
-.notion-editor ::selection {
-  background-color: rgba(59, 130, 246, 0.2);
-}
-
-.dark .notion-editor ::selection {
-  background-color: rgba(96, 165, 250, 0.25);
-}
-
-/* Focus states - Material Design ring */
-.notion-editor .bn-block-content:focus-visible {
-  outline: 2px solid rgba(59, 130, 246, 0.4);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-.dark .notion-editor .bn-block-content:focus-visible {
-  outline-color: rgba(96, 165, 250, 0.5);
-}
-
-/* Placeholder text - Notion-style subtle */
-.notion-editor .bn-inline-content:empty::before {
-  color: #9ca3af !important;
-  font-style: normal;
-}
-
-.dark .notion-editor .bn-inline-content:empty::before {
-  color: #6b7280 !important;
-}
-
-/* Smooth scrolling */
-.notion-editor {
-  scroll-behavior: smooth;
-}
-
-/* Accessibility - reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .notion-editor * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ============================================
-   ULTRA-PLAIN SEAMLESS CANVAS
-   Notion/Obsidian-inspired uniformity
-   Enhanced glassmorphism (50% intensity)
-   ============================================ */
-
-/* Seamless background system - pure uniformity */
-.seamless-canvas {
-  background: var(--background);
-  color: var(--foreground);
-}
-
-/* Universal hover effects - mode-agnostic */
-.seamless-hover {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.seamless-hover:hover {
-  opacity: 0.85;
-}
-
-/* Markdown horizontal divider - Notion style */
-hr.notion-divider,
-.bn-block hr {
-  width: 100%;
-  height: 1px;
-  border: none;
-  background: var(--border);
-  margin: 1.5em 0;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-hr.notion-divider:hover,
-.bn-block hr:hover {
-  opacity: 1;
-}
-
-.dark hr.notion-divider,
-.dark .bn-block hr {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* AI Toolbar glassy styling enhancements */
-.ai-toolbar-glass {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(8px) saturate(120%);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border-radius: 10px;
-}
-
-.dark .ai-toolbar-glass {
-  background: rgba(26, 26, 26, 0.45);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* AI icon buttons - material ripple effect */
-.ai-icon-button {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.ai-icon-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(59, 130, 246, 0.2);
-  transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
-}
-
-.ai-icon-button:active::before {
-  width: 100px;
-  height: 100px;
-}
-
-/* Seamless block styling - completely borderless */
-.notion-editor .bn-block-content {
-  background: transparent !important;
-  border: none !important;
-  padding: 2px 0 !important;
-}
-
-/* Remove all container backgrounds */
-.notion-editor .bn-container,
-.notion-editor .bn-editor {
-  background: transparent !important;
-}
-
-/* Completely seamless - no borders anywhere */
-.notion-editor .bn-block,
-.notion-editor .bn-block-outer,
-.notion-editor .bn-block-content,
-.notion-editor .bn-block-group,
-.bn-block,
-.bn-block-outer,
-.bn-block-content,
-.bn-block-group,
-.bn-editor,
-.bn-container,
-div[class*="bn-"],
-div[class*="Block"] {
-  border: none !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-/* Markdown shortcut: --- becomes divider */
-.bn-inline-content[data-content="---"] {
-  display: none;
-}
-
-.bn-inline-content[data-content="---"] + hr {
-  display: block;
-  width: 100%;
-  height: 1px;
-  background: var(--border);
-  border: none;
-  margin: 1.5em 0;
-}
-
-/* Styled divider blocks created by --- shortcut */
-.notion-editor p[data-divider="true"],
-.notion-editor .bn-block-content:has(> span[style*="textColor: gray"]) {
-  pointer-events: none;
-  user-select: none;
-  opacity: 0.6;
-  text-align: center;
-  letter-spacing: -0.5px;
-  color: var(--border) !important;
-  font-size: 12px;
-  margin: 1.5em 0 !important;
-  padding: 0.5em 0 !important;
-  border-top: 1px solid var(--border);
-  border-bottom: none !important;
-}
-
-/* Enhanced focus states - subtle ring */
-.notion-editor .bn-block:focus-within {
-  outline: 2px solid rgba(59, 130, 246, 0.15);
-  outline-offset: 4px;
-  border-radius: 8px;
-}
-
-.dark .notion-editor .bn-block:focus-within {
-  outline-color: rgba(96, 165, 250, 0.2);
-}
-
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Remove all multi-tonal sections */
-main,
-article,
-section,
-.editor-container {
-  background: var(--background) !important;
-}
-
-/* Link hover - consistent across modes */
-a:hover {
-  color: var(--accent);
-  text-decoration-color: var(--accent);
-  transition: all 0.15s ease;
-}
-
-/* Keyboard navigation - accessibility */
-*:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Global override: Remove ALL borders and shadows from BlockNote editor */
-[class*="bn-"],
-[class*="Block"],
-[data-node-type],
-.ProseMirror,
-.ProseMirror > *,
-.bn-editor *,
-.notion-editor * {
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Sidebar sticky and scrollable */
-.sidebar-container {
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  z-index: 40;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
-}
-
-.sidebar-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-container::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.3);
-  border-radius: 8px;
-}
-
-/* Prevent layout shift from full-width toggle */
-.will-change-auto {
-  will-change: max-width;
-}
-
-/* Inline Table of Contents - Notion style */
-.inline-toc-block {
-  font-family: 'Recursive', 'Inter', -apple-system, system-ui, sans-serif;
-  line-height: 1.5;
-  max-width: 100%;
-}
-
-.inline-toc-block ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.inline-toc-block li {
-  position: relative;
-  margin: 0;
-}
-
-.inline-toc-block a {
-  display: block;
-  text-decoration: none;
-  cursor: pointer;
-  user-select: none;
-}
-
-/* Smooth scroll behavior for TOC navigation */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Smooth TOC transitions */
-.toc-transition {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-/* Active section highlight animation */
-@keyframes toc-active-fade {
-  from {
-    opacity: 0;
-    transform: scaleY(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scaleY(1);
-  }
-}
-
-.inline-toc-block .active-indicator {
-  animation: toc-active-fade 0.2s ease-out;
-}
-
-/* Table of Contents custom scrollbar */
-nav[aria-label="Table of Contents"] div::-webkit-scrollbar {
-  width: 4px;
-}
-
-nav[aria-label="Table of Contents"] div::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-nav[aria-label="Table of Contents"] div::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.3);
-  border-radius: 4px;
-}
-
-nav[aria-label="Table of Contents"] div::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.5);
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  
-  .will-change-auto {
-    will-change: auto;
-  }
 }

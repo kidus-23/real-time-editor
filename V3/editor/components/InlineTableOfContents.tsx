@@ -33,7 +33,7 @@ export default function InlineTableOfContents({
       const htmlElement = element as HTMLElement;
       const level = parseInt(element.tagName.charAt(1));
       const text = htmlElement.textContent?.trim() || '';
-      
+
       // Generate or use existing ID
       let id = htmlElement.id;
       if (!id) {
@@ -120,21 +120,21 @@ export default function InlineTableOfContents({
   const scrollToHeading = useCallback((heading: Heading, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Use the stored element reference for more reliable scrolling
     const element = heading.element || document.getElementById(heading.id);
-    
+
     if (element) {
       // Calculate position with offset for sticky header
       const elementTop = element.getBoundingClientRect().top + window.scrollY;
       const offsetPosition = elementTop - 140; // 140px offset for sticky header and padding
-      
+
       // Scroll to position
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
       });
-      
+
       console.log('Scrolling to:', heading.text, 'at position:', offsetPosition);
     } else {
       console.warn('Element not found for heading:', heading.text, heading.id);
@@ -174,82 +174,98 @@ export default function InlineTableOfContents({
   };
 
   return (
-    <nav 
-      className="fixed right-0 top-36 z-20 w-[280px] max-h-[calc(100vh-180px)] py-4 px-5 rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-sm shadow-sm overflow-y-auto mr-4"
-      aria-label="Table of Contents"
-      role="navigation"
-      style={{
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(156, 163, 175, 0.3) transparent'
-      }}
-    >
-      <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-        Table of Contents
-      </h3>
-      {headings.length === 0 ? (
-        <p className="text-xs text-gray-400 dark:text-gray-500 italic">
-          No headings found. Add H1, H2, or H3 headings to see them here.
-        </p>
-      ) : (
-        <ul className="space-y-0.5" role="list">
-          {headings.map((heading, index) => {
-          if (isHidden(index)) return null;
-          
-          const isActive = activeId === heading.id;
-          const hasChild = hasChildren(index);
-          const isCollapsed = collapsedSections.has(heading.id);
-          const indent = (heading.level - 1) * 20;
+    <div className="group fixed right-0 top-36 z-20 mr-4">
+      {/* Hover trigger area */}
+      <div className="absolute right-0 top-0 w-8 h-full cursor-pointer" />
 
-          return (
-            <li
-              key={heading.id}
-              className="relative"
-              style={{ paddingLeft: `${indent}px` }}
-            >
-              {/* Active indicator bar */}
-              {isActive && (
-                <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-600 dark:bg-blue-400 rounded-r-full" />
-              )}
+      {/* Arrow indicator */}
+      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-60 group-hover:opacity-0 transition-opacity duration-300">
+        <svg
+          className="w-4 h-4 text-gray-400 dark:text-gray-500 animate-pulse"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </div>
 
-              <div className="flex items-center gap-1 group">
-                {/* Collapse/expand chevron for nested items */}
-                {hasChild && (
-                  <button
-                    onClick={(e) => toggleCollapse(heading.id, e)}
-                    className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-                    aria-label={isCollapsed ? 'Expand' : 'Collapse'}
-                  >
-                    <ChevronRight 
-                      className={`w-3 h-3 text-gray-400 transition-transform ${
-                        isCollapsed ? '' : 'rotate-90'
-                      }`}
-                    />
-                  </button>
-                )}
+      {/* Table of Contents panel */}
+      <nav
+        className="w-[280px] max-h-[calc(100vh-180px)] py-4 px-5 rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-sm shadow-sm overflow-y-auto opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto"
+        aria-label="Table of Contents"
+        role="navigation"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(156, 163, 175, 0.3) transparent'
+        }}
+      >
+        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+          Table of Contents
+        </h3>
+        {headings.length === 0 ? (
+          <p className="text-xs text-gray-400 dark:text-gray-500 italic">
+            No headings found. Add H1, H2, or H3 headings to see them here.
+          </p>
+        ) : (
+          <ul className="space-y-0.5" role="list">
+            {headings.map((heading, index) => {
+              if (isHidden(index)) return null;
 
-                {/* Heading link */}
-                <a
-                  href={`#${heading.id}`}
-                  onClick={(e) => scrollToHeading(heading, e)}
-                  className={`flex-1 py-1.5 px-2 text-sm rounded transition-all ${
-                    isActive
-                      ? 'text-blue-600 dark:text-blue-400 font-medium bg-blue-50/50 dark:bg-blue-950/30'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 hover:underline hover:underline-offset-2'
-                  }`}
-                  style={{ marginLeft: hasChild ? '0' : '20px' }}
+              const isActive = activeId === heading.id;
+              const hasChild = hasChildren(index);
+              const isCollapsed = collapsedSections.has(heading.id);
+              const indent = (heading.level - 1) * 20;
+
+              return (
+                <li
+                  key={heading.id}
+                  className="relative"
+                  style={{ paddingLeft: `${indent}px` }}
                 >
-                  {/* Bullet point for non-parent items */}
-                  {!hasChild && heading.level > 1 && (
-                    <span className="inline-block w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500 mr-2" />
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-600 dark:bg-blue-400 rounded-r-full" />
                   )}
-                  {heading.text}
-                </a>
-              </div>
-            </li>
-          );
-        })}
-        </ul>
-      )}
-    </nav>
+
+                  <div className="flex items-center gap-1 group">
+                    {/* Collapse/expand chevron for nested items */}
+                    {hasChild && (
+                      <button
+                        onClick={(e) => toggleCollapse(heading.id, e)}
+                        className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                        aria-label={isCollapsed ? 'Expand' : 'Collapse'}
+                      >
+                        <ChevronRight
+                          className={`w-3 h-3 text-gray-400 transition-transform ${isCollapsed ? '' : 'rotate-90'
+                            }`}
+                        />
+                      </button>
+                    )}
+
+                    {/* Heading link */}
+                    <a
+                      href={`#${heading.id}`}
+                      onClick={(e) => scrollToHeading(heading, e)}
+                      className={`flex-1 py-1.5 px-2 text-sm rounded transition-all ${isActive
+                          ? 'text-blue-600 dark:text-blue-400 font-medium bg-blue-50/50 dark:bg-blue-950/30'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 hover:underline hover:underline-offset-2'
+                        }`}
+                      style={{ marginLeft: hasChild ? '0' : '20px' }}
+                    >
+                      {/* Bullet point for non-parent items */}
+                      {!hasChild && heading.level > 1 && (
+                        <span className="inline-block w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500 mr-2" />
+                      )}
+                      {heading.text}
+                    </a>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </nav>
+    </div>
   );
 }

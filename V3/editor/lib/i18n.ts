@@ -3,7 +3,7 @@ export const locales = ["en", "am", "ar"] as const;
 export type Locale = (typeof locales)[number];
 
 export type LocaleDictionary = {
-    [key: string]: string | LocaleDictionary;
+    [key: string]: string | string[] | LocaleDictionary;
 };
 
 export const defaultLocale: Locale = "en";
