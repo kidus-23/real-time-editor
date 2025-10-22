@@ -468,7 +468,7 @@ function Editor({
 
         {/* Action buttons - appear when hovering on this area */}
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto">
-          <div className="bg-white/95 dark:bg-neutral-900/60 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/40 rounded-xl shadow-xl px-4 py-3 dark:shadow-gray-900/30">
+          <div className="bg-white/95 dark:bg-neutral-900/60 backdrop-blur-md rounded-xl px-4 py-3">
             <div className="flex flex-wrap gap-2">
               <TranslateDocument doc={doc} editor={editor} />
               <Summarize editor={editor} />

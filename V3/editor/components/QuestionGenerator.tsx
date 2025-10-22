@@ -218,7 +218,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant="outline" className="hover:text-white dark:hover:text-white">
+      <Button asChild variant="outline" className="hover:bg-black hover:text-white dark:hover:text-white">
         <DialogTrigger>
           <HelpCircleIcon />
           {t("editor.questionGenerator.button")}

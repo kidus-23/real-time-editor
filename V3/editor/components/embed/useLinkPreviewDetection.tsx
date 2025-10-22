@@ -25,6 +25,7 @@ function extractActualImageUrl(googleImagesUrl: string): string {
  * Extracts URL from block content, handling both plain text and links
  */
 function extractUrlFromBlock(block: any): string | null {
+    if (!block) return null;
     if (!block.content || !Array.isArray(block.content)) return null;
 
     // Check if block contains only a link
@@ -60,6 +61,7 @@ export function useLinkPreviewDetection(editor: any) {
                 const blocks = editor.document;
 
                 blocks.forEach((block: any) => {
+                    if (!block) return;
                     // Only process paragraph blocks
                     if (block.type !== 'paragraph') return;
 

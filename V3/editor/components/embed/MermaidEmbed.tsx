@@ -30,6 +30,8 @@ const MermaidEmbedComponent = ({ block, editor }: MermaidEmbedProps) => {
   const [resizeWidth, setResizeWidth] = useState<number>(100);
   const [chartId] = useState(`mermaid-embed-${mermaidIdCounter++}`);
 
+  if (!block) return null;
+
   useEffect(() => {
     // Only render if not in edit mode
     if (isEditMode) return;

@@ -15,6 +15,7 @@ interface ImageEmbedProps {
 }
 
 const ImageEmbedComponent = ({ block }: ImageEmbedProps) => {
+  if (!block) return null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
