@@ -12,7 +12,7 @@ function LiveBlocksProvider({ children }: { children: React.ReactNode }) {
       throttle={100}
       authEndpoint={"/auth-endpoint"}
       // Increase timeout for slower connections
-      lostConnectionTimeout={30000}
+      authEndpointTimeout={30000}
       // Allow resolving users and room info for notifications
       resolveUsers={async ({ userIds }) => {
         // Return user info for notifications
