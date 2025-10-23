@@ -174,14 +174,14 @@ export default function InlineTableOfContents({
   };
 
   return (
-    <div className="group fixed right-0 top-36 z-20 mr-4">
+    <div className="group fixed right-0 top-28 sm:top-36 z-20 mr-2 sm:mr-4">
       {/* Hover trigger area */}
-      <div className="absolute right-0 top-0 w-8 h-full cursor-pointer" />
+      <div className="absolute right-0 top-0 w-12 sm:w-8 h-full cursor-pointer mobile-touch-target" />
 
       {/* Arrow indicator */}
       <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-60 group-hover:opacity-0 transition-opacity duration-300">
         <svg
-          className="w-4 h-4 text-gray-400 dark:text-gray-500 animate-pulse"
+          className="w-4 sm:w-4 h-4 sm:h-4 text-gray-400 dark:text-gray-500 animate-pulse"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -192,7 +192,7 @@ export default function InlineTableOfContents({
 
       {/* Table of Contents panel */}
       <nav
-        className="w-[280px] max-h-[calc(100vh-180px)] py-4 px-5 rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-sm shadow-sm overflow-y-auto opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto"
+        className="w-[220px] sm:w-[280px] max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-180px)] py-3 sm:py-4 px-3 sm:px-5 rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-sm shadow-sm overflow-y-auto opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto"
         aria-label="Table of Contents"
         role="navigation"
         style={{

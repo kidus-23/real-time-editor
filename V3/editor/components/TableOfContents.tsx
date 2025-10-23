@@ -173,7 +173,7 @@ export default function TableOfContents({
       {/* TOC Container - Sticky and Notion-style */}
       <nav
         ref={tocRef}
-        className={`fixed right-6 top-24 z-20 w-[300px] max-h-[calc(100vh-140px)] transition-all duration-200 ease-out ${
+        className={`fixed right-6 top-24 z-20 w-[85%] sm:w-[300px] max-h-[calc(100vh-140px)] transition-all duration-200 ease-out ${
           isOpen ? 'translate-x-0 opacity-100' : 'translate-x-[320px] opacity-0 pointer-events-none'
         }`}
         aria-label="Table of Contents"
@@ -288,10 +288,10 @@ export default function TableOfContents({
       {/* Mobile Toggle Button */}
       <button
         onClick={onToggle}
-        className="fixed right-6 top-20 z-30 md:hidden bg-white dark:bg-[#1a1a1a] border border-gray-200/50 dark:border-gray-700/50 rounded-full p-2 shadow-lg hover:scale-105 active:scale-95 transition-transform"
+        className="fixed right-6 top-20 z-30 md:hidden bg-white dark:bg-[#1a1a1a] border border-gray-200/50 dark:border-gray-700/50 rounded-full p-3 shadow-lg hover:scale-105 active:scale-95 transition-transform mobile-touch-target"
         aria-label="Toggle Table of Contents"
       >
-        <List className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+        <List className="w-6 h-6 text-gray-700 dark:text-gray-300" />
       </button>
     </>
   );

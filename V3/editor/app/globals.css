@@ -628,6 +628,69 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
+  
+  /* Mobile optimizations */
+  .mobile-touch-target {
+    @apply touch-manipulation;
+  }
+  
+  @media (max-width: 640px) {
+    .mobile-touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+  
+  /* Mobile responsive utilities */
+  @media (max-width: 768px) {
+    .mobile-full-width {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+    
+    .mobile-touch-target {
+      min-height: 44px !important;
+      min-width: 44px !important;
+    }
+    
+    .mobile-py {
+      padding-top: 0.75rem !important;
+      padding-bottom: 0.75rem !important;
+    }
+    
+    .mobile-px {
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
+    }
+    
+    .mobile-text-base {
+      font-size: 1rem !important;
+      line-height: 1.5 !important;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem !important;
+      line-height: 1.25rem !important;
+    }
+    
+    .mobile-stack {
+      flex-direction: column !important;
+    }
+    
+    .mobile-hidden {
+      display: none !important;
+    }
+    
+    .mobile-block {
+      display: block !important;
+    }
+    
+    .mobile-flex {
+      display: flex !important;
+    }
+  }
 }
 
 /* Comment highlight styles */

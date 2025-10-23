@@ -178,13 +178,13 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl bg-card border border-border rounded-lg">
+      <DialogContent className="sm:max-w-2xl bg-card border border-border rounded-lg w-[95%] mx-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold tracking-tight">{t("searchDialog.title")}</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight">{t("searchDialog.title")}</DialogTitle>
         </DialogHeader>
-        <div className="relative mt-4">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-muted-foreground" />
+        <div className="relative mt-3 sm:mt-4">
+          <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+            <Search className="h-4 sm:h-5 w-4 sm:w-5 text-muted-foreground" />
           </div>
           <Input
             type="text"
@@ -192,7 +192,7 @@ function SearchDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-12 pr-28 h-12 rounded-xl text-base"
+            className="pl-10 sm:pl-12 pr-24 sm:pr-28 h-10 sm:h-12 rounded-xl text-sm sm:text-base mobile-touch-target"
             autoFocus
           />
           <Button

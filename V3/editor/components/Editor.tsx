@@ -24,7 +24,7 @@ import { useLinkPreviewDetection } from "./embed/useLinkPreviewDetection";
 import { VideoEmbed } from "./embed/VideoEmbed";
 import { ImageEmbed } from "./embed/ImageEmbed";
 import { MermaidEmbed } from "./embed/MermaidEmbed";
-import { MessageSquare, BrainCircuit } from "lucide-react";
+import { MessageSquare, BrainCircuit, ChevronDown, ChevronUp } from "lucide-react";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { toast } from "sonner";
 import {
@@ -216,7 +216,7 @@ const BlockNote = memo(function BlockNote({
   return (
     <div className={`relative mx-auto ${darkMode ? "dark" : ""}`}>
       <BlockNoteView
-        className="min-h-[60vh] notion-editor"
+        className="min-h-[60vh] notion-editor px-2 sm:px-0"
         editor={editor}
         theme={darkMode ? "dark" : "light"}
         formattingToolbar={false}
@@ -318,6 +318,36 @@ type EditorComponentProps = {
   onUndoManagerReady?: (undoManager: Y.UndoManager | null) => void;
 };
 
+// Mobile toggle component for editor actions
+const MobileActionsToggle = () => {
+  const [showMobileActions, setShowMobileActions] = useState(false);
+  
+  return (
+    <>
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 md:hidden">
+        <button 
+          className="rounded-full p-2 bg-white dark:bg-gray-800 shadow-md mobile-touch-target border border-gray-200 dark:border-gray-700"
+          onClick={() => setShowMobileActions(!showMobileActions)}
+        >
+          {showMobileActions ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+      </div>
+      
+      {showMobileActions && (
+        <style jsx global>{`
+          @media (max-width: 768px) {
+            .editor-actions {
+              opacity: 1 !important;
+              transform: translateY(0) !important;
+              pointer-events: auto !important;
+            }
+          }
+        `}</style>
+      )}
+    </>
+  );
+};
+
 function Editor({
   darkMode = false,
   onEditorReady,
@@ -329,6 +359,7 @@ function Editor({
   const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editor, setEditor] = useState<BlockNoteEditor<any> | null>(null);
+  const [showMobileActions, setShowMobileActions] = useState(false);
 
   useEffect(() => {
     if (!room) {
@@ -561,9 +592,15 @@ function Editor({
           </svg>
         </div>
 
-        {/* Action buttons - appear when hovering on this area */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto">
-          <div className="rounded-xl px-4 py-3">
+        {/* Mobile toggle button for actions */}
+        <MobileActionsToggle />
+        
+        {/* Action buttons - appear when hovering on desktop or clicking toggle on mobile */}
+        <div className={`editor-actions absolute top-14 left-1/2 transform -translate-x-1/2 z-20 transition-all duration-300 ease-out 
+          md:opacity-0 md:group-hover:opacity-100 md:translate-y-[-10px] md:group-hover:translate-y-0 md:pointer-events-none md:group-hover:pointer-events-auto md:top-4
+          opacity-0 translate-y-[-10px] pointer-events-none md:group-hover:pointer-events-auto`}
+        >
+          <div className="rounded-xl px-4 py-3 bg-white dark:bg-gray-800 shadow-lg">
             <div className="flex flex-wrap gap-2">
               <TranslateDocument doc={doc} editor={editor} />
               <Summarize editor={editor} />

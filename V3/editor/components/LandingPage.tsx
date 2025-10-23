@@ -15,20 +15,20 @@ export default function LandingPage() {
     <main className="min-h-screen bg-white dark:bg-[#0f0f0f] text-[#1a1a1a] dark:text-[#f5f5f5] font-['Recursive','Inter',system-ui]">
 
       {/* Navbar */}
-      <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto bg-white dark:bg-[#0f0f0f]">
+      <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto bg-white dark:bg-[#0f0f0f] w-full">
         <div className="text-3xl font-bold">KEN</div>
         <ul className="flex gap-6 items-center">
-          <li><a href="#features" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">Features</a></li>
-          <li><a href="#testimonials" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">Testimonials</a></li>
-          <li><Link href="/Documentation.pdf" target="_blank" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">Docs</Link></li>
-          <li>
+          <li className="hidden md:block"><a href="#features" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">Features</a></li>
+          <li className="hidden md:block"><a href="#testimonials" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">Testimonials</a></li>
+          <li className="hidden md:block"><Link href="/Documentation.pdf" target="_blank" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">Docs</Link></li>
+          <li className="hidden md:block">
             <SignInButton mode="modal">
               <button className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Login</button>
             </SignInButton>
           </li>
           <li>
             <SignInButton mode="modal">
-              <button className="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
+              <button className="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors mobile-touch-target">
                 Get Started
               </button>
             </SignInButton>
@@ -37,9 +37,9 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section - Campsite style */}
-      <section className="relative flex flex-col items-center justify-center text-center py-32 px-6 bg-white dark:bg-[#0f0f0f]">
+      <section className="relative flex flex-col items-center justify-center text-center py-16 md:py-32 px-4 md:px-6 bg-white dark:bg-[#0f0f0f] w-full">
         <motion.h1
-          className="text-6xl md:text-8xl font-bold mb-6 leading-[1.05] tracking-tight max-w-5xl"
+          className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 leading-[1.05] tracking-tight max-w-5xl"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -57,18 +57,18 @@ export default function LandingPage() {
           </span>
         </motion.h1>
         <motion.p
-          className="text-2xl text-[#64748b] dark:text-[#94a3b8] max-w-3xl mb-14 leading-relaxed font-normal"
+          className="text-xl md:text-2xl text-[#64748b] dark:text-[#94a3b8] max-w-3xl mb-10 md:mb-14 leading-relaxed font-normal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.6 }}
         >
           The new standard for thoughtful team collaboration — AI-powered real-time editing, organized and effortless.
         </motion.p>
-        <motion.div className="flex flex-col sm:flex-row gap-5 mb-20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-          <SignInButton mode="modal">
-            <button className="bg-[#0f172a] hover:bg-[#1e293b] dark:bg-white dark:hover:bg-[#f1f5f9] text-white dark:text-[#0f172a] px-8 py-4 rounded-lg transition-colors font-semibold text-base">Start for free</button>
+        <motion.div className="flex flex-col sm:flex-row gap-5 mb-10 md:mb-20 w-full px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+          <SignInButton mode="modal" className="w-full sm:w-auto">
+            <button className="bg-[#0f172a] hover:bg-[#1e293b] dark:bg-white dark:hover:bg-[#f1f5f9] text-white dark:text-[#0f172a] px-8 py-4 rounded-lg transition-colors font-semibold text-base w-full sm:w-auto mobile-touch-target">Start for free</button>
           </SignInButton>
-          <button onClick={() => router.push("/about")} className="text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white px-8 py-4 transition-colors font-semibold text-base">
+          <button onClick={() => router.push("/about")} className="hidden md:block text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white px-8 py-4 transition-colors font-semibold text-base">
             Watch demo →
           </button>
         </motion.div>

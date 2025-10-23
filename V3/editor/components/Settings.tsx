@@ -37,21 +37,21 @@ function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#0f0f0f] dark:via-[#1a1a2e] dark:to-[#0f0f0f] p-6 md:p-12 transition-colors duration-300">
-      <div className="container max-w-5xl mx-auto py-12 px-6 animate-fade-in">
-        <div className="mb-14 animate-fade-in">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent mb-4 tracking-tight leading-tight">{t("settings.title")}</h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#0f0f0f] dark:via-[#1a1a2e] dark:to-[#0f0f0f] p-3 sm:p-6 md:p-12 transition-colors duration-300">
+      <div className="container max-w-5xl mx-auto py-6 sm:py-12 px-3 sm:px-6 animate-fade-in mobile-px">
+        <div className="mb-8 sm:mb-14 animate-fade-in">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent mb-4 tracking-tight leading-tight">{t("settings.title")}</h1>
         </div>
 
         <div className="space-y-8">
           {/* Appearance Settings */}
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.appearance.title")}</h2>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-4 sm:p-8 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900 dark:text-white tracking-tight">{t("settings.appearance.title")}</h2>
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
                 <Label htmlFor="theme-select" className="text-gray-700 dark:text-gray-300 font-medium">{t("settings.appearance.theme")}</Label>
                 <Select value={theme} onValueChange={setTheme}>
-                  <SelectTrigger className="w-[180px] bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-gray-600">
+                  <SelectTrigger className="w-full sm:w-[180px] bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-gray-600 mobile-touch-target">
                     <SelectValue placeholder={t("settings.appearance.themePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>

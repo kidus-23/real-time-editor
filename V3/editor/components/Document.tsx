@@ -8,6 +8,7 @@ import {
   useCallback,
   useRef,
 } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
 import {
@@ -103,16 +104,18 @@ function Document({
   >(null);
   const [lastSavedContent, setLastSavedContent] = useState("");
   const [lastSavedTitle, setLastSavedTitle] = useState("");
+  const [isTitleFocused, setIsTitleFocused] = useState(false);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isOwner = useOwner();
   const { theme } = useTheme();
   const { user } = useUser();
   const { t } = useTranslation();
   const [blockEditor, setBlockEditor] = useState<BlockNoteEditor | null>(null);
-    const { zenMode, setZenMode } = useZenMode();
-    const [fullWidth, setFullWidth] = useState(false);
-    const [isTocOpen, setIsTocOpen] = useState(false);
-    const titleFormRef = useRef<HTMLFormElement>(null);
+  const { zenMode, setZenMode } = useZenMode();
+  const [fullWidth, setFullWidth] = useState(false);
+  const [isTocOpen, setIsTocOpen] = useState(false);
+  const titleFormRef = useRef<HTMLFormElement>(null);
+  const isMobile = useMediaQuery('(max-width: 640px)');
 
   // Memoize fullWidth toggle to prevent lag
   const toggleFullWidth = useCallback(() => {
@@ -521,19 +524,31 @@ function Document({
   return (
     <div className="min-h-screen w-full bg-white dark:bg-[#0f0f0f] transition-colors duration-300">
       {/* Header with document controls */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-all duration-300">
+      <header className="sticky top-0 z-10 bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-gray-800 px-3 sm:px-6 py-2 sm:py-3 transition-all duration-300">
         <div className="w-full">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Document title form */}
             <form
               ref={titleFormRef}
-              className="flex-1 flex items-center gap-3 group relative"
-              onSubmit={updateTitle}
+              className={`flex-1 flex items-center gap-2 sm:gap-3 group relative ${isMobile && isTitleFocused ? 'w-full' : ''}`}
+              onSubmit={(e) => {
+                updateTitle(e);
+                if (isMobile) {
+                  setIsTitleFocused(false);
+                }
+              }}
             >
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="font-bold text-3xl border-0 hover:bg-gray-100/40 dark:hover:bg-gray-800/40 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-0 bg-transparent px-3 py-2 h-auto w-full max-w-3xl tracking-tight transition-all rounded-lg"
+                onFocus={() => setIsTitleFocused(true)}
+                onBlur={() => {
+                  // Small delay to allow form submission before hiding
+                  setTimeout(() => setIsTitleFocused(false), 200);
+                }}
+                className={`font-bold text-xl sm:text-3xl border-0 hover:bg-gray-100/40 dark:hover:bg-gray-800/40 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-0 bg-transparent px-2 sm:px-3 py-1 sm:py-2 h-auto w-full tracking-tight transition-all rounded-lg mobile-touch-target ${
+                  isMobile && isTitleFocused ? 'max-w-full' : 'max-w-3xl'
+                }`}
                 placeholder={t("document.placeholders.title")}
                 style={{ fontFamily: "'Recursive', 'Inter', system-ui", fontWeight: 700 }}
               />
@@ -542,7 +557,9 @@ function Document({
                 type="submit"
                 variant="ghost"
                 size="sm"
-                className="opacity-70 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 rounded-lg text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium"
+                className={`mobile-touch-target opacity-70 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 rounded-lg text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium ${
+                  isMobile && !isTitleFocused ? 'hidden sm:flex' : ''
+                }`}
               >
                 {isUpdating ? t("document.actions.saving") : t("document.actions.save")}
               </Button>

@@ -423,11 +423,11 @@ function Chatbar({ className = "" }: { className?: string }) {
   return (
     <>
       <div
-        className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${className}`}
+        className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${className} mobile-touch-target`}
       >
         <Button
           onClick={() => setIsOpen(true)}
-          className="relative h-12 w-12 rounded-full bg-primary shadow-lg hover:shadow-primary/25 transition-all duration-300"
+          className="relative h-12 w-12 rounded-full bg-primary shadow-lg hover:shadow-primary/25 transition-all duration-300 sm:h-12 sm:w-12 h-14 w-14"
         >
           <MessagesSquare className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -444,7 +444,7 @@ function Chatbar({ className = "" }: { className?: string }) {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent
           side="right"
-          className="w-[400px] sm:w-[540px] p-0 flex flex-col h-full bg-white dark:bg-[#0f0f0f] border-l border-gray-200 dark:border-gray-800"
+          className="w-full sm:w-[400px] md:w-[540px] p-0 flex flex-col h-full bg-white dark:bg-[#0f0f0f] border-l border-gray-200 dark:border-gray-800 overflow-hidden"
         >
           <Tabs
             defaultValue="chat"

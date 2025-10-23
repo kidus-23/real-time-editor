@@ -167,11 +167,11 @@ const CommentsSidebar = memo(function CommentsSidebar({ isOpen, onClose, roomId,
     }
 
     return (
-        <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent side="right" className="w-[400px] sm:w-[500px] p-0 flex flex-col h-full bg-white dark:bg-[#0f0f0f] border-l border-gray-200 dark:border-gray-800">
-                <SheetHeader className="p-6 border-b border-gray-200/50 dark:border-gray-800/50">
-                    <SheetTitle className="flex items-center gap-3 text-2xl font-bold tracking-tight">
-                        <MessageSquare className="h-6 w-6" />
+        <Sheet open={isOpen} onOpenChange={onClose ? () => onClose() : undefined}>
+            <SheetContent side="right" className="w-full sm:w-[500px] p-0 flex flex-col h-full bg-white dark:bg-[#0f0f0f] border-l border-gray-200 dark:border-gray-800 mobile-px">
+                <SheetHeader className="p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                    <SheetTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold tracking-tight">
+                        <MessageSquare className="h-5 sm:h-6 w-5 sm:w-6" />
                         Comments
                         <Badge variant="secondary" className="rounded-full px-3 py-1">{comments.length}</Badge>
                     </SheetTitle>
