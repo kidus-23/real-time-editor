@@ -198,7 +198,7 @@ const am = {
             error: "ይዘት ማዘጋጀት አልተሳካም",
         },
         questionGenerator: {
-            button: "ጥያቄና መልስ",
+            button: "Q&A",
             title: "የጥያቄ ማመንጫ",
             description: "ከሰነድዎ ይዘት የልምምድ ጥያቄዎችን ያመነጩ።",
             selectType: "የጥያቄ አይነት ይምረጡ",

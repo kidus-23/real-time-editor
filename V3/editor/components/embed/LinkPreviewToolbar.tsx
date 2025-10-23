@@ -4,9 +4,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, Info, Video, Image } from 'lucide-react';
 import { toast } from 'sonner';
+import { BlockNoteEditor } from '@blocknote/core';
 
 interface LinkPreviewToolbarProps {
-    editor: any;
+    editor: BlockNoteEditor;
 }
 
 export function LinkPreviewToolbar({ editor }: LinkPreviewToolbarProps) {
@@ -32,7 +33,7 @@ export function LinkPreviewToolbar({ editor }: LinkPreviewToolbarProps) {
                 if (imgurl) {
                     cleanUrl = imgurl;
                 }
-            } catch (e) {
+            } catch {
                 // Keep original URL if parsing fails
             }
         }
@@ -42,7 +43,7 @@ export function LinkPreviewToolbar({ editor }: LinkPreviewToolbarProps) {
                 editor.insertBlocks(
                     [
                         {
-                            type: 'linkPreview',
+                            type: 'linkPreview' as any, // eslint-disable-line @typescript-eslint/no-explicit-any
                             props: { url: cleanUrl },
                         },
                     ],
@@ -77,7 +78,7 @@ export function LinkPreviewToolbar({ editor }: LinkPreviewToolbarProps) {
                 editor.insertBlocks(
                     [
                         {
-                            type: 'videoEmbed',
+                            type: 'videoEmbed' as any, // eslint-disable-line @typescript-eslint/no-explicit-any
                             props: { url: cleanUrl },
                         },
                     ],
@@ -115,7 +116,7 @@ export function LinkPreviewToolbar({ editor }: LinkPreviewToolbarProps) {
                 if (imgurl) {
                     cleanUrl = imgurl;
                 }
-            } catch (e) {
+            } catch {
                 // Keep original URL if parsing fails
             }
         }
@@ -125,7 +126,7 @@ export function LinkPreviewToolbar({ editor }: LinkPreviewToolbarProps) {
                 editor.insertBlocks(
                     [
                         {
-                            type: 'imageEmbed',
+                            type: 'imageEmbed' as any, // eslint-disable-line @typescript-eslint/no-explicit-any
                             props: { url: cleanUrl },
                         },
                     ],
@@ -172,6 +173,7 @@ export function LinkPreviewToolbar({ editor }: LinkPreviewToolbarProps) {
                 className="gap-2"
                 title="Insert Image"
             >
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image className="h-4 w-4" />
                 Image
             </Button>

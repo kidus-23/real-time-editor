@@ -5,7 +5,7 @@ import { PointerEvent, useCallback, useMemo } from "react";
 import FollowPointer from "./FollowPointer";
 
 function LiveCursorProvider({ children }: { children: React.ReactNode }) {
-    const [myPresence, updateMyPresence] = useMyPresence();
+    const [, updateMyPresence] = useMyPresence();
     const others = useOthers();
 
     // Memoize the filtered others to avoid unnecessary re-renders

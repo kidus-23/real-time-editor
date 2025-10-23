@@ -221,7 +221,7 @@ function QuestionGenerator({ editor }: QuestionGeneratorProps) {
             <Button asChild variant="outline" className="hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black">
         <DialogTrigger>
           <HelpCircleIcon />
-          {t("editor.question.button")}
+          {t("editor.questionGenerator.button")}
         </DialogTrigger>
       </Button>
       <DialogContent className="max-w-2xl">

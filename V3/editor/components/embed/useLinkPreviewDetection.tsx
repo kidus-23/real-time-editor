@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useEffect } from 'react';
 import LinkifyIt from 'linkify-it';
 
@@ -15,7 +17,7 @@ function extractActualImageUrl(googleImagesUrl: string): string {
         if (imgurl) {
             return imgurl;
         }
-    } catch (e) {
+    } catch {
         // If parsing fails, return original URL
     }
     return googleImagesUrl;
@@ -34,7 +36,7 @@ function extractUrlFromBlock(block: any): string | null {
     }
 
     // Check for plain text URLs
-    let text = block.content.map((item: any) => item.text || '').join('').trim();
+    const text = block.content.map((item: any) => item.text || '').join('').trim();
 
     if (!text) return null;
 
