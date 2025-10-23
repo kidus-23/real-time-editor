@@ -198,7 +198,7 @@ const ar = {
             error: "فشل إنشاء المحتوى",
         },
         questionGenerator: {
-            button: "أسئلة وأجوبة",
+            button: "Q&A",
             title: "مولد الأسئلة",
             description: "إنشاء أسئلة تدريبية من محتوى مستندك.",
             selectType: "اختر نوع السؤال",

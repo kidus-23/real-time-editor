@@ -1,11 +1,10 @@
 // components/Chatbar.tsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
   MessagesSquare,
-  Pencil,
   X,
   Bot,
   Send,
@@ -31,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { AI_MODELS } from "@/lib/constants";
@@ -54,9 +52,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import APIKeySettings from "@/components/APIKeySettings";
 import ReactMarkdown from "react-markdown";
 
-// Import useRoom but don't use it directly
-import { useRoom } from "@liveblocks/react";
-
 // Build model categories from AI_MODELS to ensure UI only shows supported models
 const MODEL_CATEGORIES: Record<
   string,
@@ -64,13 +59,13 @@ const MODEL_CATEGORIES: Record<
 > = {
   OpenAI: Object.entries(AI_MODELS.OPENAI).map(([id, meta]) => ({
     id,
-    name: (meta as any).name || id,
-    description: (meta as any).type,
+    name: meta.name || id,
+    description: meta.type,
   })),
   Gemini: Object.entries(AI_MODELS.GEMINI).map(([id, meta]) => ({
     id,
-    name: (meta as any).name || id,
-    description: (meta as any).type,
+    name: meta.name || id,
+    description: meta.type,
   })),
 };
 
@@ -106,10 +101,8 @@ function Chatbar({ className = "" }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   // Default to a model known in `lib/constants.ts` to avoid sending unsupported provider formats
   const [activeModel, setActiveModel] = useState("gemini-2.5-flash"); // Default model
-  const [showSettings, setShowSettings] = useState(false);
   const [showAPIKeySettings, setShowAPIKeySettings] = useState(false);
   const [useDocumentContext, setUseDocumentContext] = useState(false);
-  const [documentContent, setDocumentContent] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState("chat");
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -238,9 +231,8 @@ function Chatbar({ className = "" }: { className?: string }) {
   }, [roomId, user, isOpen, activeTab]);
 
   // Function to get document content
-  const getDocumentContent = async () => {
+  const getDocumentContent = useCallback(async () => {
     if (!isDocumentPage || !roomId) {
-      setDocumentContent(null);
       return null;
     }
 
@@ -259,20 +251,19 @@ function Chatbar({ className = "" }: { className?: string }) {
         return null;
       }
 
-      setDocumentContent(editorContent);
       return editorContent;
     } catch (error) {
       console.error("Error getting document content:", error);
       return null;
     }
-  };
+  }, [isDocumentPage, roomId]);
 
   // Update document content when context is enabled
   useEffect(() => {
     if (useDocumentContext && isDocumentPage) {
       getDocumentContent();
     }
-  }, [useDocumentContext, isDocumentPage]);
+  }, [useDocumentContext, isDocumentPage, getDocumentContent]);
 
   // Toggle document context
   const toggleDocumentContext = () => {
@@ -328,7 +319,7 @@ function Chatbar({ className = "" }: { className?: string }) {
           userApiKeys: userApiKeys,
         }),
       });
-      let data: any = null;
+      let data: { response: string; model?: string; usage?: unknown; error?: string } | null = null;
       if (!response.ok) {
         // Try to extract error message from body
         let bodyText = "";
@@ -345,7 +336,7 @@ function Chatbar({ className = "" }: { className?: string }) {
               status: "error",
             },
           ]);
-        } catch (e) {
+        } catch {
           setMessages((prev) => [
             ...prev,
             {
@@ -361,6 +352,9 @@ function Chatbar({ className = "" }: { className?: string }) {
 
       try {
         data = await response.json();
+        if (!data) {
+          throw new Error("Empty response from server");
+        }
       } catch (e) {
         const text = await response.text();
         setMessages((prev) => [
@@ -382,7 +376,7 @@ function Chatbar({ className = "" }: { className?: string }) {
           timestamp: new Date(),
           status: "success",
           model: data.model,
-          usage: data.usage,
+          usage: data.usage as Message["usage"],
         },
       ]);
     } catch (error) {
@@ -544,7 +538,6 @@ function Chatbar({ className = "" }: { className?: string }) {
                                 <ReactMarkdown
                                   components={{
                                     code: ({
-                                      node,
                                       children,
                                       className,
                                       ...props

@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useEffect, useRef, useState } from "react";
 import { createReactBlockSpec } from "@blocknote/react";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,7 +52,7 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
         );
         setSvg(renderedSvg);
         setError("");
-      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
         setError(err.message || "Failed to render diagram");
         setSvg("");
       }
@@ -177,7 +179,7 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
                 editor.updateBlock(block, {
                   type: "mermaid",
                   props: { code: e.target.value },
-                } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+                } as any);
               }}
               placeholder="Enter Mermaid diagram code..."
               className="font-mono text-sm min-h-[200px]"

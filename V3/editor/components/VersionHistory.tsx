@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -9,7 +11,6 @@ import {
   collection,
   query,
   orderBy,
-  getDocs,
   Timestamp,
   onSnapshot,
   doc,
@@ -23,14 +24,13 @@ import { createSnapshot, restoreVersion } from "@/actions/versionHistory";
 
 // Import BlockNote components and conversion utilities
 import {
-  BlockNoteEditor,
-  PartialBlock,
   Block,
   blocksToMarkdown,
   markdownToBlocks,
   BlockNoteSchema,
   defaultBlockSpecs,
 } from "@blocknote/core";
+import { BlockNoteEditor } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { LinkPreview } from "./embed/LinkPreview";
@@ -58,13 +58,9 @@ interface VersionHistoryProps {
 const previewSchema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     linkPreview: LinkPreview as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     videoEmbed: VideoEmbed as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     imageEmbed: ImageEmbed as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mermaid: MermaidEmbed as any,
   },
 });
@@ -92,24 +88,20 @@ function PreviewEditor({ markdownContent }: { markdownContent: string }) {
       }
 
       try {
-        // Use the previewEditor's pmSchema when parsing markdown to blocks
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // Use the previewEditor's pmSchema when parsing markdown to blocks
         const parsedBlocks = await (markdownToBlocks as any)(
           markdownContent,
           (previewEditor as any).pmSchema
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pb = parsedBlocks as any;
+        const pb = parsedBlocks as Block[];
         setBlocks(pb);
 
         // Apply parsed blocks to the preview editor so the view renders properly
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (previewEditor as any).isEditable = false;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (previewEditor as any).replaceBlocks(
             (previewEditor as any).topLevelBlocks,
-            pb as any
+            pb
           );
         } catch (innerErr) {
           // Non-fatal: render will still show blocks via BlockNoteView initial content
@@ -153,7 +145,6 @@ export default function VersionHistory({
   const [currentContent, setCurrentContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useState(false);
-  const [restoring, setRestoring] = useState(false);
   const { user } = useUser();
 
   // Fetch versions and current document content when the sheet is opened
@@ -180,18 +171,17 @@ export default function VersionHistory({
         // the editor and its pmSchema are initialized. Guard to avoid runtime errors
         // from underlying tiptap/pm serializers (e.g., domSerializer undefined).
         try {
-          const hasEditor = !!(editor as any);
-          const hasPmSchema = !!(editor as any)?.pmSchema;
+          const editorInstance = editor as any;
+          const hasEditor = !!editorInstance;
+          const hasPmSchema = !!editorInstance?.pmSchema;
 
           if (hasEditor && hasPmSchema) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const contentInBlocks = (editor as any).topLevelBlocks;
+            const contentInBlocks = editorInstance.topLevelBlocks;
             // Pass the editor instance as the 3rd argument to blocksToMarkdown (matches ImportExportMenu usage)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const markdown = await (blocksToMarkdown as any)(
               contentInBlocks,
-              (editor as any).pmSchema,
-              editor as any
+              editorInstance.pmSchema,
+              editorInstance
             );
             setCurrentContent(markdown ?? "");
           } else {
@@ -227,9 +217,7 @@ export default function VersionHistory({
   }, [documentId, isOpen, editor, selectedVersion]);
 
   // Helper function to manually serialize custom blocks
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const serializeCustomBlocks = (blocks: any[]): any[] => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return blocks.map((block: any) => {
       // Handle linkPreview blocks
       if (block.type === "linkPreview" && block.props?.url) {
@@ -242,7 +230,7 @@ export default function VersionHistory({
               content: [{ type: "text", text: block.props.url }],
             },
           ],
-        };
+        } as any;
       }
 
       // Handle imageEmbed blocks
@@ -253,7 +241,7 @@ export default function VersionHistory({
             url: block.props.url,
             caption: block.props.caption || "",
           },
-        };
+        } as any;
       }
 
       // Handle videoEmbed blocks
@@ -268,7 +256,7 @@ export default function VersionHistory({
               content: [{ type: "text", text: `🎥 ${caption}` }],
             },
           ],
-        };
+        } as any;
       }
 
       // Handle mermaid blocks - convert to code block
@@ -279,14 +267,14 @@ export default function VersionHistory({
             language: "mermaid",
           },
           content: [{ type: "text", text: block.props.code }],
-        };
+        } as any;
       }
       // Recursively handle nested blocks (children)
       if (block.children && Array.isArray(block.children)) {
         return {
           ...block,
           children: serializeCustomBlocks(block.children),
-        };
+        } as any;
       }
 
       return block;
@@ -305,11 +293,8 @@ export default function VersionHistory({
       try {
         // Capture editor fields in locals to avoid a race where `editor` changes
         // between the truthiness check and the actual use (causes pmSchema undefined).
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const editorAny = editor as any;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pmSchema = editorAny?.pmSchema as any | undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let topLevelBlocks = editorAny?.topLevelBlocks as any | undefined;
 
         if (editorAny && pmSchema && topLevelBlocks) {
@@ -318,7 +303,6 @@ export default function VersionHistory({
 
           // Pass the editor instance as the 3rd argument to blocksToMarkdown to ensure internal serializers
           // can access editor helpers (matches ImportExportMenu usage).
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           markdownContent = await (blocksToMarkdown as any)(
             topLevelBlocks,
             pmSchema,
@@ -362,7 +346,6 @@ export default function VersionHistory({
   const handleRestoreVersion = async () => {
     if (!selectedVersion || !editor) return;
 
-    setRestoring(true);
     try {
       // 1. Call the server action to GET the historical markdown
       const result = await restoreVersion(documentId, selectedVersion.id);
@@ -370,7 +353,6 @@ export default function VersionHistory({
       if (result.success && result.markdownContent) {
         // 2. Convert the markdown string back into BlockNote blocks
         // Pass the editor schema (pmSchema) to ensure parser has correct schema when available
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const blocks = await (markdownToBlocks as any)(
           result.markdownContent,
           (editor as any)?.pmSchema
@@ -378,7 +360,6 @@ export default function VersionHistory({
 
         // 3. Replace the live editor's content with the restored blocks
         // Cast to any to avoid strict typing mismatches between BlockNote schemas
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (editor as any).replaceBlocks(
           (editor as any).topLevelBlocks,
           blocks as any
@@ -392,8 +373,6 @@ export default function VersionHistory({
     } catch (error) {
       console.error("Error restoring version:", error);
       toast.error("Failed to restore version");
-    } finally {
-      setRestoring(false);
     }
   };
 

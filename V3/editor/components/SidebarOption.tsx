@@ -13,7 +13,7 @@ const SidebarOption = memo(function SidebarOption({ href, id, isExpanded }: {
     id: string;
     isExpanded: boolean;
 }) {
-    const [data, loading] = useDocument(doc(db, "documents", id));
+    const [data] = useDocument(doc(db, "documents", id));
     const pathname = usePathname();
     const router = useRouter();
     const isActive = href.includes(pathname) && pathname !== "/";

@@ -1,6 +1,8 @@
-'use client'
+"use client";
 
-import { useEffect, useRef, useState, memo } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { memo, useEffect, useRef, useState } from "react";
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { useUser } from '@clerk/nextjs';

@@ -7,6 +7,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
@@ -76,6 +77,9 @@ export default function AddCommentDialog({
             <DialogContent className="sm:max-w-[600px] bg-card border border-border rounded-lg">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold tracking-tight">{t("addCommentDialog.title")}</DialogTitle>
+                    <DialogDescription className="text-base text-muted-foreground">
+                        Add a comment to the selected text.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
