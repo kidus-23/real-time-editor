@@ -12,7 +12,10 @@ import { toast } from "sonner";
 // Counter for unique chart IDs
 let mermaidIdCounter = 0;
 
-type MermaidEmbedProps = Parameters<typeof createReactBlockSpec>[1]['render'] extends (props: infer P) => unknown ? P : never;
+type MermaidEmbedProps = {
+  block: any;
+  editor: any;
+};
 
 const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
   const { block, editor } = props;

@@ -1,7 +1,7 @@
 'use client';
 
-import HomePage from "@/components/HomePage";
-import LandingPage from "@/components/LandingPage";
+import HomePage from "./components/HomePage";
+import LandingPage from "./components/LandingPage";
 import { useUser } from "@clerk/nextjs";
 
 export default function Home() {
