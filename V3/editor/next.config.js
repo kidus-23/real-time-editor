@@ -1,7 +1,6 @@
-import type { NextConfig } from "next";
-import path from "path";
+const path = require('path');
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   /* config options here */
   outputFileTracingRoot: path.join(__dirname, "../../"),
   images: {
@@ -25,4 +24,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
