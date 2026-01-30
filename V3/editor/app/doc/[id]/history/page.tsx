@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import VersionHistory from '../../../components/VersionHistory';
-import { Button } from '../../../components/ui/button';
+import VersionHistory from '../../../../components/VersionHistory';
+import { Button } from '../../../../components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 

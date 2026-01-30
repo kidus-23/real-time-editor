@@ -1,6 +1,6 @@
 'use client'
 
-import KnowledgeGraph from "../components/KnowledgeGraph";
+import KnowledgeGraph from "../../components/KnowledgeGraph";
 
 export default function GraphPage() {
   return <KnowledgeGraph />;
