@@ -17,7 +17,8 @@ type MermaidEmbedProps = {
   editor: any;
 };
 
-const MermaidEmbedComponent = ({ block, editor }: MermaidEmbedProps) => {
+const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
+  const { block, editor } = props;
   const chartRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>("");
@@ -26,7 +27,7 @@ const MermaidEmbedComponent = ({ block, editor }: MermaidEmbedProps) => {
   const [resizeWidth, setResizeWidth] = useState<number>(100);
   const [chartId] = useState(`mermaid-embed-${mermaidIdCounter++}`);
 
-  const code = block.props.code || '';
+  const code = block?.props?.code || '';
 
   useEffect(() => {
     // Only render if not in edit mode
@@ -226,7 +227,7 @@ export const MermaidEmbedSpec = {
 
 // Create the React block spec
 export const MermaidEmbed = createReactBlockSpec(MermaidEmbedSpec, {
-  render: (props) => <MermaidEmbedComponent block={props.block as MermaidEmbedProps['block']} editor={props.editor as MermaidEmbedProps['editor']} />,
+  render: MermaidEmbedComponent as any,
   toExternalHTML: (props) => {
     return (
       <div data-block-type="mermaid">
