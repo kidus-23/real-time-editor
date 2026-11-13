@@ -10,6 +10,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import LocaleProvider from "@/components/LocaleProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import { ZenModeProvider } from "@/contexts/ZenModeContext";
+import { PHProvider } from "@/components/PHProvider";
+import { PostHogUserIdentify } from "@/components/PostHogUserIdentify";
 import { cookies } from "next/headers";
 import {
   defaultLocale,
@@ -38,27 +40,30 @@ export default async function RootLayout({
 
   return (
     <ClerkProvider publishableKey={publishableKey}>
-      <LiveBlocksProvider>
-        <html lang={locale} suppressHydrationWarning>
-          <body suppressHydrationWarning>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem={true}
-              storageKey="editor-theme"
-            >
-              <LocaleProvider locale={locale} dictionary={dictionary}>
-                <ZenModeProvider>
-                  <LayoutWrapper>
-                    {children}
-                  </LayoutWrapper>
-                  <Toaster position="top-center" />
-                </ZenModeProvider>
-              </LocaleProvider>
-            </ThemeProvider>
-          </body>
-        </html>
-      </LiveBlocksProvider>
+      <PHProvider>
+        <PostHogUserIdentify />
+        <LiveBlocksProvider>
+          <html lang={locale} suppressHydrationWarning>
+            <body suppressHydrationWarning>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem={true}
+                storageKey="editor-theme"
+              >
+                <LocaleProvider locale={locale} dictionary={dictionary}>
+                  <ZenModeProvider>
+                    <LayoutWrapper>
+                      {children}
+                    </LayoutWrapper>
+                    <Toaster position="top-center" />
+                  </ZenModeProvider>
+                </LocaleProvider>
+              </ThemeProvider>
+            </body>
+          </html>
+        </LiveBlocksProvider>
+      </PHProvider>
     </ClerkProvider>
   );
 }
