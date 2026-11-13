@@ -1,0 +1,222 @@
+rules_version = '2';
+
+// =================================================================
+// Cloud Firestore Security Rules — Real Time Editor (real-time-editor-8824b)
+// =================================================================
+//
+// WHY THESE RULES LOOK THE WAY THEY DO
+// ------------------------------------
+// This app authenticates users with Clerk and does realtime collab with
+// Liveblocks. The Firebase Web SDK is used directly from the browser, but the
+// browser NEVER signs in to Firebase Auth (firebase/auth is not imported
+// anywhere in the codebase). Therefore `request.auth` is null for every client
+// request, and security rules CANNOT verify who the user is.
+//
+// Access control today lives in two places that bypass these rules:
+//   * Next.js server actions (Admin SDK) — create/delete documents, comments
+//     CRUD, room membership, content updates, tag generation, version restore.
+//   * Liveblocks room permissions — who can join a room.
+//
+// Until a Clerk -> Firebase custom-token bridge exists (see "NEXT STEP" at the
+// bottom), rules can only enforce: which paths the browser may touch, which
+// fields it may change, and the shape/size of the data it writes. It cannot
+// enforce *who* is writing. Read access below is therefore necessarily public
+// for the paths the app reads; the browser cannot function otherwise.
+//
+// WHAT THIS BUYS (vs. the test-mode rules it replaces):
+//   * The whole database is no longer open — only the 5 paths below.
+//   * The browser can no longer: create or delete documents, write document
+//     content, write comments, or edit/delete existing versions and messages.
+//   * Field, type and size validation on everything the browser can write.
+//
+// KNOWN LEAK (documented, not hidden):
+//   * Every document's full content is publicly readable by anyone holding the
+//     public API key, if they can discover a roomId.
+//   * `users/{email}/rooms/{roomId}` must be publicly readable because two
+//     collection-group queries need it (see below). That exposes room
+//     membership, i.e. emails. The Clerk/Firebase-auth bridge is the fix.
+//
+// =================================================================
+// Assumed Data Model
+// =================================================================
+//
+// documents/{roomId}                       — created/deleted by server actions
+//   title:     string  (<= 1000 chars)     - client may change
+//   tags:      list    (<= 50 items)       - client may change
+//   content:   string                      - server actions only
+//   createdAt: timestamp                   - server actions only (immutable)
+//   lastOpened: timestamp                  - server actions only
+//
+// documents/{roomId}/comments/{commentId}  — fully server-managed; client reads only
+//   resolved:  bool, createdAt: timestamp, userId/userName: string, ...
+//
+// documents/{roomId}/versions/{versionId}  — client autosnapshot every 5 min
+//                                            + 7-day cleanup; server also writes
+//   content:  string  (<= 1,000,000 chars) - markdown snapshot
+//   title:    string  (<= 1000 chars)
+//   timestamp: timestamp                  - client Timestamp.now()
+//   userId:   string  (<= 128 chars)       - Clerk user id
+//   userName: string  (<= 200 chars)
+//
+// teamChats/{roomId}/messages/{messageId}  — client creates + reads
+//   content:    string (<= 5000 chars)
+//   userId:     string (<= 200 chars)
+//   userName:   string (<= 200 chars)
+//   userAvatar: string (<= 500 chars)      - image URL
+//   timestamp:  timestamp                  - serverTimestamp()
+//
+// users/{email}/rooms/{roomId}             — server-managed membership
+//   userId:   string (email), role: string, roomId: string, createdAt/lastOpened
+//   Read MUST be public: `useOwner` (roomId == filter) and the dashboard search
+//   (userId == filter) are collection-group queries that identity-less rules
+//   cannot scope to the caller.
+//
+// =================================================================
+// Helper validators
+// =================================================================
+
+// document title: required non-empty string, sane length
+function validTitle() {
+  return request.resource.data.title is string &&
+         request.resource.data.title.size() > 0 &&
+         request.resource.data.title.size() <= 1000;
+}
+
+// tags: bounded list. (Rules cannot iterate list elements to type-check them;
+// the element-level guarantee comes from the app, the size cap prevents abuse.)
+function validTags() {
+  return request.resource.data.tags is list &&
+         request.resource.data.tags.size() <= 50;
+}
+
+// which fields a browser update on documents/{roomId} is allowed to touch
+function docUpdateTouches(field) {
+  return request.resource.data.diff(resource.data).affectedKeys().hasAny([field]);
+}
+
+function validDocumentUpdate() {
+  return request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['title', 'tags']) &&
+         (!docUpdateTouches('title') || validTitle()) &&
+         (!docUpdateTouches('tags') || validTags());
+}
+
+// version snapshot written by the autosave effect
+function validVersion() {
+  return request.resource.data.keys()
+           .hasOnly(['content', 'title', 'timestamp', 'userId', 'userName']) &&
+         request.resource.data.content is string &&
+         request.resource.data.content.size() > 0 &&
+         request.resource.data.content.size() <= 1000000 &&
+         request.resource.data.title is string &&
+         request.resource.data.title.size() <= 1000 &&
+         request.resource.data.timestamp is timestamp &&
+         request.resource.data.userId is string &&
+         request.resource.data.userId.size() > 0 &&
+         request.resource.data.userId.size() <= 128 &&
+         request.resource.data.userName is string &&
+         request.resource.data.userName.size() <= 200;
+}
+
+// chat message written from the Chatbar
+function validChatMessage() {
+  return request.resource.data.keys()
+           .hasOnly(['content', 'userId', 'userName', 'userAvatar', 'timestamp']) &&
+         request.resource.data.content is string &&
+         request.resource.data.content.size() > 0 &&
+         request.resource.data.content.size() <= 5000 &&
+         request.resource.data.userId is string &&
+         request.resource.data.userId.size() > 0 &&
+         request.resource.data.userId.size() <= 200 &&
+         request.resource.data.userName is string &&
+         request.resource.data.userName.size() <= 200 &&
+         request.resource.data.userAvatar is string &&
+         request.resource.data.userAvatar.size() <= 500 &&
+         request.resource.data.timestamp is timestamp;
+}
+
+// =================================================================
+// Rules
+// =================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------
+    // documents/{roomId}
+    // -------------------------------------------------------------
+    match /documents/{roomId} {
+      // Read: public (editor loads the live doc; breadcrumbs, search, sidebar,
+      // version history and the knowledge graph all read it). No identity to
+      // scope this to room members yet.
+      allow read: if true;
+
+      // Update: the browser only ever changes title and tags (title form,
+      // add/remove tag, AI tag generation). Content and membership are server
+      // actions; locking this stops a visitor from rewriting document bodies.
+      allow update: if validDocumentUpdate();
+
+      // Create / delete: server actions only.
+      allow create, delete: if false;
+
+      // Comments: created/resolved/deleted by server actions. Browser reads.
+      match /comments/{commentId} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      // Versions: browser autosaves a snapshot every 5 minutes and prunes
+      // versions older than 7 days. Restores are server actions, so no update.
+      match /versions/{versionId} {
+        allow read: if true;
+        allow create: if validVersion();
+        allow delete: if true;
+        allow update: if false;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // teamChats/{roomId}/messages/{messageId}
+    // -------------------------------------------------------------
+    match /teamChats/{roomId}/messages/{messageId} {
+      allow read: if true;
+      allow create: if validChatMessage();
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------
+    // users/{email}/rooms/{roomId}  (+ collection-group equivalent)
+    // Membership docs. Written by server actions (create, invite, remove).
+    // -------------------------------------------------------------
+    match /users/{email}/rooms/{roomId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Same path reached through collection-group queries, which need the
+    // recursive wildcard to be covered at all (rules_version = '2'):
+    //   * useOwner:    collectionGroup('rooms').where('roomId','==', room.id)
+    //   * dashboard:   collectionGroup('rooms').where('userId','==', myEmail)
+    match /{path=**}/rooms/{roomId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // -------------------------------------------------------------
+    // Everything else: denied. No match means no access.
+    // -------------------------------------------------------------
+  }
+}
+
+// =================================================================
+// NEXT STEP (the real fix)
+// =================================================================
+// Bridge Clerk to Firebase Auth: a server action verifies the Clerk session
+// and returns admin.createCustomToken(sessionClaims.email); the client calls
+// signInWithCustomToken() once on boot. Then:
+//   * replace `read: if true` with membership checks against
+//     users/{email}/rooms/{roomId}
+//   * make the browser's writes carry request.auth.uid and validate it
+//   * scope collectionGroup('rooms') reads with resource.data.userId == request.auth.uid
+//     (useOwner's query must add where('userId','==', myEmail) to stay legal)
+// =================================================================

@@ -1,0 +1,16 @@
+# Emulator artifacts
+firestore-debug.log
+*.log
+
+# Dependencies
+node_modules/
+
+# Firebase local
+.firebase/
+
+# Vercel
+.vercel/
+
+# Env
+.env
+.env*.local
