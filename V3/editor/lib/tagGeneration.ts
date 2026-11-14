@@ -1,0 +1,78 @@
+// Shared tag-generation logic used by both the /api/generate-tags route and
+// the generateTags server action. Kept in one place so the prompt, parsing
+// and validation rules can never drift apart (they previously did: the route
+// returned exactly 3 tags while the action demanded at least 5).
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export async function generateTagsFromContent(
+  content: string,
+  userApiKey?: string
+): Promise<string[]> {
+  const apiKey = userApiKey || process.env.GOOGLE_AI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(
+      "No API key provided. Please configure your Google Gemini API key in settings."
+    );
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+      temperature: 0.2, // Lower temperature for more consistent tags
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1024,
+    },
+  });
+
+  const prompt = `Analyze the following document content and extract exactly 3 most relevant tags.
+
+Rules:
+1. Respond ONLY with a valid JSON array containing exactly 3 string tags
+2. Each tag should be a single word or short phrase (2-3 words maximum)
+3. Tags should represent the main topics, themes, or concepts
+4. Do not include any explanations, markdown, or additional text
+5. Format must be exactly: ["tag1","tag2","tag3"]
+
+Example valid response: ["web development","react hooks","typescript"]
+
+Document content to analyze: ${content}`;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text().trim();
+
+  // Clean any potential markdown or extra whitespace
+  const cleanedText = text
+    .replace(/```json\s*|```\s*/g, "") // Remove code blocks
+    .replace(/[\n\r\t]/g, "") // Remove newlines and tabs
+    .trim();
+
+  if (!cleanedText.startsWith("[") || !cleanedText.endsWith("]")) {
+    throw new Error("AI response was not in the expected JSON array format");
+  }
+
+  const tags = JSON.parse(cleanedText);
+
+  if (!Array.isArray(tags)) {
+    throw new Error("AI response is not an array");
+  }
+
+  if (tags.length !== 3) {
+    throw new Error("Expected exactly 3 tags");
+  }
+
+  const cleanedTags = tags
+    .map((tag: unknown) => String(tag).trim())
+    .filter((tag: string) => tag.length > 0);
+
+  if (cleanedTags.length !== 3) {
+    throw new Error("Invalid tags received");
+  }
+
+  return cleanedTags;
+}

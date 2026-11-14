@@ -7,6 +7,7 @@ import { createReactBlockSpec } from "@blocknote/react";
 import { Textarea } from "@/components/ui/textarea";
 import { BrainCircuit, Pencil, Check } from "lucide-react";
 import mermaid from "mermaid";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 // Counter for unique chart IDs
@@ -26,15 +27,18 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
 
   const code = block?.props?.code || '';
 
+  // Track the resolved theme so diagrams re-render when dark mode toggles
+  // (previously the theme was read once and left out of the dep array).
+  const { resolvedTheme } = useTheme();
+  const mermaidTheme = resolvedTheme === "dark" ? "dark" : "default";
+
   useEffect(() => {
     // Only render if not in edit mode
     if (isEditMode) return;
 
-    const theme = document.documentElement.classList.contains("dark") ? "dark" : "default";
-
     mermaid.initialize({
       startOnLoad: false,
-      theme,
+      theme: mermaidTheme,
       // "strict" (mermaid's default) sandboxes rendering and escapes HTML in
       // labels. "loose" would let attacker-authored diagram code inject HTML
       // that executes in every collaborator's browser (stored XSS).
@@ -62,7 +66,7 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
     };
 
     render();
-  }, [code, chartId, isEditMode]);
+  }, [code, chartId, isEditMode, mermaidTheme]);
 
   if (!block) return null;
 

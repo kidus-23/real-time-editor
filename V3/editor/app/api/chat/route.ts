@@ -128,13 +128,15 @@ export async function POST(req: NextRequest) {
             throw new Error(message || 'Failed to get response from upstream API')
         }
 
-        // Parse success body (may still be non-JSON; handle gracefully)
+        // Parse success body (may still be non-JSON; handle gracefully).
+        // Read the body exactly once, then parse — calling response.json()
+        // and response.text() both would throw on the consumed body.
+        const rawBody = await response.text()
         let data: { choices?: Array<{ message?: { content?: string }; text?: string }>; model?: string; usage?: unknown }
         try {
-            data = await response.json()
+            data = JSON.parse(rawBody)
         } catch {
-            const text = await response.text()
-            console.error('Failed to parse JSON from upstream API:', text)
+            console.error('Failed to parse JSON from upstream API:', rawBody)
             throw new Error('Invalid response from upstream API')
         }
 

@@ -3,6 +3,7 @@
 import { adminDB } from "@/firebase-admin";
 import liveblocks from "@/lib/liveblocks";
 import { auth } from "@clerk/nextjs/server";
+import { generateTagsFromContent } from "@/lib/tagGeneration";
 import { requireRoomAccess } from "./roomAuth";
 
 export async function createNewDocument() {
@@ -51,9 +52,11 @@ export async function createNewDocument() {
 }
 
 export async function deleteDocument(roomId: string) {
-  await requireRoomAccess(roomId, "owner");
-
   try {
+    // Only the owner may delete; inside try so the client gets a
+    // {success:false} + toast instead of an unhandled rejection.
+    await requireRoomAccess(roomId, "owner");
+
     // Delete the main document
     await adminDB.collection("documents").doc(roomId).delete();
 
@@ -81,13 +84,15 @@ export async function deleteDocument(roomId: string) {
 }
 
 export async function inviteUserToDocument(roomId: string, email: string) {
-  await requireRoomAccess(roomId, "owner");
-
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) {
-    throw new Error("Invalid email address");
-  }
-
   try {
+    // Only the owner may invite; inside try so the client gets a
+    // {success:false} + toast instead of an unhandled rejection.
+    await requireRoomAccess(roomId, "owner");
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) {
+      throw new Error("Invalid email address");
+    }
+
     await adminDB
       .collection("users")
       .doc(email)
@@ -108,10 +113,11 @@ export async function inviteUserToDocument(roomId: string, email: string) {
 }
 
 export async function removeUserFromDocument(roomId: string, email: string) {
-  // Only the room owner may remove members.
-  await requireRoomAccess(roomId, "owner");
-
   try {
+    // Only the owner may remove members; inside try so the client gets a
+    // {success:false} + toast instead of an unhandled rejection.
+    await requireRoomAccess(roomId, "owner");
+
     await adminDB
       .collection("users")
       .doc(email)
@@ -182,45 +188,20 @@ export async function generateTags(roomId: string, content: string) {
       throw new Error("No content provided");
     }
 
-    // Make request to the Cloudflare backend
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/generate-tags`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content }),
-        cache: "no-store",
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        result.error || `Failed to generate tags: ${response.statusText}`
-      );
-    }
-
-    if (!result.success || !Array.isArray(result.tags)) {
-      console.error("Invalid tag generation response:", result);
-      throw new Error("Invalid response from tag generation");
-    }
-
-    // Validate tags
-    if (!result.tags.length || result.tags.length < 5) {
-      throw new Error("Expected at least 5 tags from generation");
-    }
+    // Call the shared tag-generation logic directly — the previous version
+    // HTTP-fetched its own /api/generate-tags route, which was broken twice
+    // over: wrong URL (/generate-tags instead of /api/generate-tags) and no
+    // Clerk cookies forwarded, so the route's auth gate rejected the call.
+    const tags = await generateTagsFromContent(content);
 
     // Update document with new tags
     await adminDB.collection("documents").doc(roomId).update({
-      tags: result.tags,
+      tags,
     });
 
     return {
       success: true,
-      tags: result.tags,
+      tags,
       message: "Tags generated and saved successfully",
     };
   } catch (error) {
@@ -334,10 +315,11 @@ export async function sendRoomInviteNotification(
   inviteeEmail: string
 ) {
   // Only the owner may send invites for a room (spam/abuse vector otherwise).
-  const inviterEmail = await requireRoomAccess(roomId, "owner");
-  const { sessionClaims } = await auth();
-
+  // Inside try so the client gets a {success:false} + toast instead of an
+  // unhandled rejection.
   try {
+    const inviterEmail = await requireRoomAccess(roomId, "owner");
+    const { sessionClaims } = await auth();
     // Get document title
     const docSnap = await adminDB.collection("documents").doc(roomId).get();
     const docData = docSnap.data();
@@ -377,6 +359,19 @@ export async function acceptRoomInvite(roomId: string, inviteeEmail: string, not
     }
 
     try {
+        // SECURITY: verify the invite actually exists before granting access.
+        // Without this check any signed-in user could call this action with an
+        // arbitrary roomId and self-grant editor membership (defeating
+        // requireRoomAccess for every other action). getInboxNotification
+        // throws when the notification does not exist.
+        const notification = await liveblocks.getInboxNotification({
+            userId: inviteeEmail,
+            inboxNotificationId: notificationId,
+        });
+        if (notification.kind !== "$roomInvite" || notification.subjectId !== roomId) {
+            return { success: false, error: "Invite not found" };
+        }
+
         // Add user to room
         await adminDB
             .collection('users')

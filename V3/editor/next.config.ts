@@ -33,7 +33,9 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.clerk.accounts.dev https://clerk.*.com https://api.liveblocks.io https://*.liveblocks.io wss://*.liveblocks.io https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://us.i.posthog.com https://eu.i.posthog.com https://openrouter.ai https://generativelanguage.googleapis.com",
+      // NOTE: CSP wildcards are only valid as the leftmost label —
+      // "https://clerk.*.com" would be silently ignored by browsers.
+      "connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com https://api.liveblocks.io https://*.liveblocks.io wss://*.liveblocks.io https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://us.i.posthog.com https://eu.i.posthog.com https://openrouter.ai https://generativelanguage.googleapis.com",
       "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.mermaid.live",
       "worker-src 'self' blob:",
       "object-src 'none'",
