@@ -2,6 +2,7 @@
 import { adminDB as db } from "@/firebase-admin";
 import { auth } from "@clerk/nextjs/server";
 import { Timestamp } from "firebase-admin/firestore";
+import { requireRoomAccess } from "./roomAuth";
 
 // Create a snapshot of the document with Markdown content
 export async function createSnapshot(
@@ -21,6 +22,13 @@ export async function createSnapshot(
   const userId = (session as any)?.userId;
   if (!userId) {
     return { success: false, error: "Not authenticated" };
+  }
+
+  // Verify the caller is a member of the document's room before writing.
+  try {
+    await requireRoomAccess(documentId);
+  } catch {
+    return { success: false, error: "Forbidden" };
   }
 
   if (!documentId) {
@@ -63,6 +71,13 @@ export async function cleanupOldVersions(documentId: string) {
     return { success: false, error: "Not authenticated" };
   }
 
+  // Verify the caller is a member of the document's room before deleting.
+  try {
+    await requireRoomAccess(documentId);
+  } catch {
+    return { success: false, error: "Forbidden" };
+  }
+
   try {
     const docRef = db.collection("documents").doc(documentId);
     const sevenDaysAgo = new Date();
@@ -103,6 +118,13 @@ export async function restoreVersion(documentId: string, versionId: string) {
   const userId = (session as any)?.userId;
   if (!userId) {
     return { success: false, error: "Not authenticated" };
+  }
+
+  // Verify the caller is a member of the document's room before reading.
+  try {
+    await requireRoomAccess(documentId);
+  } catch {
+    return { success: false, error: "Forbidden" };
   }
 
   try {

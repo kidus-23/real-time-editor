@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AI_MODELS } from "@/lib/constants";
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
     try {
+        // Auth gate: AI endpoints burn paid API quotas, so only signed-in users
+        // may call them (middleware makes auth available but does not enforce it).
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { messages, model, documentContext, userApiKeys } = await req.json();
 
         // Basic validation
@@ -11,14 +19,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing messages array in request' }, { status: 400 });
         }
 
-        // If document context is provided, add it to the messages
+        // If document context is provided, add it to the messages.
+        // Document content is untrusted user input (other collaborators can edit
+        // it), so it goes in a *user*-role message — never a system message — and
+        // client-supplied 'system' roles are normalized away to prevent prompt
+        // injection into the privileged channel.
         const chatMessages = [...messages];
 
-        if (documentContext) {
-            // Add document context as a system message at the beginning
+        if (typeof documentContext === "string" && documentContext.trim()) {
             chatMessages.unshift({
-                role: "system",
-                content: `The following is a document that the user is asking about. Use this document to answer the user's questions:\n\n${documentContext}\n\nAnswer questions based on the document content above.`
+                role: "user",
+                content: `The following is a document that the user is asking about. Use this document to answer the user's questions:\n\n${documentContext.slice(0, 50000)}\n\nAnswer questions based on the document content above.`
             });
         }
 
@@ -88,7 +99,9 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify({
                 model: model,
                 messages: chatMessages.map(({ role, content }: { role: string, content: string }) => ({
-                    role: role === 'user' ? 'user' : role === 'system' ? 'system' : 'assistant',
+                    // Only 'assistant' is preserved from client messages; anything
+                    // else (including a client-supplied 'system') becomes 'user'.
+                    role: role === 'assistant' ? 'assistant' : 'user',
                     content,
                 })),
                 temperature: 0.7,

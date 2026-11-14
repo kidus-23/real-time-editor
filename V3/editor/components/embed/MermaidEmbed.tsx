@@ -35,7 +35,10 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
     mermaid.initialize({
       startOnLoad: false,
       theme,
-      securityLevel: "loose",
+      // "strict" (mermaid's default) sandboxes rendering and escapes HTML in
+      // labels. "loose" would let attacker-authored diagram code inject HTML
+      // that executes in every collaborator's browser (stored XSS).
+      securityLevel: "strict",
     });
 
     const render = async () => {
@@ -187,17 +190,20 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
             />
           </div>
         ) : (
-          /* Live Preview */
+          /* Live Preview — rendered SVG comes from mermaid in strict mode;
+             errors are rendered as a React text node (never interpolated HTML). */
           <div
             ref={chartRef}
             className="flex justify-center items-center p-4 bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-gray-700 min-h-[200px]"
-            dangerouslySetInnerHTML={{
-              __html: error
-                ? `<pre class="text-red-500">${error}</pre>`
-                : svg ||
-                  '<div class="text-gray-400">Rendering diagram...</div>',
-            }}
-          />
+          >
+            {error ? (
+              <pre className="text-red-500 whitespace-pre-wrap break-words">{error}</pre>
+            ) : svg ? (
+              <div dangerouslySetInnerHTML={{ __html: svg }} />
+            ) : (
+              <div className="text-gray-400">Rendering diagram...</div>
+            )}
+          </div>
         )}
       </div>
     </div>

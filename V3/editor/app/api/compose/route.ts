@@ -1,8 +1,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
     try {
+        // Auth gate: this endpoint can burn the server's paid AI quota.
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const { prompt, userApiKey } = await req.json();
 
         // Use user's API key if provided, otherwise fall back to environment variable

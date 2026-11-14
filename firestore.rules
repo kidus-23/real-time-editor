@@ -167,10 +167,12 @@ service cloud.firestore {
 
       // Versions: browser autosaves a snapshot every 5 minutes and prunes
       // versions older than 7 days. Restores are server actions, so no update.
+      // Deletion is only permitted once the snapshot is actually older than
+      // 7 days, so the browser cannot wipe a room's recent history.
       match /versions/{versionId} {
         allow read: if true;
         allow create: if validVersion();
-        allow delete: if true;
+        allow delete: if request.time > resource.data.timestamp + duration.value(604800, 's');
         allow update: if false;
       }
     }

@@ -255,6 +255,21 @@ describe("documents/{roomId}", () => {
       await assertSucceeds(deleteDoc(ref));
     });
 
+    it("denies deleting a version newer than the 7-day prune window", async () => {
+      await seed((db) =>
+        setDoc(doc(db, "documents", ROOM, "versions", "recentVersion"), {
+          content: "fresh",
+          title: "My Doc",
+          timestamp: Timestamp.now(),
+          userId: "user_abc",
+          userName: "Me",
+        })
+      );
+      await assertFails(
+        deleteDoc(doc(client(), "documents", ROOM, "versions", "recentVersion"))
+      );
+    });
+
     it("denies updating a version (restores are server actions)", async () => {
       const snap = await getDocs(
         collection(client(), "documents", ROOM, "versions")

@@ -3,6 +3,7 @@
 import { adminDB } from "@/firebase-admin";
 import liveblocks from "@/lib/liveblocks";
 import { auth } from "@clerk/nextjs/server";
+import { requireRoomAccess } from "./roomAuth";
 
 export async function createNewDocument() {
   const { sessionClaims } = await auth();
@@ -50,10 +51,7 @@ export async function createNewDocument() {
 }
 
 export async function deleteDocument(roomId: string) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  await requireRoomAccess(roomId, "owner");
 
   try {
     // Delete the main document
@@ -83,9 +81,10 @@ export async function deleteDocument(roomId: string) {
 }
 
 export async function inviteUserToDocument(roomId: string, email: string) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
+  await requireRoomAccess(roomId, "owner");
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) {
+    throw new Error("Invalid email address");
   }
 
   try {
@@ -109,11 +108,9 @@ export async function inviteUserToDocument(roomId: string, email: string) {
 }
 
 export async function removeUserFromDocument(roomId: string, email: string) {
-  //auth().protect();
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  // Only the room owner may remove members.
+  await requireRoomAccess(roomId, "owner");
+
   try {
     await adminDB
       .collection("users")
@@ -154,10 +151,7 @@ export async function updateLastOpened(roomId: string) {
 
 // Function to save document content
 export async function saveDocumentContent(roomId: string, content: string) {
-  const session = await auth();
-  if (!session || !session.sessionClaims?.email) {
-    throw new Error("Unauthorized");
-  }
+  await requireRoomAccess(roomId);
 
   try {
     // Update the document with content
@@ -181,10 +175,7 @@ export async function saveDocumentContent(roomId: string, content: string) {
 
 // Function to generate tags using AI
 export async function generateTags(roomId: string, content: string) {
-  const session = await auth();
-  if (!session || !session.sessionClaims?.email) {
-    throw new Error("Unauthorized");
-  }
+  await requireRoomAccess(roomId);
 
   try {
     if (!content.trim()) {
@@ -251,10 +242,8 @@ export async function createComment(
     position?: { start: number; end: number };
   }
 ) {
+  const email = await requireRoomAccess(roomId);
   const { sessionClaims } = await auth();
-  if (!sessionClaims?.email) {
-    throw new Error("Unauthorized");
-  }
 
   try {
     const commentRef = await adminDB
@@ -262,10 +251,21 @@ export async function createComment(
       .doc(roomId)
       .collection("comments")
       .add({
-        ...commentData,
+        content: typeof commentData.content === "string" ? commentData.content.slice(0, 5000) : "",
+        highlightedText:
+          typeof commentData.highlightedText === "string"
+            ? commentData.highlightedText.slice(0, 5000)
+            : "",
+        blockId: typeof commentData.blockId === "string" ? commentData.blockId.slice(0, 200) : undefined,
+        position:
+          commentData.position &&
+          typeof commentData.position.start === "number" &&
+          typeof commentData.position.end === "number"
+            ? { start: commentData.position.start, end: commentData.position.end }
+            : undefined,
         createdBy: {
-          email: sessionClaims.email,
-          name: sessionClaims.fullName || sessionClaims.email,
+          email,
+          name: sessionClaims?.fullName || email,
         },
         createdAt: new Date(),
         resolved: false,
@@ -287,10 +287,7 @@ export async function resolveComment(
   roomId: string,
   resolved: boolean
 ) {
-  const { sessionClaims } = await auth();
-  if (!sessionClaims?.email) {
-    throw new Error("Unauthorized");
-  }
+  await requireRoomAccess(roomId);
 
   try {
     await adminDB
@@ -311,10 +308,7 @@ export async function resolveComment(
 }
 
 export async function deleteComment(commentId: string, roomId: string) {
-  const { sessionClaims } = await auth();
-  if (!sessionClaims?.email) {
-    throw new Error("Unauthorized");
-  }
+  await requireRoomAccess(roomId);
 
   try {
     await adminDB
@@ -339,10 +333,9 @@ export async function sendRoomInviteNotification(
   roomId: string,
   inviteeEmail: string
 ) {
+  // Only the owner may send invites for a room (spam/abuse vector otherwise).
+  const inviterEmail = await requireRoomAccess(roomId, "owner");
   const { sessionClaims } = await auth();
-  if (!sessionClaims?.email) {
-    throw new Error("Unauthorized");
-  }
 
   try {
     // Get document title
@@ -351,7 +344,7 @@ export async function sendRoomInviteNotification(
     const documentTitle = docData?.title || "Untitled Document";
 
     // Get inviter name
-    const inviterName = sessionClaims.fullName || sessionClaims.email;
+    const inviterName = sessionClaims?.fullName || inviterEmail;
 
     // Send notification via Liveblocks
     await liveblocks.triggerInboxNotification({
@@ -361,7 +354,7 @@ export async function sendRoomInviteNotification(
       activityData: {
         roomId,
         documentTitle,
-        inviterEmail: sessionClaims.email,
+        inviterEmail: inviterEmail,
         inviterName,
         invitedAt: new Date().toISOString(),
       },
