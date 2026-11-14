@@ -64,7 +64,7 @@ export async function deleteDocument(roomId: string) {
       .get();
 
     const batch = adminDB.batch();
-    usersQuery.forEach((doc) => {
+    usersQuery.forEach((doc: import("firebase-admin/firestore").QueryDocumentSnapshot) => {
       batch.delete(doc.ref);
     });
 
