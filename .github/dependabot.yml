@@ -1,0 +1,21 @@
+# Dependabot version updates — keeps dependencies patched automatically.
+# The app code lives in V3/editor (the Vercel project's rootDirectory).
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/V3/editor"
+    schedule:
+      interval: "weekly"
+    # Security patches and semver-compatible updates; majors need manual
+    # review (see the BlockNote 0.57 upgrade plan).
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
