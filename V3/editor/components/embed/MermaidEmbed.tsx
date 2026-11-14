@@ -1,7 +1,5 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import React, { useEffect, useRef, useState } from "react";
 import { createReactBlockSpec } from "@blocknote/react";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +11,22 @@ import { toast } from "sonner";
 // Counter for unique chart IDs
 let mermaidIdCounter = 0;
 
-type MermaidEmbedProps = Parameters<typeof createReactBlockSpec>[1]['render'] extends (props: infer P) => unknown ? P : never;
+// Explicit render-props type (the old conditional-type derivation no longer
+// resolves in @blocknote/react 0.57).
+interface MermaidEmbedProps {
+  block: {
+    id: string;
+    type: "mermaid";
+    props: {
+      code: string;
+      width: number;
+    };
+    content?: never;
+    children?: never[];
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  editor: any; // BlockNote editor instance with complex schema
+}
 
 const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
   const { block, editor } = props;
@@ -59,8 +72,8 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
         );
         setSvg(renderedSvg);
         setError("");
-      } catch (err: any) {
-        setError(err.message || "Failed to render diagram");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to render diagram");
         setSvg("");
       }
     };
@@ -186,6 +199,9 @@ const MermaidEmbedComponent = (props: MermaidEmbedProps) => {
                 editor.updateBlock(block, {
                   type: "mermaid",
                   props: { code: e.target.value },
+                  // PartialBlock cast — the custom block's typing isn't
+                  // expressible against the `any`-typed editor instance.
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
               }}
               placeholder="Enter Mermaid diagram code..."
@@ -234,6 +250,9 @@ export const MermaidEmbedSpec = {
 
 // Create the React block spec
 export const MermaidEmbed = createReactBlockSpec(MermaidEmbedSpec, {
+  // Render signature cast — 0.57's render props type isn't directly
+  // compatible with the hand-written props interface above.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   render: MermaidEmbedComponent as any,
   toExternalHTML: (props) => {
     return (
