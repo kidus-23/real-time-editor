@@ -20,8 +20,10 @@ function getInstance(): Liveblocks {
 // modules during build-time page-data collection, before runtime env vars
 // are available), which broke plain `npm run build` locally. Call sites
 // that do `liveblocks.someMethod(...)` are unaffected.
-export default new Proxy({} as Liveblocks, {
+const liveblocksClient = new Proxy({} as Liveblocks, {
     get(_target, prop) {
         return (getInstance() as unknown as Record<string | symbol, unknown>)[prop];
     },
 });
+
+export default liveblocksClient;
