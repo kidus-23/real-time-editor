@@ -38,10 +38,10 @@
     "d3": "^7.9.0",
     "data-fns": "^1.1.0",
     "date-fns": "^4.1.0",
-    "diff": "^8.0.2",
+    "diff": "^8.0.4",
     "docx": "^9.5.1",
     "firebase": "^12.1.0",
-    "firebase-admin": "^13.4.0",
+    "firebase-admin": "^14.5.1",
     "framer-motion": "^12.23.12",
     "gsap": "^3.13.0",
     "html2canvas": "^1.4.1",
@@ -81,6 +81,17 @@
     "@grpc/grpc-js": "^1.13.6",
     "postcss": "^8.5.23",
     "prosemirror-view": "^1.42.3",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "table": { "ajv": "^8.18.0" },
+    "prismjs": "^1.30.0",
+    "katex": "^0.18.11",
+    "uuid": "^11.1.1",
+    "colord": "^2.9.4",
+    "postcss-selector-parser": "^7.2.1",
+    "mdast-util-to-hast": "^13.2.2",
+    "sucrase": "^3.35.1",
+    "@humanfs/node": "^0.16.8",
+    "jspdf": { "fflate": "^0.8.3" },
+    "@typescript-eslint/typescript-estree": { "minimatch": "^11.0.1" }
   }
 }
