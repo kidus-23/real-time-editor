@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect } from 'react';
-import LinkifyIt from 'linkify-it';
+import { LinkifyIt } from 'linkify-it';
 
 const linkify = new LinkifyIt();
 
