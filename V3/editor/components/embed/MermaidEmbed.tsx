@@ -249,6 +249,10 @@ export const MermaidEmbedSpec = {
 };
 
 // Create the React block spec
+// In @blocknote 0.57, createReactBlockSpec returns a spec FACTORY that must
+// be called to produce the actual block spec object — registering the
+// factory itself in a schema crashes with
+// "Cannot read properties of undefined (reading 'layoutOnly')".
 export const MermaidEmbed = createReactBlockSpec(MermaidEmbedSpec, {
   // Render signature cast — 0.57's render props type isn't directly
   // compatible with the hand-written props interface above.
@@ -272,4 +276,4 @@ export const MermaidEmbed = createReactBlockSpec(MermaidEmbedSpec, {
     }
     return undefined;
   },
-});
+})();

@@ -488,6 +488,10 @@ const linkPreviewSpec = {
   isFileBlock: false,
 };
 
+// In @blocknote 0.57, createReactBlockSpec returns a spec FACTORY that must
+// be called to produce the actual block spec object — registering the
+// factory itself in a schema crashes with
+// "Cannot read properties of undefined (reading 'layoutOnly')".
 export const LinkPreview = createReactBlockSpec(linkPreviewSpec, {
   render: (props) => <LinkPreviewComponent block={props.block as any} />, // eslint-disable-line @typescript-eslint/no-explicit-any
-});
+})();
