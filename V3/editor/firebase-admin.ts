@@ -31,14 +31,20 @@ function getAdminApp(): App {
 
 // Proxies keep the existing call sites (`adminDB.collection(...)`,
 // `adminApp`) unchanged while deferring initialization to first access.
+// Methods are bound to the REAL instance so that any class-private
+// internals work the same as direct calls.
 export const adminApp: App = new Proxy({} as App, {
     get(_target, prop) {
-        return (getAdminApp() as unknown as Record<string | symbol, unknown>)[prop];
+        const instance = getAdminApp();
+        const value = Reflect.get(instance as unknown as object, prop, instance);
+        return typeof value === "function" ? value.bind(instance) : value;
     },
 });
 
 export const adminDB: Firestore = new Proxy({} as Firestore, {
     get(_target, prop) {
-        return (getFirestore(getAdminApp()) as unknown as Record<string | symbol, unknown>)[prop];
+        const instance = getFirestore(getAdminApp());
+        const value = Reflect.get(instance as unknown as object, prop, instance);
+        return typeof value === "function" ? value.bind(instance) : value;
     },
 });

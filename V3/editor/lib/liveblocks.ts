@@ -20,9 +20,22 @@ function getInstance(): Liveblocks {
 // modules during build-time page-data collection, before runtime env vars
 // are available), which broke plain `npm run build` locally. Call sites
 // that do `liveblocks.someMethod(...)` are unaffected.
+//
+// Methods are bound to the REAL instance before being returned: the
+// Liveblocks class uses true private fields (`#private`), and a method
+// invoked with `this` set to the Proxy itself would throw
+// "Cannot read private member ... from an object whose class did not
+// declare it". (This exact bug shipped once — the editor stuck on
+// "Connecting..." because /auth-endpoint 500'd at prepareSession.)
 const liveblocksClient = new Proxy({} as Liveblocks, {
     get(_target, prop) {
-        return (getInstance() as unknown as Record<string | symbol, unknown>)[prop];
+        const instance = getInstance();
+        const value = Reflect.get(
+            instance as unknown as object,
+            prop,
+            instance
+        );
+        return typeof value === "function" ? value.bind(instance) : value;
     },
 });
 
