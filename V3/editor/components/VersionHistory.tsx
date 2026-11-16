@@ -143,6 +143,7 @@ export default function VersionHistory({
   const [versions, setVersions] = useState<Version[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [currentContent, setCurrentContent] = useState<string>("");
+  const [docTitle, setDocTitle] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useState(false);
   const { user } = useUser();
@@ -162,6 +163,10 @@ export default function VersionHistory({
         if (!docSnap.exists()) return;
 
         const data = docSnap.data() as Record<string, unknown> | undefined;
+
+        if (data && typeof data.title === "string") {
+          setDocTitle(data.title);
+        }
 
         // If the server is storing canonical markdown in the document (preferred), use it
         if (data && typeof data.content === "string") {
@@ -326,7 +331,7 @@ export default function VersionHistory({
       }
 
       const title =
-        (editor as any)?.document?.[0]?.content?.[0]?.text || "Untitled";
+        (editor as any)?.document?.[0]?.content?.[0]?.text || docTitle || "Untitled";
 
       const result = await createSnapshot(documentId, title, markdownContent);
       if (result.success) {
