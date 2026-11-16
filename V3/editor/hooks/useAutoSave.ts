@@ -25,6 +25,7 @@ export function useAutoSave({
     minIntervalMs = 30000,
 }: UseAutoSaveOptions) {
     const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const retryTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const lastSaveTimeRef = useRef<number>(Date.now());
     const isDirtyRef = useRef<boolean>(false);
     const isSavingRef = useRef<boolean>(false);
@@ -37,8 +38,18 @@ export function useAutoSave({
         const now = Date.now();
         const timeSinceLastSave = now - lastSaveTimeRef.current;
 
-        // Respect minimum interval
+        // Respect minimum interval — reschedule instead of dropping the
+        // change. Previously the debounced save was silently discarded
+        // when the interval hadn't elapsed (lastSaveTimeRef starts at
+        // page load, so the first ~30s of edits were all dropped), and
+        // only a later keystroke or tab switch would retry it.
         if (timeSinceLastSave < minIntervalMs) {
+            if (retryTimerRef.current) {
+                clearTimeout(retryTimerRef.current);
+            }
+            retryTimerRef.current = setTimeout(() => {
+                performSave();
+            }, minIntervalMs - timeSinceLastSave + 100);
             return;
         }
 
@@ -108,6 +119,9 @@ export function useAutoSave({
         return () => {
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
+            }
+            if (retryTimerRef.current) {
+                clearTimeout(retryTimerRef.current);
             }
         };
     }, []);

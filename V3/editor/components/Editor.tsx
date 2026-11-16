@@ -86,8 +86,10 @@ const BlockNote = memo(function BlockNote({
 
   const saveContent = useCallback(async () => {
     try {
-      // BlockNote 0.57 renders the editable surface as .bn-editor
-      // (.bn-container no longer exists, which silently broke saving).
+      // Query the BlockNote editable surface directly; verified present in
+      // the 0.57 DOM (both .bn-container and .bn-editor exist — the real
+      // save-gap was in useAutoSave, which silently dropped debounced
+      // saves inside the min-interval window).
       const editorContent =
         document.querySelector(".bn-editor")?.textContent || "";
 
