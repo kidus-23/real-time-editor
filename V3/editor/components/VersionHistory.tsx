@@ -147,9 +147,11 @@ export default function VersionHistory({
   const [isPending, startTransition] = useState(false);
   const { user } = useUser();
 
-  // Fetch versions and current document content when the sheet is opened
+  // Fetch versions and current document content when the sheet is opened.
+  // isOpen is optional: the standalone /doc/[id]/history route renders this
+  // component without it, so only an explicit `false` (Sheet closed) skips.
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen === false) return;
 
     setLoading(true);
 
@@ -281,9 +283,11 @@ export default function VersionHistory({
     });
   };
 
-  // Client-side handler to create a snapshot
+  // Client-side handler to create a snapshot.
+  // editor is optional: the standalone history route has no live editor, in
+  // which case the branch below falls back to `currentContent`.
   const handleCreateSnapshot = async () => {
-    if (!user || !editor) return;
+    if (!user) return;
 
     startTransition(true);
     try {
