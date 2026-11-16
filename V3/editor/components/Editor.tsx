@@ -86,8 +86,10 @@ const BlockNote = memo(function BlockNote({
 
   const saveContent = useCallback(async () => {
     try {
+      // BlockNote 0.57 renders the editable surface as .bn-editor
+      // (.bn-container no longer exists, which silently broke saving).
       const editorContent =
-        document.querySelector(".bn-container")?.textContent || "";
+        document.querySelector(".bn-editor")?.textContent || "";
 
       if (editorContent.trim()) {
         const result = await saveDocumentContent(roomId, editorContent);
