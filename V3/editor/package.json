@@ -69,7 +69,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "^16.4.6",
     "stylelint-config-standard": "^39.0.1",
     "tailwindcss": "^4",
